@@ -1,7 +1,41 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import Login from './Login'
 
 export default function App() {
+  const [session, setSession] = useState(null)
+  const [authReady, setAuthReady] = useState(false)
+
+  useEffect(() => {
+    // نتحقق من وجود جلسة دخول حالية
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthReady(true)
+    })
+    // نستمع لأي تغيّر في حالة الدخول/الخروج
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
+  if (!authReady) {
+    return (
+      <div className="state">
+        <div className="spinner"></div>
+        جارٍ التحميل…
+      </div>
+    )
+  }
+
+  // غير مسجّل دخول → شاشة الدخول
+  if (!session) return <Login />
+
+  // مسجّل دخول → اللوحة
+  return <Dashboard />
+}
+
+function Dashboard() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -9,11 +43,9 @@ export default function App() {
   useEffect(() => {
     async function load() {
       try {
-        // نجلب الطلاب مع بيانات الشخص المرتبطة بهم
         const { data, error } = await supabase
           .from('students')
           .select('id, degree_level, persons(full_name, nationality, residency_no, phone)')
-
         if (error) throw error
         setStudents(data || [])
       } catch (err) {
@@ -25,7 +57,10 @@ export default function App() {
     load()
   }, [])
 
-  // إحصاءات سريعة
+  async function handleLogout() {
+    await supabase.auth.signOut()
+  }
+
   const total = students.length
   const byDegree = students.reduce((acc, s) => {
     const d = s.degree_level || 'غير محدد'
@@ -43,21 +78,23 @@ export default function App() {
           <h1>منصة رافد</h1>
           <span>جمعية تأصيل التعليمية — طلاب المنح الدوليين</span>
         </div>
-        <div className="meta">لوحة مدير النظام</div>
+        <div className="header-actions">
+          <span className="meta">لوحة مدير النظام</span>
+          <button className="logout-btn" onClick={handleLogout}>تسجيل الخروج</button>
+        </div>
       </header>
 
       <div className="container">
         {loading && (
           <div className="state">
             <div className="spinner"></div>
-            جارٍ تحميل البيانات من قاعدة البيانات…
+            جارٍ تحميل البيانات…
           </div>
         )}
 
         {error && (
           <div className="error-box">
-            <strong>تعذّر الاتصال بقاعدة البيانات.</strong><br />
-            تأكد من ضبط مفاتيح Supabase بشكل صحيح. تفاصيل الخطأ:<br />
+            <strong>تعذّر تحميل البيانات.</strong><br />
             <code>{error}</code>
           </div>
         )}
@@ -86,12 +123,8 @@ export default function App() {
               <table>
                 <thead>
                   <tr>
-                    <th>#</th>
-                    <th>الاسم</th>
-                    <th>الجنسية</th>
-                    <th>المرحلة</th>
-                    <th>رقم الإقامة</th>
-                    <th>الجوال</th>
+                    <th>#</th><th>الاسم</th><th>الجنسية</th>
+                    <th>المرحلة</th><th>رقم الإقامة</th><th>الجوال</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -99,11 +132,9 @@ export default function App() {
                     <tr key={s.id}>
                       <td className="muted">{i + 1}</td>
                       <td>{s.persons?.full_name || '—'}</td>
-                      <td>
-                        {s.persons?.nationality
-                          ? <span className="pill">{s.persons.nationality}</span>
-                          : <span className="muted">غير محدد</span>}
-                      </td>
+                      <td>{s.persons?.nationality
+                        ? <span className="pill">{s.persons.nationality}</span>
+                        : <span className="muted">غير محدد</span>}</td>
                       <td>{s.degree_level || '—'}</td>
                       <td className="muted">{s.persons?.residency_no || '—'}</td>
                       <td className="muted">{s.persons?.phone || '—'}</td>

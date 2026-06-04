@@ -90,3 +90,44 @@ tbody tr:hover { background: #fafbfe; }
   border-radius: 12px; padding: 18px 22px; font-size: 14px; line-height: 1.8;
 }
 .error-box code { background: #fff; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+/* شاشة الدخول */
+.login-wrap {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1f3864 0%, #2e5496 100%); padding: 20px;
+}
+.login-card {
+  background: var(--surface); border-radius: 18px; padding: 40px 36px;
+  width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+.login-brand { text-align: center; margin-bottom: 28px; }
+.login-brand h1 { font-size: 30px; font-weight: 700; color: var(--navy); }
+.login-brand p { font-size: 14px; color: var(--text-soft); margin-top: 4px; }
+.login-card form { display: flex; flex-direction: column; gap: 6px; }
+.login-card label { font-size: 14px; font-weight: 500; color: var(--text); margin-top: 12px; }
+.login-card input {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 15px; font-family: inherit; outline: none; transition: border-color .15s;
+}
+.login-card input:focus { border-color: var(--blue); }
+.login-card button {
+  margin-top: 22px; padding: 13px; background: var(--navy); color: #fff;
+  border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: background .15s;
+}
+.login-card button:hover:not(:disabled) { background: var(--blue); }
+.login-card button:disabled { opacity: .6; cursor: default; }
+.login-error {
+  background: #fcecec; color: #a32d2d; border-radius: 8px;
+  padding: 10px 14px; font-size: 14px; margin-top: 12px;
+}
+.login-hint { text-align: center; font-size: 13px; color: var(--text-soft); margin-top: 20px; }
+
+/* زر الخروج */
+.header-actions { display: flex; align-items: center; gap: 16px; }
+.logout-btn {
+  background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.25);
+  padding: 8px 16px; border-radius: 8px; font-size: 14px; font-family: inherit;
+  cursor: pointer; transition: background .15s;
+}
+.logout-btn:hover { background: rgba(255,255,255,.22); }
