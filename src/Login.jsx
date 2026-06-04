@@ -81,7 +81,7 @@ export default function Login() {
             <>
               <label>كلمة المرور</label>
               <div className="password-field">
-                <input type={showPass ? 'text' : 'password'} value={password}
+                <input className="pw-input" type={showPass ? 'text' : 'password'} value={password}
                   onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
                 <button type="button" className="eye-btn" onClick={() => setShowPass(!showPass)}
                   aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'} title={showPass ? 'إخفاء' : 'إظهار'}>
