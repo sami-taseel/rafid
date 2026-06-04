@@ -10,6 +10,8 @@ const MENU = [
   { key: 'housing',    label: 'السكن والمخالفات', icon: '🏢' },
   { key: 'surveys',    label: 'الاستبانات',     icon: '📋' },
   { key: 'support',    label: 'الدعم',          icon: '🎁' },
+  { key: 'reports',    label: 'التقارير',       icon: '📤' },
+  { key: 'users',      label: 'المستخدمون',     icon: '🔑' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
 ]
 

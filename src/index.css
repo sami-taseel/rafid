@@ -421,3 +421,32 @@ tbody tr:hover { background: #fafbfe; }
 .sp-save:hover:not(:disabled) { background: var(--blue); }
 .sp-save:disabled { opacity: .6; }
 .sp-container .section-title { color: var(--navy); margin: 4px 0 14px; }
+
+/* ===== إدارة المستخدمين ===== */
+.user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); gap: 12px; flex-wrap: wrap; }
+.user-info { display: flex; flex-direction: column; }
+.user-info .muted { font-size: 13px; }
+.user-roles { display: flex; gap: 6px; flex-wrap: wrap; }
+.role-chip { background: var(--blue-soft); color: var(--blue); padding: 4px 6px 4px 10px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+.role-chip button { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 13px; padding: 0 2px; }
+
+/* ===== تفاصيل الطالب ===== */
+.clickable { cursor: pointer; }
+.student-card.clickable:hover { border-color: var(--blue); }
+tr.clickable:hover { background: var(--blue-soft); }
+.detail-hero { display: flex; align-items: center; gap: 16px; margin: 16px 0; }
+.avatar.lg { width: 60px; height: 60px; font-size: 26px; }
+.detail-hero h2 { color: var(--navy); font-size: 22px; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.info-item { display: flex; flex-direction: column; gap: 3px; }
+.info-label { font-size: 12px; color: var(--text-soft); }
+.info-val { font-size: 15px; }
+
+/* ===== التقارير ===== */
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.report-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 22px; text-align: center; cursor: pointer; font-family: inherit; box-shadow: var(--shadow); }
+.report-card:hover { border-color: var(--blue); }
+.report-icon { font-size: 32px; margin-bottom: 8px; }
+.report-label { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
+.report-action { font-size: 13px; color: var(--blue); background: var(--blue-soft); padding: 6px; border-radius: 8px; }
+.text-answers { margin-top: 10px; }

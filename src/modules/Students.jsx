@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import StudentDetail from './StudentDetail'
 
 export function Spinner() { return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div> }
 export function Stat({ num, label }) { return <div className="stat-card"><div className="num">{num}</div><div className="label">{label}</div></div> }
@@ -8,6 +9,7 @@ export default function Students() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const [sel, setSel] = useState(null)
 
   useEffect(() => {
     supabase.from('students')
@@ -16,6 +18,7 @@ export default function Students() {
   }, [])
 
   if (loading) return <Spinner />
+  if (sel) return <StudentDetail studentId={sel} onBack={() => setSel(null)} />
   const filtered = students.filter(s =>
     (s.persons?.full_name || '').includes(q) || (s.persons?.nationality || '').includes(q))
   const byDeg = students.reduce((a, s) => { const d = s.degree_level || 'غير محدد'; a[d] = (a[d]||0)+1; return a }, {})
@@ -31,7 +34,7 @@ export default function Students() {
       <input className="search" placeholder="بحث بالاسم أو الجنسية…" value={q} onChange={e => setQ(e.target.value)} />
       <div className="cards-view">
         {filtered.map((s) => (
-          <div className="student-card" key={s.id}>
+          <div className="student-card clickable" key={s.id} onClick={() => setSel(s.id)}>
             <div className="card-head">
               <div className="avatar">{(s.persons?.full_name || '؟').trim().charAt(0)}</div>
               <div className="card-name">
@@ -52,7 +55,7 @@ export default function Students() {
           <thead><tr><th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الإقامة</th><th>الجوال</th></tr></thead>
           <tbody>
             {filtered.map((s, i) => (
-              <tr key={s.id}>
+              <tr key={s.id} className="clickable" onClick={() => setSel(s.id)}>
                 <td className="muted">{i+1}</td>
                 <td>{s.persons?.full_name || '—'}</td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>

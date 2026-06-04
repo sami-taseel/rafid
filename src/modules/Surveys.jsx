@@ -8,6 +8,7 @@ export default function Surveys() {
   const [surveys, setSurveys] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
+  const [results, setResults] = useState(null)
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', target_audience: 'الجميع' })
   const [msg, setMsg] = useState(null)
@@ -37,6 +38,7 @@ export default function Surveys() {
 
   if (loading) return <Spinner />
   if (editing) return <SurveyEditor survey={editing} onBack={() => { setEditing(null); loadAll() }} />
+  if (results) return <SurveyResults survey={results} onBack={() => setResults(null)} />
 
   return (
     <div>
@@ -73,6 +75,7 @@ export default function Surveys() {
           </div>
           <div className="survey-actions">
             <button className="mini" onClick={() => setEditing(s)}>تحرير الأسئلة</button>
+            <button className="mini" onClick={() => setResults(s)}>النتائج</button>
             <button className="mini" onClick={() => duplicate(s)}>نسخ</button>
             <button className="fr-del" onClick={() => del(s.id)}>حذف</button>
           </div>
@@ -152,6 +155,59 @@ function SurveyEditor({ survey, onBack }) {
       ))}
       <button className="add-field-btn" onClick={addQ}>+ إضافة سؤال</button>
       <button className="save-btn" style={{ marginTop: 12 }} onClick={saveAll}>حفظ كل الأسئلة</button>
+    </div>
+  )
+}
+
+function SurveyResults({ survey, onBack }) {
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    async function load() {
+      const { data: qs } = await supabase.from('survey_questions').select('*').eq('survey_id', survey.id).order('sort_order')
+      const { data: resp } = await supabase.from('survey_responses').select('id').eq('survey_id', survey.id)
+      const ids = (resp || []).map(r => r.id)
+      let answers = []
+      if (ids.length) {
+        const { data: a } = await supabase.from('survey_answers').select('question_id, answer').in('response_id', ids)
+        answers = a || []
+      }
+      setData({ qs: qs || [], count: ids.length, answers })
+    }
+    load()
+  }, [survey])
+  if (!data) return <Spinner />
+  return (
+    <div>
+      <button className="mini" onClick={onBack}>→ رجوع</button>
+      <div className="survey-edit-head"><h3>نتائج: {survey.title}</h3><span className="pill">{data.count} رد</span></div>
+      {data.count === 0 && <div className="panel muted">لا توجد ردود بعد.</div>}
+      {data.qs.map((q, i) => {
+        const qa = data.answers.filter(a => a.question_id === q.id).map(a => a.answer?.value)
+        const counts = {}
+        qa.forEach(v => { const k = String(v); counts[k] = (counts[k]||0)+1 })
+        const max = Math.max(1, ...Object.values(counts))
+        return (
+          <div className="panel" key={q.id}>
+            <strong>{i+1}. {q.q_text}</strong>
+            {q.q_type === 'text' ? (
+              <div className="text-answers">
+                {qa.filter(Boolean).map((t, j) => <div key={j} className="list-line">"{t}"</div>)}
+                {qa.filter(Boolean).length === 0 && <div className="muted">لا إجابات</div>}
+              </div>
+            ) : (
+              <div className="bar-list" style={{ marginTop: 10 }}>
+                {Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k, v]) => (
+                  <div className="bar-item" key={k}>
+                    <span className="bar-label">{k}</span>
+                    <div className="bar-track"><div className="bar-fill" style={{ width: (v/max*100)+'%' }}></div></div>
+                    <span className="bar-val">{v}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }
