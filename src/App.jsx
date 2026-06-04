@@ -10,6 +10,7 @@ import Housing from './modules/Housing'
 import Surveys from './modules/Surveys'
 import Support from './modules/Support'
 import Buildings from './modules/Buildings'
+import Stats from './modules/Stats'
 import Fields from './modules/Fields'
 
 export default function App() {
@@ -50,9 +51,9 @@ function RoleRouter({ session }) {
 }
 
 function StaffApp() {
-  const [active, setActive] = useState('students')
+  const [active, setActive] = useState('stats')
   const views = {
-    students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
+    stats: <Stats />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
     buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>

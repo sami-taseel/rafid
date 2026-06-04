@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from './supabaseClient'
 
 const MENU = [
+  { key: 'stats',      label: 'الرئيسية',       icon: '📊' },
   { key: 'students',   label: 'الطلاب',        icon: '👥' },
   { key: 'tracks',     label: 'المسارات والأنشطة', icon: '📚' },
   { key: 'attendance', label: 'الحضور',        icon: '✓' },

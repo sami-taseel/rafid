@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import Companions from './modules/Companions'
+import StudentSurveys from './modules/StudentSurveys'
 
 export default function StudentProfile({ session }) {
   const [student, setStudent] = useState(null)
@@ -8,6 +10,7 @@ export default function StudentProfile({ session }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [tab, setTab] = useState('data')
 
   useEffect(() => {
     async function load() {
@@ -74,9 +77,16 @@ export default function StudentProfile({ session }) {
 
       <div className="container narrow">
         <div className="welcome-box">
-          مرحباً بك. يمكنك مراجعة بياناتك وتحديثها في أي وقت. الحقول غير إلزامية،
-          واملأ ما تستطيع ثم احفظ.
+          مرحباً بك. يمكنك مراجعة بياناتك وتحديثها في أي وقت.
         </div>
+        <div className="login-tabs" style={{ marginBottom: 20 }}>
+          <button type="button" className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بياناتي</button>
+          <button type="button" className={tab==='companions'?'active':''} onClick={()=>setTab('companions')}>المرافقون والملفات</button>
+          <button type="button" className={tab==='surveys'?'active':''} onClick={()=>setTab('surveys')}>الاستبانات</button>
+        </div>
+        {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
+        {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
+        {tab === 'data' && (
         <form onSubmit={handleSave} className="profile-form">
           {sections.map(sec => (
             <div key={sec}>
@@ -105,6 +115,7 @@ export default function StudentProfile({ session }) {
             {saving ? 'جارٍ الحفظ…' : 'حفظ البيانات'}
           </button>
         </form>
+        )}
       </div>
     </div>
   )

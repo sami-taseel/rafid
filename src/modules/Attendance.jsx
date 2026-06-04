@@ -25,8 +25,17 @@ export default function Attendance() {
   async function save() {
     const rows = students.map(s => ({ session_id: sel.id, student_id: s.id, status: marks[s.id] || 'not_recorded' }))
     const { error } = await supabase.from('attendance').upsert(rows, { onConflict: 'session_id,student_id' })
-    setMsg(error ? 'خطأ: ' + error.message : 'تم حفظ الحضور بنجاح')
-    setTimeout(() => setMsg(null), 2000)
+    if (error) { setMsg('خطأ: ' + error.message); return }
+    // فحص آلي للإنذار لكل طالب غائب
+    let warnings = []
+    for (const s of students) {
+      if (marks[s.id] === 'absent') {
+        const { data } = await supabase.rpc('check_and_generate_sanction', { p_student: s.id })
+        if (data && !data.includes('لا يوجد')) warnings.push(s.persons?.full_name + ': ' + data)
+      }
+    }
+    setMsg('تم حفظ الحضور بنجاح' + (warnings.length ? ' — تنبيهات: ' + warnings.join(' | ') : ''))
+    setTimeout(() => setMsg(null), 5000)
   }
 
   if (loading) return <Spinner />

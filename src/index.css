@@ -353,3 +353,39 @@ tbody tr:hover { background: #fafbfe; }
 .q-controls select { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
 .q-opts { width: 100%; margin-top: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
 .q-preview { margin-top: 10px; font-size: 13px; color: var(--text-soft); background: #f7f9fc; padding: 10px; border-radius: 8px; }
+
+/* ===== لوحة الإحصائيات ===== */
+.stats.big { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.big-card { text-align: center; }
+.big-icon { font-size: 28px; margin-bottom: 6px; }
+.alert-box { background: #fbe4d5; color: #92400e; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; font-size: 14px; }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.bar-list { display: flex; flex-direction: column; gap: 10px; }
+.bar-item { display: flex; align-items: center; gap: 10px; }
+.bar-label { font-size: 13px; width: 90px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 10px; background: #eef2f8; border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--blue); border-radius: 6px; }
+.bar-val { font-size: 13px; font-weight: 500; width: 30px; text-align: left; }
+
+/* ===== الجزاءات ===== */
+.sanction-row { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.sanc-level { font-size: 12px; padding: 4px 12px; border-radius: 10px; font-weight: 500; }
+.sanc-level.notice { background: #eaf3de; color: #3b6d11; }
+.sanc-level.warning { background: #fbe4d5; color: #854f0b; }
+.sanc-level.eviction { background: #fcecec; color: #a32d2d; }
+.sanc-actions { display: flex; gap: 6px; align-items: center; }
+
+/* ===== رفع الملفات ===== */
+.docs-upload { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.upload-card { display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 18px; background: #f7f9fc; border: 1px dashed var(--border); border-radius: 12px; cursor: pointer; font-size: 14px; }
+.upload-card .upload-btn { background: var(--blue-soft); color: var(--blue); padding: 6px 16px; border-radius: 8px; font-size: 13px; }
+
+/* ===== ليكرت والنجوم ===== */
+.likert { display: flex; gap: 8px; flex-wrap: wrap; }
+.lk { padding: 8px 14px; border: 1px solid var(--border); background: #fff; border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 13px; }
+.lk.sel { background: var(--navy); color: #fff; border-color: var(--navy); }
+.stars { display: flex; gap: 4px; }
+.star { font-size: 28px; color: #ddd; cursor: pointer; }
+.star.on { color: #f5b301; }
+
+@media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
