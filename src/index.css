@@ -459,3 +459,64 @@ tr.clickable:hover { background: var(--blue-soft); }
 .ins-btn.sel.ok { background: var(--green); color: #fff; border-color: var(--green); }
 .ins-btn.sel.warn { background: var(--amber); color: #fff; border-color: var(--amber); }
 .ins-btn.sel.bad { background: #c0392b; color: #fff; border-color: #c0392b; }
+
+/* ===== الوضع الليلي ===== */
+:root[data-theme="dark"] {
+  --bg: #12151c; --surface: #1b1f28; --navy: #2e4a7a; --blue: #5b8fd4;
+  --blue-soft: #1e2a3f; --text: #e6e8ec; --text-soft: #9aa3b2; --border: #2a3140;
+  --shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+:root[data-theme="dark"] body { background: var(--bg); color: var(--text); }
+:root[data-theme="dark"] input, :root[data-theme="dark"] select, :root[data-theme="dark"] textarea { background: #232834; color: var(--text); }
+:root[data-theme="dark"] .topbar, :root[data-theme="dark"] thead th { background: var(--surface); }
+:root[data-theme="dark"] .att-row, :root[data-theme="dark"] .session-row, :root[data-theme="dark"] .inspect-row { background: #232834; }
+.theme-toggle { margin-right: auto; background: none; border: none; font-size: 20px; cursor: pointer; }
+
+/* ===== الإشعارات العابرة ===== */
+.toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast { padding: 12px 22px; border-radius: 10px; font-size: 14px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,.18); animation: toastIn .25s; }
+.toast.ok { background: #1d9e75; color: #fff; }
+.toast.error { background: #c0392b; color: #fff; }
+.toast.info { background: var(--navy); color: #fff; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+/* ===== شاشة الدخول: إضافات ===== */
+.pass-wrap { position: relative; }
+.pass-wrap input { width: 100%; }
+.pass-toggle { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; padding: 4px; }
+.login-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; }
+.remember { display: flex; align-items: center; gap: 6px; color: var(--text-soft); cursor: pointer; }
+.link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; }
+.link-btn.center { display: block; margin: 14px auto 0; }
+.login-submit { width: 100%; margin-top: 18px; padding: 13px; background: var(--navy); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; min-height: 48px; }
+.reset-head { text-align: center; font-size: 17px; font-weight: 600; color: var(--navy); margin-bottom: 18px; }
+.divider { display: flex; align-items: center; text-align: center; margin: 18px 0; color: var(--text-soft); font-size: 13px; }
+.divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+.divider span { padding: 0 12px; }
+.google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px; background: #fff; border: 1px solid #dadce0; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 15px; color: #3c4043; min-height: 48px; }
+.google-btn:hover { background: #f8f9fa; }
+
+/* ===== الحالة الفارغة ===== */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-soft); }
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.empty-hint { font-size: 14px; margin-bottom: 16px; }
+
+/* ===== الرصد الجماعي ===== */
+.bulk-bar { display: flex; gap: 8px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+
+/* ===== الشهادة ===== */
+.cert-overlay { position: fixed; inset: 0; background: rgba(20,30,55,.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 80; overflow-y: auto; }
+.cert-wrap { max-width: 600px; width: 100%; }
+.cert { background: #fff; border: 8px solid var(--navy); border-radius: 8px; padding: 40px; text-align: center; color: #1a1f2b; }
+.cert-logo { height: 60px; margin-bottom: 20px; }
+.cert-title { font-size: 30px; font-weight: 700; color: var(--navy); margin-bottom: 24px; }
+.cert-body { font-size: 16px; color: #555; margin: 8px 0; }
+.cert-name { font-size: 26px; font-weight: 700; color: var(--navy); margin: 12px 0; }
+.cert-activity { font-size: 20px; font-weight: 600; margin: 12px 0; }
+.cert-date { font-size: 14px; color: #888; margin-top: 16px; }
+.cert-seal { font-size: 13px; color: #aaa; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; }
+.cert-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+@media print { body * { visibility: hidden; } #cert-print, #cert-print * { visibility: visible; } #cert-print { position: absolute; top: 0; left: 0; right: 0; } .no-print { display: none; } }
+
+@media (max-width: 768px) { .theme-toggle { margin-right: auto; } }

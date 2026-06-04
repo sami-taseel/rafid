@@ -58,6 +58,10 @@ export default function Attendance() {
         </div>
         {msg && <div className="save-ok">{msg}</div>}
         <div className="panel">
+          <div className="bulk-bar">
+            <button className="mini" onClick={() => { const m={}; students.forEach(s=>m[s.id]='present'); setMarks(m) }}>تحديد الكل حاضر</button>
+            <button className="mini" onClick={() => setMarks({})}>مسح الكل</button>
+          </div>
           <div className="att-list">
             {students.map(s => (
               <div className="att-row" key={s.id}>

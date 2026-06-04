@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDarkMode } from './useDarkMode'
 import { supabase } from './supabaseClient'
 
 const MENU = [
@@ -18,6 +19,7 @@ const MENU = [
 
 export default function Layout({ active, onNavigate, children }) {
   const [open, setOpen] = useState(false)
+  const [dark, setDark] = useDarkMode()
   async function handleLogout() { await supabase.auth.signOut() }
 
   return (
@@ -47,6 +49,7 @@ export default function Layout({ active, onNavigate, children }) {
         <header className="topbar">
           <button className="menu-toggle" onClick={() => setOpen(!open)}>☰</button>
           <span className="topbar-title">{MENU.find(m => m.key === active)?.label}</span>
+          <button className="theme-toggle" onClick={() => setDark(!dark)} aria-label="الوضع الليلي">{dark ? '☀️' : '🌙'}</button>
         </header>
         <div className="content">{children}</div>
       </div>

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import { useState as useCertState } from 'react'
+import Certificate from './Certificate'
 
 export default function StudentDetail({ studentId, onBack }) {
   const [d, setD] = useState(null)
+  const [cert, setCert] = useCertState(false)
 
   useEffect(() => {
     async function load() {
@@ -36,7 +39,9 @@ export default function StudentDetail({ studentId, onBack }) {
           <h2>{p?.full_name || '—'}</h2>
           <span className="muted">{d.s?.degree_level} · {p?.nationality}</span>
         </div>
+        <button className="mini" style={{ marginRight: 'auto' }} onClick={() => setCert(true)}>إصدار شهادة</button>
       </div>
+      {cert && <Certificate name={p?.full_name} activity="أنشطة مشروع طلاب المنح" date={new Date().toLocaleDateString('ar')} onClose={() => setCert(false)} />}
 
       <div className="stats">
         <div className="stat-card"><div className="num">{present}</div><div className="label">حضور</div></div>
