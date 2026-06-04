@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import { useConfirm } from '../Confirm'
 import UnitInspection from './UnitInspection'
 
 export default function Housing() {
+  const confirmDialog = useConfirm()
   const [buildings, setBuildings] = useState([])
   const [violations, setViolations] = useState([])
   const [sanctions, setSanctions] = useState([])
@@ -23,7 +25,8 @@ export default function Housing() {
   }
 
   async function confirmEviction(id) {
-    if (!confirm('تأكيد إخلاء السكن لهذا الطالب؟ هذا قرار مهم.')) return
+    const ok = await confirmDialog({ title: 'تأكيد إخلاء السكن', message: 'هذا قرار مهم وسيُسجّل إخلاءً مؤكّداً بحق الطالب. هل أنت متأكد؟', confirmText: 'تأكيد الإخلاء', danger: true })
+    if (!ok) return
     await supabase.from('sanctions').update({ status: 'confirmed' }).eq('id', id); loadAll()
   }
   async function cancelSanction(id) {

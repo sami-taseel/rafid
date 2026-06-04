@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useConfirm } from '../Confirm'
 
 export default function Fields() {
   const onClose = null
+  const confirmDialog = useConfirm()
   const [fields, setFields] = useState([])
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
@@ -37,7 +39,8 @@ export default function Fields() {
     setTimeout(() => setMsg(null), 1500)
   }
   async function delField(id) {
-    if (!confirm('حذف هذا السؤال؟')) return
+    const ok = await confirmDialog({ title: 'حذف السؤال', message: 'سيتم حذف هذا السؤال من النموذج.', confirmText: 'نعم، احذف', danger: true })
+    if (!ok) return
     await supabase.from('profile_fields').delete().eq('id', id)
     load()
   }

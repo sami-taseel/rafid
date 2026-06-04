@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import { useConfirm } from '../Confirm'
 import ExcelImport from './ExcelImport'
 
 const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
 
 export default function Tracks() {
+  const confirmDialog = useConfirm()
   const [tracks, setTracks] = useState([])
   const [activities, setActivities] = useState([])
   const [sessions, setSessions] = useState([])
@@ -51,9 +53,10 @@ export default function Tracks() {
   async function deleteActivity(a) {
     const cnt = sessions.filter(s => s.activity_id === a.id).length
     const warn = cnt > 0
-      ? `هذا النشاط له ${cnt} جلسة سيتم حذفها مع كل سجلات حضورها. هل أنت متأكد؟`
-      : 'حذف هذا النشاط؟'
-    if (!confirm(warn)) return
+      ? `هذا النشاط له ${cnt} جلسة سيتم حذفها مع كل سجلات حضورها.`
+      : 'سيتم حذف هذا النشاط نهائياً.'
+    const ok = await confirmDialog({ title: 'حذف النشاط', message: warn, confirmText: 'نعم، احذف', danger: true })
+    if (!ok) return
     await supabase.from('activities').delete().eq('id', a.id)
     flash('تم حذف النشاط'); loadAll()
   }
@@ -86,7 +89,8 @@ export default function Tracks() {
     setSessFor(null); loadAll()
   }
   async function deleteSession(s) {
-    if (!confirm('حذف هذه الجلسة وكل سجلات حضورها؟')) return
+    const ok = await confirmDialog({ title: 'حذف الجلسة', message: 'سيتم حذف هذه الجلسة وكل سجلات حضورها.', confirmText: 'نعم، احذف', danger: true })
+    if (!ok) return
     await supabase.from('sessions').delete().eq('id', s.id); flash('تم حذف الجلسة'); loadAll()
   }
   async function setSessionStatus(id, status) {

@@ -798,3 +798,23 @@ tr.clickable:hover { background: var(--blue-soft); }
 .session-modal { max-width: 460px; }
 .session-modal .field { margin-bottom: 14px; }
 .sess-name { font-weight: 500; }
+
+/* ===== صندوق التأكيد الاحترافي ===== */
+.confirm-overlay { position: fixed; inset: 0; background: rgba(20,30,55,.55); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 20px; animation: fadeIn .15s; }
+.confirm-box { background: var(--surface); border-radius: 18px; padding: 28px 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: popIn .2s; }
+.confirm-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 16px; }
+.confirm-icon.danger { background: #fcecec; }
+.confirm-icon.info { background: var(--blue-soft); }
+.confirm-title { font-size: 19px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.confirm-msg { font-size: 14px; color: var(--text-soft); line-height: 1.7; margin-bottom: 22px; }
+.confirm-actions { display: flex; gap: 10px; }
+.confirm-actions button { flex: 1; padding: 12px; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.confirm-cancel { background: #eef1f6; color: var(--text); }
+.confirm-cancel:hover { background: #e2e7ef; }
+.confirm-ok { background: var(--navy); color: #fff; }
+.confirm-ok:hover { background: var(--blue); }
+.confirm-ok.danger { background: #c0392b; }
+.confirm-ok.danger:hover { background: #a52f22; }
+:root[data-theme="dark"] .confirm-cancel { background: #2a3140; color: var(--text); }
+@keyframes fadeIn { from { opacity: 0; } }
+@keyframes popIn { from { transform: scale(.92); opacity: 0; } }
