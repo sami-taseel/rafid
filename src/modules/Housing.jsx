@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import UnitInspection from './UnitInspection'
 
 export default function Housing() {
   const [buildings, setBuildings] = useState([])
@@ -60,6 +61,7 @@ export default function Housing() {
         </div>
         {msg && <div className="save-ok">{msg}</div>}
       </div>
+      <UnitInspection units={[]} students={students} />
       <div className="panel">
         <h3>الجزاءات الآلية</h3>
         {sanctions.length === 0 && <div className="muted">لا توجد جزاءات.</div>}

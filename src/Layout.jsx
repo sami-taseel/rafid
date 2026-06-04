@@ -8,6 +8,7 @@ const MENU = [
   { key: 'attendance', label: 'الحضور',        icon: '✓' },
   { key: 'buildings',  label: 'العمارات',       icon: '🏗️' },
   { key: 'housing',    label: 'السكن والمخالفات', icon: '🏢' },
+  { key: 'policy',     label: 'لائحة السكن',    icon: '📜' },
   { key: 'surveys',    label: 'الاستبانات',     icon: '📋' },
   { key: 'support',    label: 'الدعم',          icon: '🎁' },
   { key: 'reports',    label: 'التقارير',       icon: '📤' },

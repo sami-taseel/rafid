@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Companions from './modules/Companions'
 import StudentSurveys from './modules/StudentSurveys'
+import { PolicyAcceptance } from './modules/Policy'
 
 export default function StudentProfile({ session }) {
   const [student, setStudent] = useState(null)
@@ -80,13 +81,14 @@ export default function StudentProfile({ session }) {
 
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['data','بياناتي'],['companions','المرافقون'],['surveys','الاستبانات']].map(([k, l]) => (
+          {[['data','بياناتي'],['companions','المرافقون'],['surveys','الاستبانات'],['policy','لائحة السكن']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
 
         {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
         {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
+        {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
         {tab === 'data' && (
           <form onSubmit={handleSave}>
             {sections.map(sec => (

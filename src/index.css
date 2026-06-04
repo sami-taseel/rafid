@@ -450,3 +450,12 @@ tr.clickable:hover { background: var(--blue-soft); }
 .report-label { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
 .report-action { font-size: 13px; color: var(--blue); background: var(--blue-soft); padding: 6px; border-radius: 8px; }
 .text-answers { margin-top: 10px; }
+
+/* معاينة الشقة */
+.inspect-list { display: flex; flex-direction: column; gap: 8px; }
+.inspect-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f7f9fc; border-radius: 8px; gap: 10px; flex-wrap: wrap; }
+.inspect-btns { display: flex; gap: 6px; }
+.ins-btn { padding: 6px 12px; border: 1px solid var(--border); background: #fff; border-radius: 7px; cursor: pointer; font-family: inherit; font-size: 12px; }
+.ins-btn.sel.ok { background: var(--green); color: #fff; border-color: var(--green); }
+.ins-btn.sel.warn { background: var(--amber); color: #fff; border-color: var(--amber); }
+.ins-btn.sel.bad { background: #c0392b; color: #fff; border-color: #c0392b; }
