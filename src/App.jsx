@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './Login'
 import StudentProfile from './StudentProfile'
+import FieldManager from './FieldManager'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -70,6 +71,7 @@ function RoleRouter({ session }) {
 }
 
 function Dashboard() {
+  const [showFields, setShowFields] = useState(false)
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -116,8 +118,8 @@ function Dashboard() {
           </div>
         </div>
         <div className="header-actions">
-          <span className="meta">لوحة مدير النظام</span>
-          <button className="logout-btn" onClick={handleLogout}>تسجيل الخروج</button>
+          <button className="logout-btn" onClick={() => setShowFields(true)}>أسئلة النموذج</button>
+          <button className="logout-btn" onClick={handleLogout}>خروج</button>
         </div>
       </header>
 
