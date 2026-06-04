@@ -394,7 +394,7 @@ tbody tr:hover { background: #fafbfe; }
 .sp-app { min-height: 100vh; background: var(--bg); padding: 20px 16px 40px; }
 .sp-container { max-width: 600px; margin: 0 auto; }
 .sp-hero { background: var(--navy); border-radius: 18px; padding: 22px; color: #fff; position: relative; margin-bottom: 18px; }
-.sp-logout { position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,.14); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 13px; cursor: pointer; }
+.sp-logout { background: rgba(255,255,255,.14); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 13px; cursor: pointer; }
 .sp-hero-top { display: flex; align-items: center; gap: 14px; }
 .sp-avatar { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; }
 .sp-greet { font-size: 19px; font-weight: 600; }
@@ -481,10 +481,11 @@ tr.clickable:hover { background: var(--blue-soft); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
 /* ===== شاشة الدخول: إضافات ===== */
-.pass-wrap { position: relative; display: flex; align-items: center; }
-.pass-wrap input { width: 100%; padding-left: 44px; }
-.pass-toggle { position: absolute; left: 8px; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; width: 36px; background: none; border: none; cursor: pointer; color: var(--text-soft); padding: 0; }
+.pass-wrap { position: relative; }
+.pass-wrap input { width: 100%; padding-left: 42px !important; }
+.pass-toggle { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer; color: var(--text-soft); padding: 0; margin: 0; }
 .pass-toggle:hover { color: var(--blue); }
+.pass-toggle svg { display: block; }
 .login-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; }
 .remember { display: flex; align-items: center; gap: 6px; color: var(--text-soft); cursor: pointer; }
 .link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; font-weight: 400; text-decoration: underline; }
@@ -612,7 +613,8 @@ tr.clickable:hover { background: var(--blue-soft); }
 .kpi-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
 
 /* ===== الإشعارات ===== */
-.sp-hero-actions { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; }
+.sp-hero-actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 14px; }
+.sp-hero-actions .sp-logout { position: static; }
 .sp-hero-actions .sp-logout { position: static; }
 .notif-wrap { position: relative; }
 .notif-bell { background: rgba(255,255,255,.14); border: none; color: #fff; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; font-size: 17px; position: relative; }
