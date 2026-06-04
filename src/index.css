@@ -481,12 +481,13 @@ tr.clickable:hover { background: var(--blue-soft); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
 /* ===== شاشة الدخول: إضافات ===== */
-.pass-wrap { position: relative; }
-.pass-wrap input { width: 100%; }
-.pass-toggle { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 17px; padding: 4px; }
+.pass-wrap { position: relative; display: flex; align-items: center; }
+.pass-wrap input { width: 100%; padding-left: 44px; }
+.pass-toggle { position: absolute; left: 8px; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; width: 36px; background: none; border: none; cursor: pointer; color: var(--text-soft); padding: 0; }
+.pass-toggle:hover { color: var(--blue); }
 .login-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; }
 .remember { display: flex; align-items: center; gap: 6px; color: var(--text-soft); cursor: pointer; }
-.link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; }
+.link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; font-weight: 400; text-decoration: underline; }
 .link-btn.center { display: block; margin: 14px auto 0; }
 .login-submit { width: 100%; margin-top: 18px; padding: 13px; background: var(--navy); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; min-height: 48px; }
 .reset-head { text-align: center; font-size: 17px; font-weight: 600; color: var(--navy); margin-bottom: 18px; }
@@ -520,3 +521,45 @@ tr.clickable:hover { background: var(--blue-soft); }
 @media print { body * { visibility: hidden; } #cert-print, #cert-print * { visibility: visible; } #cert-print { position: absolute; top: 0; left: 0; right: 0; } .no-print { display: none; } }
 
 @media (max-width: 768px) { .theme-toggle { margin-right: auto; } }
+
+/* ===== إصلاحات الوضع الليلي الشاملة ===== */
+:root[data-theme="dark"] .stat-card .num { color: #7ba9e8; }
+:root[data-theme="dark"] .section-title, :root[data-theme="dark"] .panel h3,
+:root[data-theme="dark"] .sc-title, :root[data-theme="dark"] .survey-title,
+:root[data-theme="dark"] .detail-hero h2, :root[data-theme="dark"] .report-label,
+:root[data-theme="dark"] .topbar-title, :root[data-theme="dark"] .brand-text h1 { color: #8fb5ed; }
+:root[data-theme="dark"] .pill { background: #243450; color: #9ec3f0; }
+:root[data-theme="dark"] .stat-card, :root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .student-card, :root[data-theme="dark"] .session-card,
+:root[data-theme="dark"] .survey-card, :root[data-theme="dark"] .question-card,
+:root[data-theme="dark"] .report-card, :root[data-theme="dark"] .sp-card { background: var(--surface); border-color: var(--border); }
+:root[data-theme="dark"] .avatar { background: #243450; color: #9ec3f0; }
+:root[data-theme="dark"] .blue-soft, :root[data-theme="dark"] .welcome-box { background: #1e2a3f; color: #9ec3f0; }
+:root[data-theme="dark"] .mini { background: #243450; color: #9ec3f0; }
+:root[data-theme="dark"] .search, :root[data-theme="dark"] .field input, :root[data-theme="dark"] .field select,
+:root[data-theme="dark"] .form-row input, :root[data-theme="dark"] .form-row select,
+:root[data-theme="dark"] .sp-field input, :root[data-theme="dark"] .sp-field select,
+:root[data-theme="dark"] .q-text, :root[data-theme="dark"] .q-opts, :root[data-theme="dark"] textarea { background: #232834; color: var(--text); border-color: var(--border); }
+:root[data-theme="dark"] .list-line { border-color: var(--border); }
+:root[data-theme="dark"] tbody tr:hover { background: #232834; }
+:root[data-theme="dark"] tbody td { border-color: var(--border); }
+:root[data-theme="dark"] .sp-hero, :root[data-theme="dark"] .header, :root[data-theme="dark"] .sidebar { background: #1a2740; }
+:root[data-theme="dark"] .save-ok { background: #143a2a; color: #6dd3a8; }
+:root[data-theme="dark"] .login-error { background: #3a1a1a; color: #f0a0a0; }
+:root[data-theme="dark"] .q-preview, :root[data-theme="dark"] .session-row, :root[data-theme="dark"] .att-row,
+:root[data-theme="dark"] .inspect-row, :root[data-theme="dark"] .field-row, :root[data-theme="dark"] .building-row { background: #232834; }
+:root[data-theme="dark"] .bar-track { background: #2a3140; }
+:root[data-theme="dark"] .att-btn, :root[data-theme="dark"] .ins-btn { background: #232834; color: var(--text); border-color: var(--border); }
+:root[data-theme="dark"] .upload-card { background: #232834; border-color: var(--border); }
+:root[data-theme="dark"] .role-chip { background: #243450; color: #9ec3f0; }
+:root[data-theme="dark"] .info-val { color: var(--text); }
+:root[data-theme="dark"] .login-card, :root[data-theme="dark"] .modal, :root[data-theme="dark"] .cert { background: var(--surface); }
+:root[data-theme="dark"] .login-tabs { background: #232834; }
+:root[data-theme="dark"] .login-tabs button.active { background: var(--navy); color: #fff; }
+:root[data-theme="dark"] .google-btn { background: #232834; color: var(--text); border-color: var(--border); }
+
+/* وسوم حالة الاستبانة */
+.pill-on { background: #e6f6ee; color: #1d7a52; font-size: 12px; padding: 3px 10px; border-radius: 12px; }
+.pill-off { background: #f0f0f0; color: #888; font-size: 12px; padding: 3px 10px; border-radius: 12px; }
+:root[data-theme="dark"] .pill-on { background: #143a2a; color: #6dd3a8; }
+:root[data-theme="dark"] .pill-off { background: #2a3140; color: #9aa3b2; }

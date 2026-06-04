@@ -35,6 +35,7 @@ export default function Surveys() {
     loadAll()
   }
   async function del(id) { if (confirm('حذف الاستبانة؟')) { await supabase.from('surveys').delete().eq('id', id); loadAll() } }
+  async function toggleActive(s) { await supabase.from('surveys').update({ is_active: !s.is_active }).eq('id', s.id); loadAll() }
 
   if (loading) return <Spinner />
   if (editing) return <SurveyEditor survey={editing} onBack={() => { setEditing(null); loadAll() }} />
@@ -71,11 +72,13 @@ export default function Surveys() {
             <div className="survey-tags">
               <span className="pill">{s.target_audience || 'الجميع'}</span>
               <span className="muted">{s.survey_questions?.length || 0} سؤال</span>
+              <span className={s.is_active ? 'pill-on' : 'pill-off'}>{s.is_active ? 'ظاهرة للطلاب' : 'مخفية'}</span>
             </div>
           </div>
           <div className="survey-actions">
             <button className="mini" onClick={() => setEditing(s)}>تحرير الأسئلة</button>
             <button className="mini" onClick={() => setResults(s)}>النتائج</button>
+            <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
             <button className="mini" onClick={() => duplicate(s)}>نسخ</button>
             <button className="fr-del" onClick={() => del(s.id)}>حذف</button>
           </div>

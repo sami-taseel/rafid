@@ -78,7 +78,11 @@ export default function Login() {
                   onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
                 <button type="button" className="pass-toggle" onClick={() => setShowPass(!showPass)}
                   aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
-                  {showPass ? '🙈' : '👁'}
+                  {showPass ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 10 8 10 8a13.16 13.16 0 01-1.67 2.68M6.61 6.61A13.526 13.526 0 002 12s3 8 10 8a9.74 9.74 0 005.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M2 12s3-8 10-8 10 8 10 8-3 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
                 </button>
               </div>
             </>
