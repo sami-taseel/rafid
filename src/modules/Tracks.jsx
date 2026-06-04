@@ -3,13 +3,16 @@ import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
 import ExcelImport from './ExcelImport'
 
+const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
+
 export default function Tracks() {
   const [tracks, setTracks] = useState([])
   const [activities, setActivities] = useState([])
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
-  const [sessFor, setSessFor] = useState(null)   // النشاط الذي نضيف له جلسة
-  const [sessForm, setSessForm] = useState({ title: '', planned_date: '', start_time: '', duration_min: '' })
+  const [sessFor, setSessFor] = useState(null)
+  const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
+  const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
   const [msg, setMsg] = useState(null)
 
@@ -24,35 +27,68 @@ export default function Tracks() {
   }
   useEffect(() => { loadAll() }, [])
 
+  function flash(m) { setMsg(m); setTimeout(() => setMsg(null), 2500) }
+
+  // ===== الأنشطة =====
   async function addActivity() {
-    if (!newAct.title || !newAct.track_code) { setMsg('اكتب اسم النشاط واختر المسار'); return }
+    if (!newAct.title || !newAct.track_code) { flash('اكتب اسم النشاط واختر المسار'); return }
     const track = tracks.find(t => t.code === newAct.track_code)
     await supabase.from('activities').insert({
       title: newAct.title, activity_type: newAct.activity_type,
       provider: newAct.provider, location: newAct.location, track_id: track?.id,
     })
     setNewAct({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
-    setMsg('أُضيف النشاط'); loadAll()
+    flash('أُضيف النشاط'); loadAll()
+  }
+  async function saveEditActivity() {
+    const track = tracks.find(t => t.code === editAct.track_code)
+    await supabase.from('activities').update({
+      title: editAct.title, activity_type: editAct.activity_type,
+      provider: editAct.provider, location: editAct.location, track_id: track?.id,
+    }).eq('id', editAct.id)
+    setEditAct(null); flash('تم تعديل النشاط'); loadAll()
+  }
+  async function deleteActivity(a) {
+    const cnt = sessions.filter(s => s.activity_id === a.id).length
+    const warn = cnt > 0
+      ? `هذا النشاط له ${cnt} جلسة سيتم حذفها مع كل سجلات حضورها. هل أنت متأكد؟`
+      : 'حذف هذا النشاط؟'
+    if (!confirm(warn)) return
+    await supabase.from('activities').delete().eq('id', a.id)
+    flash('تم حذف النشاط'); loadAll()
   }
 
+  // ===== الجلسات =====
+  function openNewSession(actId) {
+    setSessFor(actId); setSessForm({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
+  }
+  function openEditSession(s) {
+    setSessFor(s.activity_id)
+    setSessForm({ id: s.id, title: s.title || '', planned_date: s.planned_date || '',
+      start_time: s.start_time ? s.start_time.slice(0,5) : '', duration_min: s.duration_min || '', status: s.status })
+  }
   async function saveSession() {
-    if (!sessForm.planned_date) { setMsg('اختر تاريخ الجلسة'); return }
-    const act = activities.find(a => a.id === sessFor)
-    // اسم تلقائي إن تُرك فارغاً
+    if (!sessForm.planned_date) { flash('اختر تاريخ الجلسة'); return }
     let title = sessForm.title
     if (!title) {
-      const count = sessions.filter(s => s.activity_id === sessFor).length
+      const act = activities.find(a => a.id === sessFor)
+      const count = sessions.filter(s => s.activity_id === sessFor && s.id !== sessForm.id).length
       title = (act?.activity_type || 'جلسة') + ' ' + (count + 1)
     }
-    await supabase.from('sessions').insert({
+    const payload = {
       activity_id: sessFor, planned_date: sessForm.planned_date,
-      start_time: sessForm.start_time || null, duration_min: sessForm.duration_min ? Number(sessForm.duration_min) : null,
-      title, status: 'scheduled',
-    })
-    setSessFor(null); setSessForm({ title: '', planned_date: '', start_time: '', duration_min: '' })
-    loadAll()
+      start_time: sessForm.start_time || null,
+      duration_min: sessForm.duration_min ? Number(sessForm.duration_min) : null,
+      title, status: sessForm.status,
+    }
+    if (sessForm.id) await supabase.from('sessions').update(payload).eq('id', sessForm.id)
+    else await supabase.from('sessions').insert(payload)
+    setSessFor(null); loadAll()
   }
-
+  async function deleteSession(s) {
+    if (!confirm('حذف هذه الجلسة وكل سجلات حضورها؟')) return
+    await supabase.from('sessions').delete().eq('id', s.id); flash('تم حذف الجلسة'); loadAll()
+  }
   async function setSessionStatus(id, status) {
     await supabase.from('sessions').update({ status }).eq('id', id); loadAll()
   }
@@ -75,25 +111,21 @@ export default function Tracks() {
           </select>
           <input placeholder="اسم النشاط" value={newAct.title} onChange={e => setNewAct({ ...newAct, title: e.target.value })} />
           <select value={newAct.activity_type} onChange={e => setNewAct({ ...newAct, activity_type: e.target.value })}>
-            {['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة'].map(t => <option key={t}>{t}</option>)}
+            {ACT_TYPES.map(t => <option key={t}>{t}</option>)}
           </select>
           <input placeholder="المقدّم" value={newAct.provider} onChange={e => setNewAct({ ...newAct, provider: e.target.value })} />
           <input placeholder="المكان" value={newAct.location} onChange={e => setNewAct({ ...newAct, location: e.target.value })} />
           <button onClick={addActivity}>إضافة</button>
         </div>
-        {msg && <div className="save-ok">{msg}</div>}
       </div>
 
       <div className="panel">
         <h3>إضافة جلسات دفعة واحدة من Excel</h3>
         <p className="muted" style={{ fontSize: 13, marginBottom: 10 }}>
-          ارفع الجلسات، وستُنشأ الأنشطة تلقائياً منها دون تكرار. لو تكرر اسم النشاط والمسار،
-          تُضاف الجلسة للنشاط نفسه. اترك اسم الجلسة فارغاً ليُسمّى تلقائياً (مثل: درس ١، درس ٢).
+          ارفع الجلسات، وستُنشأ الأنشطة تلقائياً منها دون تكرار. اترك اسم الجلسة فارغاً ليُسمّى تلقائياً.
         </p>
         <ExcelImport
-          title="الجلسات"
-          mode="rpc"
-          rpcName="add_session_smart"
+          title="الجلسات" mode="rpc" rpcName="add_session_smart"
           columns={[
             { key: 'p_activity_title', label: 'اسم النشاط', sample: 'شرح كتاب التوحيد' },
             { key: 'p_activity_type', label: 'نوع النشاط', sample: 'درس' },
@@ -114,12 +146,13 @@ export default function Tracks() {
           })}
           onDone={loadAll}
         />
-        <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>
-          رموز المسارات: educational, skills, social, care, applied, companions
-        </div>
+        <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>رموز المسارات: educational, skills, social, care, applied, companions</div>
       </div>
 
+      {msg && <div className="save-ok">{msg}</div>}
+
       <h3 className="section-title">الأنشطة والجلسات</h3>
+      {activities.length === 0 && <div className="panel muted">لا توجد أنشطة بعد. أضِف نشاطاً أو ارفع جلسات من Excel.</div>}
       {activities.map(a => (
         <div className="panel" key={a.id}>
           <div className="act-head">
@@ -128,7 +161,11 @@ export default function Tracks() {
               <span className="pill" style={{ marginRight: 8 }}>{a.tracks?.name_ar}</span>
               <span className="muted"> {a.activity_type} {a.provider && '· ' + a.provider} {a.location && '· ' + a.location}</span>
             </div>
-            <button className="mini" onClick={() => { setSessFor(a.id); setSessForm({ title: '', planned_date: '', start_time: '', duration_min: '' }) }}>+ جلسة</button>
+            <div className="sess-actions">
+              <button className="mini" onClick={() => openNewSession(a.id)}>+ جلسة</button>
+              <button className="mini" onClick={() => setEditAct({ id: a.id, title: a.title, activity_type: a.activity_type, provider: a.provider || '', location: a.location || '', track_code: a.tracks?.code || '' })}>تعديل</button>
+              <button className="fr-del" onClick={() => deleteActivity(a)}>حذف</button>
+            </div>
           </div>
           <div className="sessions">
             {sessions.filter(s => s.activity_id === a.id).map(s => (
@@ -138,7 +175,10 @@ export default function Tracks() {
                 <span className={'status-' + s.status}>{statusLabel(s.status)}</span>
                 <div className="sess-actions">
                   <button className="mini" onClick={() => setSessionStatus(s.id, 'held')}>منعقدة</button>
-                  <button className="mini" onClick={() => setSessionStatus(s.id, 'postponed')}>مؤجلة</button>
+                  <button className="mini" onClick={() => setSessionStatus(s.id, 'postponed')}>تأجيل</button>
+                  <button className="mini" onClick={() => setSessionStatus(s.id, 'cancelled')}>إلغاء</button>
+                  <button className="mini" onClick={() => openEditSession(s)}>تعديل</button>
+                  <button className="fr-del" onClick={() => deleteSession(s)}>حذف</button>
                 </div>
               </div>
             ))}
@@ -147,12 +187,12 @@ export default function Tracks() {
         </div>
       ))}
 
-      {/* نافذة إضافة جلسة احترافية */}
+      {/* نافذة الجلسة (إضافة/تعديل) */}
       {sessFor && (
         <div className="modal-overlay" onClick={() => setSessFor(null)}>
           <div className="modal session-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-head">
-              <h2>إضافة جلسة — {activities.find(a => a.id === sessFor)?.title}</h2>
+              <h2>{sessForm.id ? 'تعديل جلسة' : 'إضافة جلسة'} — {activities.find(a => a.id === sessFor)?.title}</h2>
               <button className="icon-btn" onClick={() => setSessFor(null)}>✕</button>
             </div>
             <div className="field"><label>اسم الجلسة (اتركه فارغاً للتسمية التلقائية)</label>
@@ -165,7 +205,39 @@ export default function Tracks() {
               <div className="field" style={{ flex: 1 }}><label>المدة (دقيقة)</label>
                 <input type="number" value={sessForm.duration_min} onChange={e => setSessForm({ ...sessForm, duration_min: e.target.value })} placeholder="60" /></div>
             </div>
-            <button className="save-btn" onClick={saveSession}>حفظ الجلسة</button>
+            {sessForm.id && (
+              <div className="field"><label>الحالة</label>
+                <select value={sessForm.status} onChange={e => setSessForm({ ...sessForm, status: e.target.value })}>
+                  <option value="scheduled">مجدولة</option><option value="held">منعقدة</option>
+                  <option value="postponed">مؤجلة</option><option value="cancelled">ملغاة</option>
+                </select></div>
+            )}
+            <button className="save-btn" onClick={saveSession}>{sessForm.id ? 'حفظ التعديل' : 'حفظ الجلسة'}</button>
+          </div>
+        </div>
+      )}
+
+      {/* نافذة تعديل النشاط */}
+      {editAct && (
+        <div className="modal-overlay" onClick={() => setEditAct(null)}>
+          <div className="modal session-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-head"><h2>تعديل النشاط</h2><button className="icon-btn" onClick={() => setEditAct(null)}>✕</button></div>
+            <div className="field"><label>المسار</label>
+              <select value={editAct.track_code} onChange={e => setEditAct({ ...editAct, track_code: e.target.value })}>
+                <option value="">اختر…</option>
+                {tracks.map(t => <option key={t.id} value={t.code}>{t.name_ar}</option>)}
+              </select></div>
+            <div className="field"><label>اسم النشاط</label>
+              <input value={editAct.title} onChange={e => setEditAct({ ...editAct, title: e.target.value })} /></div>
+            <div className="field"><label>النوع</label>
+              <select value={editAct.activity_type} onChange={e => setEditAct({ ...editAct, activity_type: e.target.value })}>
+                {ACT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select></div>
+            <div className="field"><label>المقدّم</label>
+              <input value={editAct.provider} onChange={e => setEditAct({ ...editAct, provider: e.target.value })} /></div>
+            <div className="field"><label>المكان</label>
+              <input value={editAct.location} onChange={e => setEditAct({ ...editAct, location: e.target.value })} /></div>
+            <button className="save-btn" onClick={saveEditActivity}>حفظ التعديل</button>
           </div>
         </div>
       )}
