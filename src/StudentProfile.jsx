@@ -4,8 +4,14 @@ import Companions from './modules/Companions'
 import StudentSurveys from './modules/StudentSurveys'
 import { PolicyAcceptance } from './modules/Policy'
 import Notifications from './modules/Notifications'
+import { LangProvider, useLang } from './i18n/LangContext'
 
-export default function StudentProfile({ session }) {
+export default function StudentProfile(props) {
+  return <LangProvider><StudentProfileInner {...props} /></LangProvider>
+}
+
+function StudentProfileInner({ session }) {
+  const { t, lang, setLang, available, isRtl } = useLang()
   const [student, setStudent] = useState(null)
   const [fields, setFields] = useState([])
   const [values, setValues] = useState({})
@@ -62,30 +68,35 @@ export default function StudentProfile({ session }) {
   const sections = [...new Set(fields.map(f => f.section || 'بيانات'))]
 
   return (
-    <div className="sp-app">
+    <div className="sp-app" dir={isRtl ? "rtl" : "ltr"}>
       <div className="sp-container">
         {/* ترويسة الترحيب */}
         <div className="sp-hero">
           <div className="sp-hero-actions">
             <Notifications studentId={student?.id} />
-            <button className="sp-logout" onClick={handleLogout}>خروج</button>
+            {available.length > 1 && (
+              <select className="lang-picker" value={lang} onChange={e => setLang(e.target.value)} aria-label={t('selectLang')}>
+                {available.map(l => <option key={l.code} value={l.code}>{l.name_native}</option>)}
+              </select>
+            )}
+            <button className="sp-logout" onClick={handleLogout}>{t('logout')}</button>
           </div>
           <div className="sp-hero-top">
             <div className="sp-avatar">{name.trim().charAt(0) || '؟'}</div>
             <div>
-              <div className="sp-greet">مرحباً، {name.split(' ')[0]}</div>
+              <div className="sp-greet">{t('welcome')}، {name.split(' ')[0]}</div>
               <div className="sp-sub">{[deg, nat].filter(Boolean).join(' · ') || 'أكمل بياناتك'}</div>
             </div>
           </div>
           <div className="sp-progress">
-            <div className="sp-progress-head"><span>اكتمال الملف</span><span>{pct}%</span></div>
+            <div className="sp-progress-head"><span>{t('profileComplete')}</span><span>{pct}%</span></div>
             <div className="sp-bar"><div className="sp-fill" style={{ width: pct + '%' }}></div></div>
           </div>
         </div>
 
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['data','بياناتي'],['companions','المرافقون'],['surveys','الاستبانات'],['policy','لائحة السكن']].map(([k, l]) => (
+          {[['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['policy',t('policy')]].map(([k, l]) => (
             <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -119,7 +130,7 @@ export default function StudentProfile({ session }) {
             ))}
             {msg && <div className={msg.type === 'ok' ? 'save-ok' : 'login-error'}>{msg.text}</div>}
             <button type="submit" disabled={saving} className="sp-save">
-              {saving ? 'جارٍ الحفظ…' : 'حفظ البيانات'}
+              {saving ? t('saving') : t('save')}
             </button>
           </form>
         )}

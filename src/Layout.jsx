@@ -18,6 +18,7 @@ const MENU = [
   { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
   { key: 'audit',      label: 'سجل العمليات',   icon: '📜' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
+  { key: 'languages',  label: 'اللغات',         icon: '🌐' },
 ]
 
 export default function Layout({ active, onNavigate, children }) {
