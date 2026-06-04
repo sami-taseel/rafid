@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './Login'
+import StudentProfile from './StudentProfile'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -31,8 +32,41 @@ export default function App() {
   // غير مسجّل دخول → شاشة الدخول
   if (!session) return <Login />
 
-  // مسجّل دخول → اللوحة
-  return <Dashboard />
+  // مسجّل دخول → نوجّهه حسب دوره
+  return <RoleRouter session={session} />
+}
+
+// يوجّه المستخدم: الموظف يرى اللوحة، والطالب يرى ملفه
+function RoleRouter({ session }) {
+  const [role, setRole] = useState(null)   // 'staff' | 'student'
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    async function checkRole() {
+      try {
+        const uid = session.user.id
+        // نجلب أدوار هذا المستخدم
+        const { data } = await supabase
+          .from('persons')
+          .select('id, user_roles(roles(code))')
+          .eq('auth_user_id', uid)
+          .maybeSingle()
+
+        const codes = (data?.user_roles || []).map(ur => ur.roles?.code)
+        const isStaff = codes.some(c => c && c !== 'student')
+        setRole(isStaff ? 'staff' : 'student')
+      } catch {
+        setRole('student')   // الافتراضي: طالب
+      } finally {
+        setChecking(false)
+      }
+    }
+    checkRole()
+  }, [session])
+
+  if (checking) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
+  if (role === 'staff') return <Dashboard />
+  return <StudentProfile session={session} />
 }
 
 function Dashboard() {

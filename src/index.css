@@ -186,3 +186,40 @@ tbody tr:hover { background: #fafbfe; }
   button, .logout-btn { min-height: 44px; }
   input { min-height: 46px; font-size: 16px; } /* 16px يمنع التكبير التلقائي في آيفون */
 }
+
+/* ===== تبويبات الدخول/التسجيل ===== */
+.login-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #f0f3f9; padding: 4px; border-radius: 10px; }
+.login-tabs button {
+  flex: 1; padding: 10px; border: none; background: transparent; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text-soft);
+  border-radius: 8px; transition: all .15s; margin: 0;
+}
+.login-tabs button.active { background: #fff; color: var(--navy); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* ===== واجهة الطالب ===== */
+.container.narrow { max-width: 640px; }
+.welcome-box {
+  background: var(--blue-soft); color: var(--blue); border-radius: 12px;
+  padding: 16px 18px; font-size: 14px; margin-bottom: 24px; line-height: 1.7;
+}
+.profile-form { display: flex; flex-direction: column; }
+.profile-form .section-title { margin-top: 20px; margin-bottom: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label { font-size: 14px; font-weight: 500; color: var(--text); }
+.field input, .field select {
+  padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+  font-size: 15px; font-family: inherit; outline: none; background: #fff;
+  transition: border-color .15s;
+}
+.field input:focus, .field select:focus { border-color: var(--blue); }
+.save-btn {
+  margin-top: 12px; padding: 14px; background: var(--navy); color: #fff;
+  border: none; border-radius: 10px; font-size: 16px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+}
+.save-btn:hover:not(:disabled) { background: var(--blue); }
+.save-btn:disabled { opacity: .6; }
+.save-ok {
+  background: #e6f6ee; color: #1d7a52; border-radius: 8px;
+  padding: 10px 14px; font-size: 14px; margin-bottom: 12px;
+}
