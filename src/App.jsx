@@ -13,7 +13,6 @@ export default function App() {
         const { data, error } = await supabase
           .from('students')
           .select('id, degree_level, persons(full_name, nationality, residency_no, phone)')
-          .order('created_at', { ascending: true })
 
         if (error) throw error
         setStudents(data || [])
