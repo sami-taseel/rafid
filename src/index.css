@@ -483,9 +483,10 @@ tr.clickable:hover { background: var(--blue-soft); }
 /* ===== شاشة الدخول: إضافات ===== */
 .pass-wrap { position: relative; }
 .pass-wrap input { width: 100%; padding-left: 42px !important; }
-.pass-toggle { position: absolute; left: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: transparent !important; border: none !important; box-shadow: none !important; cursor: pointer; color: var(--text-soft); padding: 0; margin: 0; }
-.pass-toggle:hover { color: var(--blue); }
-.pass-toggle svg { display: block; }
+.pass-toggle { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; box-shadow: none; cursor: pointer; padding: 0; margin: 0; color: #5f6b80; z-index: 2; }
+.pass-toggle:hover { color: #2e5496; }
+.pass-toggle svg { display: block; width: 20px; height: 20px; stroke: currentColor; }
+:root[data-theme="dark"] .pass-toggle { color: #9aa3b2; }
 .login-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; }
 .remember { display: flex; align-items: center; gap: 6px; color: var(--text-soft); cursor: pointer; }
 .link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; font-weight: 400; text-decoration: underline; }
