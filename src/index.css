@@ -610,3 +610,20 @@ tr.clickable:hover { background: var(--blue-soft); }
 :root[data-theme="dark"] .kpi-num { color: #7ba9e8; }
 .kpi-label { font-size: 15px; font-weight: 500; margin-top: 6px; }
 .kpi-sub { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+
+/* ===== الإشعارات ===== */
+.sp-hero-actions { position: absolute; top: 16px; left: 16px; display: flex; gap: 8px; align-items: center; }
+.sp-hero-actions .sp-logout { position: static; }
+.notif-wrap { position: relative; }
+.notif-bell { background: rgba(255,255,255,.14); border: none; color: #fff; width: 38px; height: 38px; border-radius: 8px; cursor: pointer; font-size: 17px; position: relative; }
+.notif-badge { position: absolute; top: -4px; left: -4px; background: #e24b4a; color: #fff; font-size: 11px; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.notif-panel { position: absolute; top: 46px; left: 0; width: 300px; max-width: 85vw; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.2); z-index: 40; max-height: 400px; overflow-y: auto; }
+.notif-head { padding: 14px; font-weight: 600; color: var(--navy); border-bottom: 1px solid var(--border); }
+.notif-empty { padding: 24px; text-align: center; color: var(--text-soft); font-size: 14px; }
+.notif-item { padding: 12px 14px; border-bottom: 1px solid var(--border); border-right: 3px solid transparent; }
+.notif-item.warning { border-right-color: #e24b4a; }
+.notif-item.survey { border-right-color: var(--blue); }
+.notif-title { font-size: 14px; font-weight: 500; }
+.notif-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; line-height: 1.6; }
+.notif-date { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+:root[data-theme="dark"] .notif-panel { background: var(--surface); }

@@ -3,6 +3,7 @@ import { supabase } from './supabaseClient'
 import Companions from './modules/Companions'
 import StudentSurveys from './modules/StudentSurveys'
 import { PolicyAcceptance } from './modules/Policy'
+import Notifications from './modules/Notifications'
 
 export default function StudentProfile({ session }) {
   const [student, setStudent] = useState(null)
@@ -65,7 +66,10 @@ export default function StudentProfile({ session }) {
       <div className="sp-container">
         {/* ترويسة الترحيب */}
         <div className="sp-hero">
-          <button className="sp-logout" onClick={handleLogout}>خروج</button>
+          <div className="sp-hero-actions">
+            <Notifications studentId={student?.id} />
+            <button className="sp-logout" onClick={handleLogout}>خروج</button>
+          </div>
           <div className="sp-hero-top">
             <div className="sp-avatar">{name.trim().charAt(0) || '؟'}</div>
             <div>

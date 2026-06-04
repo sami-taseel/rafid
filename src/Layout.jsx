@@ -16,6 +16,7 @@ const MENU = [
   { key: 'reports',    label: 'التقارير',       icon: '📤' },
   { key: 'users',      label: 'المستخدمون',     icon: '🔑' },
   { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
+  { key: 'audit',      label: 'سجل العمليات',   icon: '📜' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
 ]
 

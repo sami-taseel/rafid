@@ -36,6 +36,10 @@ export default function Surveys() {
   }
   async function del(id) { if (confirm('حذف الاستبانة؟')) { await supabase.from('surveys').delete().eq('id', id); loadAll() } }
   async function toggleActive(s) { await supabase.from('surveys').update({ is_active: !s.is_active }).eq('id', s.id); loadAll() }
+  async function notifyStudents(s) {
+    const { data } = await supabase.rpc('notify_survey', { p_survey: s.id, p_title: s.title })
+    alert('تم إشعار ' + (data || 0) + ' طالب')
+  }
 
   if (loading) return <Spinner />
   if (editing) return <SurveyEditor survey={editing} onBack={() => { setEditing(null); loadAll() }} />
@@ -79,6 +83,7 @@ export default function Surveys() {
             <button className="mini" onClick={() => setEditing(s)}>تحرير الأسئلة</button>
             <button className="mini" onClick={() => setResults(s)}>النتائج</button>
             <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
+            <button className="mini" onClick={() => notifyStudents(s)}>إشعار الطلاب</button>
             <button className="mini" onClick={() => duplicate(s)}>نسخ</button>
             <button className="fr-del" onClick={() => del(s.id)}>حذف</button>
           </div>
