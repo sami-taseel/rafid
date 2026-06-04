@@ -481,12 +481,12 @@ tr.clickable:hover { background: var(--blue-soft); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
 
 /* ===== شاشة الدخول: إضافات ===== */
-.pass-wrap { position: relative; }
-.pass-wrap input { width: 100%; padding-left: 42px !important; }
-.pass-toggle { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; box-shadow: none; cursor: pointer; padding: 0; margin: 0; color: #5f6b80; z-index: 2; }
-.pass-toggle:hover { color: #2e5496; }
-.pass-toggle svg { display: block; width: 20px; height: 20px; stroke: currentColor; }
-:root[data-theme="dark"] .pass-toggle { color: #9aa3b2; }
+
+
+
+
+
+:root[data-theme="dark"] 
 .login-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 13px; }
 .remember { display: flex; align-items: center; gap: 6px; color: var(--text-soft); cursor: pointer; }
 .link-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-family: inherit; font-size: 13px; padding: 0; font-weight: 400; text-decoration: underline; }
@@ -640,8 +640,8 @@ tr.clickable:hover { background: var(--blue-soft); }
 .qr-box button { margin-top: 16px; }
 
 /* ===== اللغات ===== */
-.lang-picker { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: 13px; }
-.lang-picker option { color: #1a1f2b; }
+
+
 .lang-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 4px; border-bottom: 1px solid var(--border); }
 .lang-row:last-child { border-bottom: none; }
 .lang-name { font-size: 15px; }
@@ -652,3 +652,53 @@ tr.clickable:hover { background: var(--blue-soft); }
 .switch input:checked + .slider { background: var(--green); }
 .switch input:checked + .slider::before { transform: translateX(-22px); }
 :root[data-theme="dark"] .slider { background: #444; }
+
+/* ===== حقل كلمة المرور (بنية نظيفة) ===== */
+.password-field { position: relative; display: block; }
+.password-field input {
+  width: 100%;
+  padding: 12px 14px;
+  padding-inline-start: 46px;  /* مساحة مخصصة ثابتة للأيقونة */
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 15px; font-family: inherit; outline: none; box-sizing: border-box;
+}
+.password-field input:focus { border-color: var(--blue); }
+.eye-btn {
+  position: absolute;
+  inset-inline-start: 6px;
+  top: 0; bottom: 0;
+  width: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; padding: 0; margin: 0;
+  color: #5f6b80; cursor: pointer;
+}
+.eye-btn:hover { color: #2e5496; }
+.eye-btn svg { display: block; }
+:root[data-theme="dark"] .eye-btn { color: #9aa3b2; }
+:root[data-theme="dark"] .eye-btn:hover { color: #7ba9e8; }
+
+/* ===== منتقي اللغة الاحترافي ===== */
+.langpick { position: relative; }
+.langpick-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.14); color: #fff;
+  border: 1px solid rgba(255,255,255,.25); border-radius: 8px;
+  padding: 7px 10px; cursor: pointer; font-family: inherit; font-size: 13px;
+}
+.langpick-btn:hover { background: rgba(255,255,255,.22); }
+.langpick-code { font-weight: 600; font-size: 12px; }
+.langpick-menu {
+  position: absolute; top: 44px; inset-inline-start: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.22);
+  min-width: 180px; overflow: hidden; z-index: 50; padding: 6px;
+}
+.langpick-item {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 10px 12px; background: none; border: 0;
+  border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 14px;
+  color: var(--text); text-align: start;
+}
+.langpick-item:hover { background: var(--blue-soft); }
+.langpick-item.active { background: var(--blue-soft); color: var(--blue); font-weight: 500; }
+.langpick-check { color: var(--green); font-weight: 700; }

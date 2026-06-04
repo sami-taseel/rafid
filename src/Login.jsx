@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { supabase } from './supabaseClient'
 
+function Eye() {
+  return (<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>)
+}
+function EyeOff() {
+  return (<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.5 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19m-3.36 2.34A9.1 9.1 0 0 1 12 18c-6.5 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><line x1="2" y1="2" x2="22" y2="22"/></svg>)
+}
+
 export default function Login() {
   const [mode, setMode] = useState('login')   // login | signup | reset
   const [email, setEmail] = useState('')
@@ -73,16 +80,12 @@ export default function Login() {
           {mode !== 'reset' && (
             <>
               <label>كلمة المرور</label>
-              <div className="pass-wrap">
+              <div className="password-field">
                 <input type={showPass ? 'text' : 'password'} value={password}
                   onChange={e => setPassword(e.target.value)} placeholder="••••••••" required minLength={6} />
-                <button type="button" className="pass-toggle" onClick={() => setShowPass(!showPass)}
-                  aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
-                  {showPass ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  )}
+                <button type="button" className="eye-btn" onClick={() => setShowPass(!showPass)}
+                  aria-label={showPass ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'} title={showPass ? 'إخفاء' : 'إظهار'}>
+                  {showPass ? <EyeOff /> : <Eye />}
                 </button>
               </div>
             </>

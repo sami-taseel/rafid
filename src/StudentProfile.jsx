@@ -5,6 +5,7 @@ import StudentSurveys from './modules/StudentSurveys'
 import { PolicyAcceptance } from './modules/Policy'
 import Notifications from './modules/Notifications'
 import { LangProvider, useLang } from './i18n/LangContext'
+import LangPicker from './i18n/LangPicker'
 
 export default function StudentProfile(props) {
   return <LangProvider><StudentProfileInner {...props} /></LangProvider>
@@ -74,11 +75,7 @@ function StudentProfileInner({ session }) {
         <div className="sp-hero">
           <div className="sp-hero-actions">
             <Notifications studentId={student?.id} />
-            {available.length > 1 && (
-              <select className="lang-picker" value={lang} onChange={e => setLang(e.target.value)} aria-label={t('selectLang')}>
-                {available.map(l => <option key={l.code} value={l.code}>{l.name_native}</option>)}
-              </select>
-            )}
+            <LangPicker />
             <button className="sp-logout" onClick={handleLogout}>{t('logout')}</button>
           </div>
           <div className="sp-hero-top">
