@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient'
 
 // مكوّن استيراد عام قابل لإعادة الاستخدام لأي وحدة
 // columns: [{ key, label, sample }]  | table: اسم الجدول | transform: دالة تحويل صف (اختياري)
-export default function ExcelImport({ title, columns, table, transform, onDone }) {
+export default function ExcelImport({ title, columns, table, transform, onDone, mode, rpcName }) {
   const [rows, setRows] = useState([])
   const [msg, setMsg] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -39,11 +39,22 @@ export default function ExcelImport({ title, columns, table, transform, onDone }
   async function save() {
     if (!rows.length) return
     setBusy(true)
-    const { error } = await supabase.from(table).insert(rows)
-    setBusy(false)
-    if (error) { setMsg('خطأ: ' + error.message); return }
-    setMsg(`تم حفظ ${rows.length} سجل بنجاح.`)
-    setRows([]); onDone && onDone()
+    if (mode === 'rpc') {
+      let ok = 0, fail = 0
+      for (const r of rows) {
+        const { error } = await supabase.rpc(rpcName, r)
+        if (error) fail++; else ok++
+      }
+      setBusy(false)
+      setMsg(`تم حفظ ${ok} جلسة` + (fail ? ` (تعذّر ${fail})` : '') + '.')
+      setRows([]); onDone && onDone()
+    } else {
+      const { error } = await supabase.from(table).insert(rows)
+      setBusy(false)
+      if (error) { setMsg('خطأ: ' + error.message); return }
+      setMsg(`تم حفظ ${rows.length} سجل بنجاح.`)
+      setRows([]); onDone && onDone()
+    }
   }
 
   return (

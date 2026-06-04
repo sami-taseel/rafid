@@ -788,3 +788,13 @@ tr.clickable:hover { background: var(--blue-soft); }
   .dash-greet { font-size: 20px; }
   .dash-logo { height: 32px; }
 }
+
+/* ===== أزرار الشريط العلوي ===== */
+.topbar-actions { margin-right: auto; display: flex; gap: 6px; align-items: center; }
+.icon-act { background: none; border: none; cursor: pointer; font-size: 19px; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-soft); }
+.icon-act:hover { background: var(--blue-soft); color: var(--blue); }
+
+/* نافذة إضافة الجلسة */
+.session-modal { max-width: 460px; }
+.session-modal .field { margin-bottom: 14px; }
+.sess-name { font-weight: 500; }

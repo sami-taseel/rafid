@@ -42,9 +42,7 @@ export default function Layout({ active, onNavigate, children }) {
             </button>
           ))}
         </nav>
-        <button className="nav-item logout" onClick={handleLogout}>
-          <span className="nav-icon">⏏</span>تسجيل الخروج
-        </button>
+
       </aside>
 
       {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)}></div>}
@@ -53,7 +51,12 @@ export default function Layout({ active, onNavigate, children }) {
         <header className="topbar">
           <button className="menu-toggle" onClick={() => setOpen(!open)}>☰</button>
           <span className="topbar-title">{MENU.find(m => m.key === active)?.label}</span>
-          <button className="theme-toggle" onClick={() => setDark(!dark)} aria-label="الوضع الليلي">{dark ? '☀️' : '🌙'}</button>
+          <div className="topbar-actions">
+            <button className="icon-act" onClick={() => setDark(!dark)} aria-label="الوضع الليلي" title="الوضع الليلي">{dark ? '☀️' : '🌙'}</button>
+            <button className="icon-act" onClick={handleLogout} aria-label="تسجيل الخروج" title="تسجيل الخروج">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+          </div>
         </header>
         <div className="content">{children}</div>
       </div>
