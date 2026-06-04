@@ -131,3 +131,58 @@ tbody tr:hover { background: #fafbfe; }
   cursor: pointer; transition: background .15s;
 }
 .logout-btn:hover { background: rgba(255,255,255,.22); }
+
+/* ===== الشعار ===== */
+.login-logo { width: 220px; max-width: 80%; height: auto; margin: 0 auto 16px; display: block; }
+.header-logo { height: 42px; width: auto; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-text h1 { font-size: 22px; font-weight: 700; line-height: 1.2; }
+.brand-text span { font-size: 12px; color: #b9c6e0; }
+
+/* ===== عرض البطاقات (للجوال) ===== */
+.cards-view { display: none; flex-direction: column; gap: 12px; }
+.student-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; box-shadow: var(--shadow);
+}
+.card-head { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--blue-soft); color: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 18px;
+}
+.card-name { flex: 1; min-width: 0; }
+.card-name .name { font-weight: 600; font-size: 16px; }
+.card-name .degree { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+.card-body {
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+
+/* ===== التجاوب مع الجوال ===== */
+@media (max-width: 768px) {
+  .header { padding: 14px 16px; }
+  .header-logo { height: 34px; }
+  .brand-text h1 { font-size: 18px; }
+  .brand-text span { font-size: 11px; }
+  .container { padding: 16px; }
+  .header-actions { gap: 8px; }
+  .logout-btn { padding: 7px 12px; font-size: 13px; }
+  .meta { display: none; }            /* نخفي النص الزائد على الجوال */
+
+  .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-card .num { font-size: 26px; }
+
+  .cards-view { display: flex; }       /* تظهر البطاقات */
+  .table-wrap { display: none; }       /* يختفي الجدول */
+  .section-title { font-size: 17px; }
+}
+
+/* تكبير مناطق اللمس على كل الأجهزة الصغيرة */
+@media (max-width: 768px) {
+  button, .logout-btn { min-height: 44px; }
+  input { min-height: 46px; font-size: 16px; } /* 16px يمنع التكبير التلقائي في آيفون */
+}

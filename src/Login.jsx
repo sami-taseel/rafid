@@ -26,8 +26,8 @@ export default function Login() {
     <div className="login-wrap">
       <div className="login-card">
         <div className="login-brand">
+          <img src="/logo.png" alt="جمعية تأصيل التعليمية" className="login-logo" />
           <h1>منصة رافد</h1>
-          <p>جمعية تأصيل التعليمية</p>
         </div>
         <form onSubmit={handleLogin}>
           <label>البريد الإلكتروني</label>

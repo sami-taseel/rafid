@@ -75,8 +75,11 @@ function Dashboard() {
     <div className="app">
       <header className="header">
         <div className="brand">
-          <h1>منصة رافد</h1>
-          <span>جمعية تأصيل التعليمية — طلاب المنح الدوليين</span>
+          <img src="/logo-white.png" alt="تأصيل" className="header-logo" />
+          <div className="brand-text">
+            <h1>منصة رافد</h1>
+            <span>طلاب المنح الدوليين</span>
+          </div>
         </div>
         <div className="header-actions">
           <span className="meta">لوحة مدير النظام</span>
@@ -119,6 +122,34 @@ function Dashboard() {
             </div>
 
             <h2 className="section-title">قائمة الطلاب</h2>
+
+            {/* عرض البطاقات — يظهر على الجوال فقط */}
+            <div className="cards-view">
+              {students.map((s, i) => {
+                const name = s.persons?.full_name || '—'
+                const initial = name.trim().charAt(0)
+                return (
+                  <div className="student-card" key={s.id}>
+                    <div className="card-head">
+                      <div className="avatar">{initial}</div>
+                      <div className="card-name">
+                        <div className="name">{name}</div>
+                        <div className="degree">{s.degree_level || '—'}</div>
+                      </div>
+                      {s.persons?.nationality
+                        ? <span className="pill">{s.persons.nationality}</span>
+                        : <span className="muted">—</span>}
+                    </div>
+                    <div className="card-body">
+                      <span className="muted">الجوال: {s.persons?.phone || '—'}</span>
+                      <span className="muted">الإقامة: {s.persons?.residency_no || '—'}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* عرض الجدول — يظهر على الكمبيوتر فقط */}
             <div className="table-wrap">
               <table>
                 <thead>
