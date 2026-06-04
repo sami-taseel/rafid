@@ -73,7 +73,7 @@ function RoleRouter({ session }) {
 function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
-    stats: <Stats />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
+    stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
     buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
