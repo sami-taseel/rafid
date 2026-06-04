@@ -389,3 +389,35 @@ tbody tr:hover { background: #fafbfe; }
 .star.on { color: #f5b301; }
 
 @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
+
+/* ===== واجهة الطالب الجديدة ===== */
+.sp-app { min-height: 100vh; background: var(--bg); padding: 20px 16px 40px; }
+.sp-container { max-width: 600px; margin: 0 auto; }
+.sp-hero { background: var(--navy); border-radius: 18px; padding: 22px; color: #fff; position: relative; margin-bottom: 18px; }
+.sp-logout { position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,.14); color: #fff; border: none; padding: 7px 14px; border-radius: 8px; font-family: inherit; font-size: 13px; cursor: pointer; }
+.sp-hero-top { display: flex; align-items: center; gap: 14px; }
+.sp-avatar { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; }
+.sp-greet { font-size: 19px; font-weight: 600; }
+.sp-sub { font-size: 13px; color: #b9c6e0; margin-top: 2px; }
+.sp-progress { margin-top: 18px; }
+.sp-progress-head { display: flex; justify-content: space-between; font-size: 12px; color: #b9c6e0; margin-bottom: 6px; }
+.sp-bar { height: 8px; background: rgba(255,255,255,.18); border-radius: 6px; overflow: hidden; }
+.sp-fill { height: 100%; background: #5dcaa5; border-radius: 6px; transition: width .4s; }
+.sp-tabs { display: flex; gap: 6px; background: #fff; padding: 5px; border-radius: 12px; margin-bottom: 18px; box-shadow: var(--shadow); }
+.sp-tabs button { flex: 1; padding: 11px; border: none; background: transparent; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--text-soft); cursor: pointer; }
+.sp-tabs button.active { background: var(--navy); color: #fff; }
+.sp-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.sp-card-title { font-size: 14px; font-weight: 600; color: var(--blue); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.sp-field { margin-bottom: 16px; }
+.sp-field:last-child { margin-bottom: 0; }
+.sp-field label { display: block; font-size: 13px; color: var(--text-soft); margin-bottom: 6px; }
+.sp-field .req { color: #c0392b; }
+.sp-field input, .sp-field select {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px;
+  font-family: inherit; font-size: 15px; background: #f7f9fc; outline: none; transition: all .15s;
+}
+.sp-field input:focus, .sp-field select:focus { border-color: var(--blue); background: #fff; }
+.sp-save { width: 100%; padding: 15px; background: var(--navy); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 50px; }
+.sp-save:hover:not(:disabled) { background: var(--blue); }
+.sp-save:disabled { opacity: .6; }
+.sp-container .section-title { color: var(--navy); margin: 4px 0 14px; }

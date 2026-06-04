@@ -24,17 +24,11 @@ export default function StudentProfile({ session }) {
           await supabase.from('students').insert({ person_id: p.id })
         }
         const { data: s } = await supabase.from('students').select('*').eq('person_id', p.id).maybeSingle()
-        setStudent(s)
-
-        const { data: fs } = await supabase.from('profile_fields')
-          .select('*').eq('is_active', true).order('sort_order')
+        setStudent({ ...s, _person: p })
+        const { data: fs } = await supabase.from('profile_fields').select('*').eq('is_active', true).order('sort_order')
         setFields(fs || [])
-
-        const { data: vals } = await supabase.from('student_field_values')
-          .select('field_id, value').eq('student_id', s.id)
-        const vmap = {}
-        ;(vals || []).forEach(v => { vmap[v.field_id] = v.value })
-        setValues(vmap)
+        const { data: vals } = await supabase.from('student_field_values').select('field_id, value').eq('student_id', s.id)
+        const vmap = {}; (vals || []).forEach(v => { vmap[v.field_id] = v.value }); setValues(vmap)
       } catch (err) {
         setMsg({ type: 'error', text: 'تعذّر التحميل: ' + (err.message || err) })
       } finally { setLoading(false) }
@@ -43,14 +37,10 @@ export default function StudentProfile({ session }) {
   }, [session])
 
   async function handleSave(e) {
-    e.preventDefault()
-    setSaving(true); setMsg(null)
+    e.preventDefault(); setSaving(true); setMsg(null)
     try {
-      const rows = fields.map(f => ({
-        student_id: student.id, field_id: f.id, value: values[f.id] || ''
-      }))
-      const { error } = await supabase.from('student_field_values')
-        .upsert(rows, { onConflict: 'student_id,field_id' })
+      const rows = fields.map(f => ({ student_id: student.id, field_id: f.id, value: values[f.id] || '' }))
+      const { error } = await supabase.from('student_field_values').upsert(rows, { onConflict: 'student_id,field_id' })
       if (error) throw error
       await supabase.from('students').update({ profile_reviewed: true }).eq('id', student.id)
       setMsg({ type: 'ok', text: 'تم حفظ بياناتك بنجاح. شكراً لك.' })
@@ -58,63 +48,74 @@ export default function StudentProfile({ session }) {
       setMsg({ type: 'error', text: 'تعذّر الحفظ: ' + (err.message || err) })
     } finally { setSaving(false) }
   }
-
   async function handleLogout() { await supabase.auth.signOut() }
 
   if (loading) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
 
+  const name = values[fields.find(f => f.field_key === 'full_name')?.id] || student?._person?.full_name || 'طالب'
+  const nat = values[fields.find(f => f.field_key === 'nationality')?.id] || ''
+  const deg = values[fields.find(f => f.field_key === 'degree_level')?.id] || ''
+  const filled = fields.filter(f => values[f.id]?.trim()).length
+  const pct = fields.length ? Math.round(filled / fields.length * 100) : 0
   const sections = [...new Set(fields.map(f => f.section || 'بيانات'))]
 
   return (
-    <div className="app">
-      <header className="header">
-        <div className="brand">
-          <img src="/logo-white.png" alt="تأصيل" className="header-logo" />
-          <div className="brand-text"><h1>منصة رافد</h1><span>ملف الطالب</span></div>
+    <div className="sp-app">
+      <div className="sp-container">
+        {/* ترويسة الترحيب */}
+        <div className="sp-hero">
+          <button className="sp-logout" onClick={handleLogout}>خروج</button>
+          <div className="sp-hero-top">
+            <div className="sp-avatar">{name.trim().charAt(0) || '؟'}</div>
+            <div>
+              <div className="sp-greet">مرحباً، {name.split(' ')[0]}</div>
+              <div className="sp-sub">{[deg, nat].filter(Boolean).join(' · ') || 'أكمل بياناتك'}</div>
+            </div>
+          </div>
+          <div className="sp-progress">
+            <div className="sp-progress-head"><span>اكتمال الملف</span><span>{pct}%</span></div>
+            <div className="sp-bar"><div className="sp-fill" style={{ width: pct + '%' }}></div></div>
+          </div>
         </div>
-        <button className="logout-btn" onClick={handleLogout}>خروج</button>
-      </header>
 
-      <div className="container narrow">
-        <div className="welcome-box">
-          مرحباً بك. يمكنك مراجعة بياناتك وتحديثها في أي وقت.
+        {/* تبويبات */}
+        <div className="sp-tabs">
+          {[['data','بياناتي'],['companions','المرافقون'],['surveys','الاستبانات']].map(([k, l]) => (
+            <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
+          ))}
         </div>
-        <div className="login-tabs" style={{ marginBottom: 20 }}>
-          <button type="button" className={tab==='data'?'active':''} onClick={()=>setTab('data')}>بياناتي</button>
-          <button type="button" className={tab==='companions'?'active':''} onClick={()=>setTab('companions')}>المرافقون والملفات</button>
-          <button type="button" className={tab==='surveys'?'active':''} onClick={()=>setTab('surveys')}>الاستبانات</button>
-        </div>
+
         {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
         {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'data' && (
-        <form onSubmit={handleSave} className="profile-form">
-          {sections.map(sec => (
-            <div key={sec}>
-              <h2 className="section-title">{sec}</h2>
-              {fields.filter(f => (f.section || 'بيانات') === sec).map(f => (
-                <div className="field" key={f.id}>
-                  <label>{f.label}{f.required && <span style={{color:'#c0392b'}}> *</span>}</label>
-                  {f.field_type === 'select' ? (
-                    <select value={values[f.id] || ''} required={f.required}
-                      onChange={e => setValues({ ...values, [f.id]: e.target.value })}>
-                      <option value="">اختر…</option>
-                      {(Array.isArray(f.options) ? f.options : []).map(o =>
-                        <option key={o} value={o}>{o}</option>)}
-                    </select>
-                  ) : (
-                    <input type={f.field_type === 'number' ? 'number' : f.field_type === 'date' ? 'date' : 'text'}
-                      value={values[f.id] || ''} required={f.required}
-                      onChange={e => setValues({ ...values, [f.id]: e.target.value })} />
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-          {msg && <div className={msg.type === 'ok' ? 'save-ok' : 'login-error'}>{msg.text}</div>}
-          <button type="submit" disabled={saving} className="save-btn">
-            {saving ? 'جارٍ الحفظ…' : 'حفظ البيانات'}
-          </button>
-        </form>
+          <form onSubmit={handleSave}>
+            {sections.map(sec => (
+              <div className="sp-card" key={sec}>
+                <div className="sp-card-title">{sec}</div>
+                {fields.filter(f => (f.section || 'بيانات') === sec).map(f => (
+                  <div className="sp-field" key={f.id}>
+                    <label>{f.label}{f.required && <span className="req"> *</span>}</label>
+                    {f.field_type === 'select' ? (
+                      <select value={values[f.id] || ''} required={f.required}
+                        onChange={e => setValues({ ...values, [f.id]: e.target.value })}>
+                        <option value="">اختر…</option>
+                        {(Array.isArray(f.options) ? f.options : []).map(o => <option key={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input type={f.field_type === 'number' ? 'number' : f.field_type === 'date' ? 'date' : 'text'}
+                        value={values[f.id] || ''} required={f.required}
+                        dir={f.field_key === 'phone' || f.field_key === 'residency_no' ? 'ltr' : 'rtl'}
+                        onChange={e => setValues({ ...values, [f.id]: e.target.value })} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))}
+            {msg && <div className={msg.type === 'ok' ? 'save-ok' : 'login-error'}>{msg.text}</div>}
+            <button type="submit" disabled={saving} className="sp-save">
+              {saving ? 'جارٍ الحفظ…' : 'حفظ البيانات'}
+            </button>
+          </form>
         )}
       </div>
     </div>
