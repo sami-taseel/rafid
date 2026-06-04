@@ -5,6 +5,7 @@ const MENU = [
   { key: 'students',   label: 'الطلاب',        icon: '👥' },
   { key: 'tracks',     label: 'المسارات والأنشطة', icon: '📚' },
   { key: 'attendance', label: 'الحضور',        icon: '✓' },
+  { key: 'buildings',  label: 'العمارات',       icon: '🏗️' },
   { key: 'housing',    label: 'السكن والمخالفات', icon: '🏢' },
   { key: 'surveys',    label: 'الاستبانات',     icon: '📋' },
   { key: 'support',    label: 'الدعم',          icon: '🎁' },

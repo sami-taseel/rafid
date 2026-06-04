@@ -9,6 +9,7 @@ import Attendance from './modules/Attendance'
 import Housing from './modules/Housing'
 import Surveys from './modules/Surveys'
 import Support from './modules/Support'
+import Buildings from './modules/Buildings'
 import Fields from './modules/Fields'
 
 export default function App() {
@@ -52,7 +53,7 @@ function StaffApp() {
   const [active, setActive] = useState('students')
   const views = {
     students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }

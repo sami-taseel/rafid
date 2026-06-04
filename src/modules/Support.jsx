@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import ExcelImport from './ExcelImport'
 
 export default function Support() {
   const [records, setRecords] = useState([])
@@ -12,9 +13,9 @@ export default function Support() {
   async function loadAll() {
     const [r, s] = await Promise.all([
       supabase.from('support_records').select('*, students(persons(full_name))').order('created_at', { ascending: false }),
-      supabase.from('students').select('id, persons(full_name)'),
+      supabase.from('students').select('id, persons(full_name, residency_no)'),
     ])
-    setRecords(r.data || []); setStudents(s.data || []); setLoading(false)
+    setRecords(r.data || []); setStudents((s.data || []).map(x => ({ ...x, _res: x.persons?.residency_no }))); setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
 
@@ -43,6 +44,29 @@ export default function Support() {
           <button onClick={add}>تسجيل</button>
         </div>
         {msg && <div className="save-ok">{msg}</div>}
+      </div>
+      <div className="panel">
+        <h3>إضافة دعم دفعة واحدة من Excel</h3>
+        <ExcelImport
+          title="الدعم"
+          table="support_records"
+          columns={[
+            { key: 'residency_no', label: 'رقم إقامة الطالب', sample: '2412345678' },
+            { key: 'kind', label: 'النوع (عيني/نقدي)', sample: 'عيني' },
+            { key: 'description', label: 'الوصف', sample: 'كيس دقيق' },
+            { key: 'source', label: 'المصدر', sample: 'تبرع' },
+            { key: 'received_at', label: 'التاريخ', sample: '2026-06-01' },
+          ]}
+          transform={(r) => {
+            const st = students.find(s => s._res === r.residency_no)
+            return {
+              student_id: st ? st.id : null,
+              kind: r.kind === 'نقدي' ? 'cash' : 'in_kind',
+              description: r.description, source: r.source, received_at: r.received_at || null,
+            }
+          }}
+          onDone={loadAll}
+        />
       </div>
       <div className="panel">
         <h3>سجل الدعم</h3>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import ExcelImport from './ExcelImport'
 
 export default function Tracks() {
   const [tracks, setTracks] = useState([])
@@ -63,6 +64,30 @@ export default function Tracks() {
           <button onClick={addActivity}>إضافة</button>
         </div>
         {msg && <div className="save-ok">{msg}</div>}
+      </div>
+
+      <div className="panel">
+        <h3>إضافة أنشطة دفعة واحدة من Excel</h3>
+        <ExcelImport
+          title="الأنشطة"
+          table="activities"
+          columns={[
+            { key: 'title', label: 'اسم النشاط', sample: 'درس التفسير' },
+            { key: 'activity_type', label: 'النوع', sample: 'درس' },
+            { key: 'provider', label: 'المقدّم', sample: 'الشيخ منصور' },
+            { key: 'location', label: 'المكان', sample: 'القاعة الكبرى' },
+            { key: 'track_code', label: 'رمز المسار', sample: 'educational' },
+          ]}
+          transform={(r) => ({
+            title: r.title, activity_type: r.activity_type,
+            provider: r.provider, location: r.location,
+            track_id: (tracks.find(t => t.code === r.track_code) || {}).id || selTrack,
+          })}
+          onDone={loadAll}
+        />
+        <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>
+          رموز المسارات: educational, skills, social, care, applied, companions
+        </div>
       </div>
 
       <h3 className="section-title">الأنشطة والجلسات</h3>

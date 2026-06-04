@@ -305,3 +305,51 @@ tbody tr:hover { background: #fafbfe; }
   .table-wrap { display: none; }
 }
 @media (min-width: 769px) { .cards-view { display: none; } }
+
+/* ===== استيراد Excel ===== */
+.import-box { }
+.import-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.upload-label { display: inline-flex; align-items: center; cursor: pointer; }
+.import-preview { margin: 12px 0; border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; }
+.import-preview table { width: 100%; font-size: 13px; }
+.import-preview th { background: var(--blue-soft); color: var(--navy); padding: 8px 10px; white-space: nowrap; }
+.import-preview td { padding: 8px 10px; border-top: 1px solid var(--border); }
+
+/* ===== العمارات ===== */
+.building-row { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--border); }
+.building-row:last-child { border-bottom: none; }
+
+/* ===== بطاقات الجلسات (الحضور) ===== */
+.session-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.session-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+  text-align: right; cursor: pointer; font-family: inherit; box-shadow: var(--shadow);
+  transition: transform .12s, border-color .12s; position: relative;
+}
+.session-card:hover { transform: translateY(-2px); border-color: var(--blue); }
+.sc-title { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.sc-meta { font-size: 13px; color: var(--text-soft); }
+.sc-date { font-size: 13px; color: var(--text-soft); margin-top: 10px; }
+.sc-status { display: inline-block; margin-top: 10px; font-size: 12px; padding: 3px 10px; border-radius: 12px; background: var(--blue-soft); }
+.att-header { display: flex; justify-content: space-between; align-items: center; margin: 14px 0; flex-wrap: wrap; gap: 10px; }
+.att-header h3 { color: var(--navy); }
+.att-counters { display: flex; gap: 8px; }
+.cnt { padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; }
+.cnt.present { background: #e6f6ee; color: var(--green); }
+.cnt.absent { background: #fcecec; color: #c0392b; }
+.att-name { flex: 1; font-size: 14px; }
+
+/* ===== الاستبانات الاحترافية ===== */
+.create-survey .field { margin-bottom: 14px; }
+.survey-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; box-shadow: var(--shadow); }
+.survey-title { font-size: 17px; font-weight: 600; color: var(--navy); }
+.survey-tags { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+.survey-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.survey-edit-head { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+.question-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; box-shadow: var(--shadow); }
+.q-num { font-size: 13px; color: var(--blue); font-weight: 500; margin-bottom: 8px; }
+.q-text { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 15px; margin-bottom: 10px; }
+.q-controls { display: flex; gap: 8px; align-items: center; }
+.q-controls select { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+.q-opts { width: 100%; margin-top: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+.q-preview { margin-top: 10px; font-size: 13px; color: var(--text-soft); background: #f7f9fc; padding: 10px; border-radius: 8px; }
