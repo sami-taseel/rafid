@@ -627,3 +627,11 @@ tr.clickable:hover { background: var(--blue-soft); }
 .notif-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; line-height: 1.6; }
 .notif-date { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 :root[data-theme="dark"] .notif-panel { background: var(--surface); }
+
+/* ===== رمز QR ===== */
+.qr-overlay { position: fixed; inset: 0; background: rgba(20,30,55,.55); display: flex; align-items: center; justify-content: center; z-index: 70; padding: 20px; }
+.qr-box { background: var(--surface); border-radius: 16px; padding: 28px; text-align: center; max-width: 360px; }
+.qr-box h3 { color: var(--navy); margin-bottom: 6px; }
+.qr-box .muted { font-size: 13px; margin-bottom: 16px; }
+.qr-box img { width: 240px; height: 240px; border: 1px solid var(--border); border-radius: 12px; padding: 8px; background: #fff; }
+.qr-box button { margin-top: 16px; }

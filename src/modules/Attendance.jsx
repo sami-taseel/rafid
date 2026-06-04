@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import QRCode from 'qrcode'
 
 export default function Attendance() {
   const [sessions, setSessions] = useState([])
@@ -9,6 +10,13 @@ export default function Attendance() {
   const [marks, setMarks] = useState({})
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
+  const [qr, setQr] = useState(null)
+
+  async function showQR(sessionId) {
+    const url = window.location.origin + '/#checkin=' + sessionId
+    const dataUrl = await QRCode.toDataURL(url, { width: 280, margin: 2 })
+    setQr(dataUrl)
+  }
 
   useEffect(() => {
     Promise.all([
@@ -54,9 +62,20 @@ export default function Attendance() {
           <div className="att-counters">
             <span className="cnt present">حاضر {present}</span>
             <span className="cnt absent">غائب {absent}</span>
+            <button className="mini" onClick={() => showQR(sel.id)}>رمز QR للحضور</button>
           </div>
         </div>
         {msg && <div className="save-ok">{msg}</div>}
+        {qr && (
+          <div className="qr-overlay" onClick={() => setQr(null)}>
+            <div className="qr-box" onClick={e => e.stopPropagation()}>
+              <h3>رمز حضور الجلسة</h3>
+              <p className="muted">يمسحه الطلاب بكاميرا الجوال لتسجيل حضورهم</p>
+              <img src={qr} alt="QR" />
+              <button className="mini" onClick={() => setQr(null)}>إغلاق</button>
+            </div>
+          </div>
+        )}
         <div className="panel">
           <div className="bulk-bar">
             <button className="mini" onClick={() => { const m={}; students.forEach(s=>m[s.id]='present'); setMarks(m) }}>تحديد الكل حاضر</button>

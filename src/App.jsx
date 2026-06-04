@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
 import Login from './Login'
 import ResetPassword from './ResetPassword'
+import CheckIn from './CheckIn'
 import StudentProfile from './StudentProfile'
 import Layout from './Layout'
 import Students from './modules/Students'
@@ -24,10 +25,13 @@ export default function App() {
   const [session, setSession] = useState(null)
   const [ready, setReady] = useState(false)
   const [recovery, setRecovery] = useState(false)
+  const [checkin, setCheckin] = useState(null)
 
   useEffect(() => {
     // كشف رابط استعادة كلمة المرور
     if (window.location.hash.includes('type=recovery')) setRecovery(true)
+    const ci = window.location.hash.match(/checkin=([\w-]+)/)
+    if (ci) setCheckin(ci[1])
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true) })
     const { data: l } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
@@ -38,6 +42,7 @@ export default function App() {
 
   if (!ready) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
   if (recovery) return <ResetPassword onDone={() => { setRecovery(false); window.location.hash = '' }} />
+  if (checkin && session) return <CheckIn sessionId={checkin} onDone={() => { setCheckin(null); window.location.hash = '' }} />
   if (!session) return <Login />
   return <RoleRouter session={session} />
 }
