@@ -7,6 +7,7 @@ const MENU = [
   { key: 'students',   label: 'الطلاب',        icon: '👥' },
   { key: 'tracks',     label: 'المسارات والأنشطة', icon: '📚' },
   { key: 'attendance', label: 'الحضور',        icon: '✓' },
+  { key: 'calendar',   label: 'التقويم',        icon: '🗓️' },
   { key: 'buildings',  label: 'العمارات',       icon: '🏗️' },
   { key: 'housing',    label: 'السكن والمخالفات', icon: '🏢' },
   { key: 'policy',     label: 'لائحة السكن',    icon: '📜' },
@@ -14,6 +15,7 @@ const MENU = [
   { key: 'support',    label: 'الدعم',          icon: '🎁' },
   { key: 'reports',    label: 'التقارير',       icon: '📤' },
   { key: 'users',      label: 'المستخدمون',     icon: '🔑' },
+  { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
 ]
 

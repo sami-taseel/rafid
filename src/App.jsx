@@ -15,6 +15,8 @@ import Stats from './modules/Stats'
 import Users from './modules/Users'
 import Reports from './modules/Reports'
 import Policy from './modules/Policy'
+import Calendar from './modules/Calendar'
+import Sponsor from './modules/Sponsor'
 import Fields from './modules/Fields'
 
 export default function App() {
@@ -65,7 +67,7 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }
