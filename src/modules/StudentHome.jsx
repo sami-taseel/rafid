@@ -9,20 +9,25 @@ export default function StudentHome({ studentId, onGoTab }) {
   useEffect(() => {
     async function load() {
       const today = new Date().toISOString().slice(0, 10)
+      const { data: visIds } = await supabase.rpc('visible_activity_ids')
+      const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
         supabase.from('attendance').select('status').eq('student_id', studentId),
-        supabase.from('sessions').select('id, planned_date, status, activities(title, activity_type, location, tracks(name_ar))')
-          .gte('planned_date', today).order('planned_date').limit(8),
+        supabase.from('sessions').select('id, planned_date, status, activity_id, activities(title, activity_type, location, tracks(name_ar))')
+          .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
         supabase.from('notifications').select('id, title, body, kind, created_at, is_read')
           .eq('student_id', studentId).order('created_at', { ascending: false }).limit(3),
       ])
+      // فلترة الجلسات حسب الأنشطة المرئية للطالب (فئاته المستهدفة)
+      const visSet = new Set(visible)
+      const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
       const a = att.data || []
       setData({
         present: a.filter(x => x.status === 'present').length,
         absent: a.filter(x => x.status === 'absent').length,
         total: a.length,
-        upcoming: (sessions.data || []).filter(s => s.status === 'scheduled' || s.status === 'held'),
+        upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held').slice(0, 8),
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })

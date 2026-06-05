@@ -873,3 +873,21 @@ tr.clickable:hover { background: var(--blue-soft); }
 .opt-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; }
 .opt-del { background: #fcecec; color: #a32d2d; border: none; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; flex-shrink: 0; }
 :root[data-theme="dark"] .opt-del { background: #3a1a1a; color: #f0a0a0; }
+
+/* ===== بطاقات الأسئلة القابلة للطيّ ===== */
+.acc-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.acc-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+.acc-card.open { border-color: var(--blue); }
+.acc-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; cursor: pointer; gap: 12px; flex-wrap: wrap; }
+.acc-head:hover { background: var(--blue-soft); }
+.acc-title { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 15px; }
+.acc-chevron { color: var(--text-soft); font-size: 12px; }
+.acc-sub { display: flex; align-items: center; gap: 8px; }
+.acc-type-badge { font-size: 12px; background: var(--blue-soft); color: var(--blue); padding: 3px 10px; border-radius: 10px; }
+.req-badge { font-size: 11px; background: #fbe4d5; color: #854f0b; padding: 3px 8px; border-radius: 8px; }
+.saved-flag { font-size: 12px; color: var(--green); font-weight: 500; }
+.acc-body { padding: 4px 16px 16px; border-top: 1px solid var(--border); }
+.acc-body .field { margin-top: 14px; margin-bottom: 0; }
+.acc-toggles { display: flex; align-items: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+.chk { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.acc-toggles .fr-del { margin-right: auto; }
