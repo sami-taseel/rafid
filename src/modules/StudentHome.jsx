@@ -5,6 +5,7 @@ import { useLang } from '../i18n/LangContext'
 export default function StudentHome({ studentId, onGoTab }) {
   const [data, setData] = useState(null)
   const { t } = useLang()
+  const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -27,7 +28,7 @@ export default function StudentHome({ studentId, onGoTab }) {
         present: a.filter(x => x.status === 'present').length,
         absent: a.filter(x => x.status === 'absent').length,
         total: a.length,
-        upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held').slice(0, 8),
+        upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
@@ -38,21 +39,33 @@ export default function StudentHome({ studentId, onGoTab }) {
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
 
   const attRate = data.total ? Math.round(data.present / (data.present + data.absent || 1) * 100) : null
-  const next = data.upcoming[0]
   const dayName = (d) => ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][new Date(d).getDay()]
+  // أقرب موعد = كل جلسات أقرب يوم فيه مواعيد
+  const nextDay = data.upcoming.length ? data.upcoming[0].planned_date : null
+  const nextDaySessions = data.upcoming.filter(s => s.planned_date === nextDay)
+  const sessName = (s) => s.title || s.activities?.title || 'جلسة'
+  const ROWS_LIMIT = 9
+  const shownUpcoming = showAll ? data.upcoming : data.upcoming.slice(0, ROWS_LIMIT)
 
   return (
     <div className="st-home">
       {/* أقرب موعد قادم */}
-      {next ? (
-        <div className="next-card">
-          <div className="next-label">📌 أقرب موعد قادم</div>
-          <div className="next-title">{next.activities?.title}</div>
-          <div className="next-meta">
-            <span>🗓️ {dayName(next.planned_date)} {next.planned_date}</span>
-            {next.activities?.location && <span>📍 {next.activities.location}</span>}
+      {nextDaySessions.length > 0 ? (
+        <div className="next-wrap">
+          <div className="next-head">📌 أقرب موعد قادم — {dayName(nextDay)} {nextDay}</div>
+          <div className="next-grid">
+            {nextDaySessions.map(s => (
+              <div className="next-card" key={s.id}>
+                <div className="next-sess">{sessName(s)}</div>
+                <div className="next-act">{s.activities?.title}</div>
+                <div className="next-meta">
+                  {s.start_time && <span>🕐 {s.start_time.slice(0,5)}</span>}
+                  {s.activities?.location && <span>📍 {s.activities.location}</span>}
+                </div>
+                {s.activities?.tracks?.name_ar && <span className="pill">{s.activities.tracks.name_ar}</span>}
+              </div>
+            ))}
           </div>
-          {next.activities?.tracks?.name_ar && <span className="pill">{next.activities.tracks.name_ar}</span>}
         </div>
       ) : (
         <div className="next-card empty-next">لا توجد مواعيد قادمة حالياً</div>
@@ -68,20 +81,28 @@ export default function StudentHome({ studentId, onGoTab }) {
 
       {/* المواعيد القادمة */}
       <div className="st-section">
-        <h3>المواعيد القادمة</h3>
+        <h3>المواعيد القادمة {data.upcoming.length > 0 && <span className="muted" style={{fontSize:13}}>({data.upcoming.length})</span>}</h3>
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
-        {data.upcoming.map(s => (
-          <div key={s.id} className="upcoming-row">
-            <div className="up-date">
-              <div className="up-day">{dayName(s.planned_date)}</div>
-              <div className="up-num">{s.planned_date?.slice(8,10)}</div>
+        <div className="up-grid">
+          {shownUpcoming.map(s => (
+            <div key={s.id} className="up-card">
+              <div className="up-date">
+                <div className="up-day">{dayName(s.planned_date)}</div>
+                <div className="up-num">{s.planned_date?.slice(8,10)}</div>
+              </div>
+              <div className="up-info">
+                <div className="up-sess">{sessName(s)}</div>
+                <div className="up-title">{s.activities?.title}</div>
+                <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + s.start_time.slice(0,5)}</div>
+              </div>
             </div>
-            <div className="up-info">
-              <div className="up-title">{s.activities?.title}</div>
-              <div className="up-sub">{s.activities?.tracks?.name_ar} {s.activities?.location && '· ' + s.activities.location}</div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
+        {data.upcoming.length > ROWS_LIMIT && (
+          <button className="show-all-btn" onClick={() => setShowAll(!showAll)}>
+            {showAll ? 'عرض أقل' : `عرض الكل (${data.upcoming.length})`}
+          </button>
+        )}
       </div>
 
       {/* روابط سريعة */}
