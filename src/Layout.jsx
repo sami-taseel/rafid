@@ -6,6 +6,7 @@ const MENU = [
   { key: 'stats',      label: 'الرئيسية',       icon: '📊' },
   { key: 'students',   label: 'الطلاب',        icon: '👥' },
   { key: 'tracks',     label: 'المسارات والأنشطة', icon: '📚' },
+  { key: 'categories', label: 'الفئات والتصنيفات', icon: '🏷️' },
   { key: 'attendance', label: 'الحضور',        icon: '✓' },
   { key: 'calendar',   label: 'التقويم',        icon: '🗓️' },
   { key: 'buildings',  label: 'العمارات',       icon: '🏗️' },

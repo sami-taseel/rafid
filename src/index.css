@@ -818,3 +818,38 @@ tr.clickable:hover { background: var(--blue-soft); }
 :root[data-theme="dark"] .confirm-cancel { background: #2a3140; color: var(--text); }
 @keyframes fadeIn { from { opacity: 0; } }
 @keyframes popIn { from { transform: scale(.92); opacity: 0; } }
+
+/* ===== الفئات ===== */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.cat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.cat-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.cat-name { font-size: 16px; font-weight: 600; color: var(--navy); }
+:root[data-theme="dark"] .cat-name { color: #8fb5ed; }
+.cat-type { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
+.cat-type.student { background: var(--blue-soft); color: var(--blue); }
+.cat-type.companion { background: #f3e8fc; color: #7c3aed; }
+.cat-mode { font-size: 13px; color: var(--text-soft); margin-bottom: 8px; }
+.cat-actions { display: flex; gap: 6px; margin-top: 12px; }
+
+/* محدّد القطاعات (segmented) */
+.seg { display: flex; gap: 6px; background: #eef1f6; padding: 4px; border-radius: 10px; }
+.seg button { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 7px; font-family: inherit; font-size: 14px; cursor: pointer; color: var(--text-soft); }
+.seg button.seg-on { background: var(--navy); color: #fff; }
+:root[data-theme="dark"] .seg { background: #232834; }
+
+/* المعايير */
+.rules-box { background: #f7f9fc; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+:root[data-theme="dark"] .rules-box { background: #232834; }
+.rules-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-weight: 600; }
+.rule-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+.rule-top { display: flex; gap: 8px; margin-bottom: 10px; }
+.rule-top select { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+.rule-values { display: flex; flex-wrap: wrap; gap: 6px; }
+.val-chip { padding: 6px 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 16px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text); }
+.val-chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+/* المنتقي اليدوي */
+.manual-picker { margin-bottom: 14px; }
+.picker-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
+.picker-row { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.picker-row:hover { background: var(--blue-soft); }
