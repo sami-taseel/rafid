@@ -17,6 +17,9 @@ export default function Tracks() {
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
   const [msg, setMsg] = useState(null)
+  const [categories, setCategories] = useState([])
+  const [actCats, setActCats] = useState([])  // فئات النشاط قيد التعديل
+  const [scope, setScope] = useState('students')  // students | companions | both
 
   async function loadAll() {
     const [t, a, s] = await Promise.all([
@@ -25,6 +28,8 @@ export default function Tracks() {
       supabase.from('sessions').select('*, activities(title)').order('planned_date', { ascending: false }),
     ])
     setTracks(t.data || []); setActivities(a.data || []); setSessions(s.data || [])
+    const { data: cats } = await supabase.from('categories').select('*').order('name')
+    setCategories(cats || [])
     setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
@@ -42,13 +47,27 @@ export default function Tracks() {
     setNewAct({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
     flash('أُضيف النشاط'); loadAll()
   }
+  async function openEditActivity(a) {
+    setEditAct({ id: a.id, title: a.title, activity_type: a.activity_type, provider: a.provider || '', location: a.location || '', track_code: a.tracks?.code || '' })
+    const { data } = await supabase.from('activity_categories').select('category_id').eq('activity_id', a.id)
+    setActCats((data || []).map(x => x.category_id))
+    setScope('students')
+  }
+  function toggleActCat(cid) {
+    setActCats(actCats.includes(cid) ? actCats.filter(x => x !== cid) : [...actCats, cid])
+  }
   async function saveEditActivity() {
     const track = tracks.find(t => t.code === editAct.track_code)
     await supabase.from('activities').update({
       title: editAct.title, activity_type: editAct.activity_type,
       provider: editAct.provider, location: editAct.location, track_id: track?.id,
     }).eq('id', editAct.id)
-    setEditAct(null); flash('تم تعديل النشاط'); loadAll()
+    // تحديث الفئات المستهدفة
+    await supabase.from('activity_categories').delete().eq('activity_id', editAct.id)
+    if (actCats.length) {
+      await supabase.from('activity_categories').insert(actCats.map(cid => ({ activity_id: editAct.id, category_id: cid })))
+    }
+    setEditAct(null); flash('تم تعديل النشاط وفئاته المستهدفة'); loadAll()
   }
   async function deleteActivity(a) {
     const cnt = sessions.filter(s => s.activity_id === a.id).length
@@ -167,7 +186,7 @@ export default function Tracks() {
             </div>
             <div className="sess-actions">
               <button className="mini" onClick={() => openNewSession(a.id)}>+ جلسة</button>
-              <button className="mini" onClick={() => setEditAct({ id: a.id, title: a.title, activity_type: a.activity_type, provider: a.provider || '', location: a.location || '', track_code: a.tracks?.code || '' })}>تعديل</button>
+              <button className="mini" onClick={() => openEditActivity(a)}>تعديل</button>
               <button className="fr-del" onClick={() => deleteActivity(a)}>حذف</button>
             </div>
           </div>
@@ -241,6 +260,28 @@ export default function Tracks() {
               <input value={editAct.provider} onChange={e => setEditAct({ ...editAct, provider: e.target.value })} /></div>
             <div className="field"><label>المكان</label>
               <input value={editAct.location} onChange={e => setEditAct({ ...editAct, location: e.target.value })} /></div>
+
+            <div className="field">
+              <label>الفئة المستهدفة (الملزمون بالحضور)</label>
+              <div className="seg" style={{ marginBottom: 10 }}>
+                <button type="button" className={scope === 'students' ? 'seg-on' : ''} onClick={() => setScope('students')}>الطلاب</button>
+                <button type="button" className={scope === 'companions' ? 'seg-on' : ''} onClick={() => setScope('companions')}>المرافقون</button>
+                <button type="button" className={scope === 'both' ? 'seg-on' : ''} onClick={() => setScope('both')}>الجميع</button>
+              </div>
+              <div className="cat-pick-list">
+                {categories.filter(c => scope === 'both' ? true : c.member_type === (scope === 'students' ? 'student' : 'companion')).map(c => (
+                  <button type="button" key={c.id}
+                    className={'val-chip' + (actCats.includes(c.id) ? ' on' : '')}
+                    onClick={() => toggleActCat(c.id)}>{c.name}</button>
+                ))}
+                {categories.filter(c => scope === 'both' ? true : c.member_type === (scope === 'students' ? 'student' : 'companion')).length === 0 &&
+                  <span className="muted" style={{ fontSize: 13 }}>لا توجد فئات من هذا النوع. أنشئها من «الفئات والتصنيفات».</span>}
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+                اختر فئة أو أكثر. إن لم تختر شيئاً، يكون النشاط عاماً لغير محدّد.
+              </p>
+            </div>
+
             <button className="save-btn" onClick={saveEditActivity}>حفظ التعديل</button>
           </div>
         </div>
