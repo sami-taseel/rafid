@@ -52,7 +52,27 @@ function StudentProfileInner({ session }) {
       const rows = fields.map(f => ({ student_id: student.id, field_id: f.id, value: values[f.id] || '' }))
       const { error } = await supabase.from('student_field_values').upsert(rows, { onConflict: 'student_id,field_id' })
       if (error) throw error
-      await supabase.from('students').update({ profile_reviewed: true }).eq('id', student.id)
+
+      // توحيد البيانات: نكتب الحقول الأساسية في الأعمدة المباشرة أيضاً
+      // حتى يظهر الطالب في الفلاتر والفئات مثل بقية الطلاب
+      const byKey = {}
+      fields.forEach(f => { if (f.field_key) byKey[f.field_key] = values[f.id] || null })
+      const personUpd = {}
+      if ('full_name' in byKey) personUpd.full_name = byKey.full_name
+      if ('nationality' in byKey) personUpd.nationality = byKey.nationality
+      if ('residency_no' in byKey) personUpd.residency_no = byKey.residency_no
+      if ('phone' in byKey) personUpd.phone = byKey.phone
+      if ('gender' in byKey) personUpd.gender = byKey.gender
+      if (Object.keys(personUpd).length) {
+        await supabase.from('persons').update(personUpd).eq('id', student.person_id)
+      }
+      const studentUpd = { profile_reviewed: true }
+      if ('degree_level' in byKey) studentUpd.degree_level = byKey.degree_level
+      if ('university' in byKey) studentUpd.university = byKey.university
+      if ('college' in byKey) studentUpd.college = byKey.college
+      if ('major' in byKey) studentUpd.major = byKey.major
+      await supabase.from('students').update(studentUpd).eq('id', student.id)
+
       setMsg({ type: 'ok', text: 'تم حفظ بياناتك بنجاح. شكراً لك.' })
     } catch (err) {
       setMsg({ type: 'error', text: 'تعذّر الحفظ: ' + (err.message || err) })
