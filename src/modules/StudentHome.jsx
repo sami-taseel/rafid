@@ -14,7 +14,7 @@ export default function StudentHome({ studentId, onGoTab }) {
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
         supabase.from('attendance').select('status').eq('student_id', studentId),
-        supabase.from('sessions').select('id, planned_date, status, activity_id, activities(title, activity_type, location, tracks(name_ar))')
+        supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, activities(title, activity_type, location, tracks(name_ar))')
           .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
         supabase.from('notifications').select('id, title, body, kind, created_at, is_read')
@@ -57,7 +57,7 @@ export default function StudentHome({ studentId, onGoTab }) {
             {nextDaySessions.map(s => (
               <div className="next-card" key={s.id}>
                 <div className="next-sess">{sessName(s)}</div>
-                <div className="next-act">{s.activities?.title}</div>
+                {s.activities?.title && s.activities.title !== sessName(s) && <div className="next-act">{s.activities.title}</div>}
                 <div className="next-meta">
                   {s.start_time && <span>🕐 {s.start_time.slice(0,5)}</span>}
                   {s.activities?.location && <span>📍 {s.activities.location}</span>}
@@ -92,7 +92,7 @@ export default function StudentHome({ studentId, onGoTab }) {
               </div>
               <div className="up-info">
                 <div className="up-sess">{sessName(s)}</div>
-                <div className="up-title">{s.activities?.title}</div>
+                {s.activities?.title && s.activities.title !== sessName(s) && <div className="up-title">{s.activities.title}</div>}
                 <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + s.start_time.slice(0,5)}</div>
               </div>
             </div>
