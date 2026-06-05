@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import StudentDetail from './StudentDetail'
+import { useConfirm } from '../Confirm'
+import { useToast } from '../Toast'
 
 export function Spinner() { return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div> }
 export function Stat({ num, label }) { return <div className="stat-card"><div className="num">{num}</div><div className="label">{label}</div></div> }
 
 export default function Students() {
+  const confirmDialog = useConfirm()
+  const toast = useToast()
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
@@ -14,11 +18,42 @@ export default function Students() {
   const [fFile, setFFile] = useState('')
   const [sel, setSel] = useState(null)
 
+  const [catMap, setCatMap] = useState({})   // student_id -> [أسماء الفئات]
+  const [allCats, setAllCats] = useState([])
+  const [fCat, setFCat] = useState('')
+
   useEffect(() => {
-    supabase.from('students')
-      .select('id, degree_level, profile_reviewed, persons(full_name, nationality, residency_no, phone)')
-      .then(({ data }) => { setStudents(data || []); setLoading(false) })
+    async function load() {
+      const { data: st } = await supabase.from('students')
+        .select('id, degree_level, profile_reviewed, persons(full_name, nationality, residency_no, phone)')
+      setStudents(st || [])
+      // نحمّل الفئات وأعضاءها
+      const { data: cats } = await supabase.from('categories').select('id, name').eq('member_type', 'student')
+      setAllCats(cats || [])
+      const map = {}
+      for (const cat of (cats || [])) {
+        const { data: mem } = await supabase.rpc('category_students', { p_category: cat.id })
+        for (const m of (mem || [])) {
+          if (!map[m.student_id]) map[m.student_id] = []
+          map[m.student_id].push(cat.name)
+        }
+      }
+      setCatMap(map)
+      setLoading(false)
+    }
+    load()
   }, [])
+
+  async function purgeLegacy() {
+    const ok = await confirmDialog({
+      title: 'حذف بيانات الطلاب القدامى',
+      message: 'سيتم حذف سجلات الطلاب المستوردين قديماً (غير المسجّلين بحساب). الحسابات المسجّلة وأسئلة النموذج تبقى. هل أنت متأكد؟',
+      confirmText: 'نعم، ابدأ نظيفاً', danger: true
+    })
+    if (!ok) return
+    const { data } = await supabase.rpc('purge_legacy_students')
+    toast(data || 'تم'); setTimeout(() => window.location.reload(), 1200)
+  }
 
   if (loading) return <Spinner />
   if (sel) return <StudentDetail studentId={sel} onBack={() => setSel(null)} />
@@ -31,7 +66,8 @@ export default function Students() {
     const matchN = !fNat || s.persons?.nationality === fNat
     const matchD = !fDeg || s.degree_level === fDeg
     const matchF = !fFile || (fFile === 'done' ? s.profile_reviewed : !s.profile_reviewed)
-    return matchQ && matchN && matchD && matchF
+    const matchC = !fCat || (catMap[s.id] || []).includes(fCat)
+    return matchQ && matchN && matchD && matchF && matchC
   })
 
   const byDeg = students.reduce((a, s) => { const d = s.degree_level || 'غير محدد'; a[d] = (a[d]||0)+1; return a }, {})
@@ -60,7 +96,11 @@ export default function Students() {
             <option value="done">مكتمل</option>
             <option value="pending">غير مكتمل</option>
           </select>
-          {(q || fNat || fDeg || fFile) && <button className="mini" onClick={() => { setQ(''); setFNat(''); setFDeg(''); setFFile('') }}>مسح الفلاتر</button>}
+          <select value={fCat} onChange={e => setFCat(e.target.value)}>
+            <option value="">كل الفئات</option>
+            {allCats.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+          </select>
+          {(q || fNat || fDeg || fFile || fCat) && <button className="mini" onClick={() => { setQ(''); setFNat(''); setFDeg(''); setFFile(''); setFCat('') }}>مسح الفلاتر</button>}
         </div>
         <div className="result-count">{filtered.length} نتيجة</div>
       </div>
@@ -85,7 +125,7 @@ export default function Students() {
       </div>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الإقامة</th><th>الملف</th></tr></thead>
+          <thead><tr><th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الفئات</th><th>الملف</th></tr></thead>
           <tbody>
             {filtered.map((s, i) => (
               <tr key={s.id} className="clickable" onClick={() => setSel(s.id)}>
@@ -93,12 +133,23 @@ export default function Students() {
                 <td>{s.persons?.full_name || '—'}</td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>
                 <td>{s.degree_level || '—'}</td>
-                <td className="muted">{s.persons?.residency_no || '—'}</td>
+                <td className="cats-cell">
+                  {(catMap[s.id] || []).length ? (catMap[s.id].map(cn => <span key={cn} className="cat-tag">{cn}</span>)) : <span className="muted">—</span>}
+                </td>
                 <td>{s.profile_reviewed ? <span className="pill-on">مكتمل</span> : <span className="pill-off">ناقص</span>}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="panel" style={{ marginTop: 18, borderColor: '#f0c0c0' }}>
+        <h3 style={{ color: '#a32d2d' }}>منطقة الإجراءات الحسّاسة</h3>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+          البدء النظيف: يحذف بيانات الطلاب القدامى المستوردة (غير المسجّلين بحساب)،
+          ويطلب من الجميع التسجيل من جديد. الحسابات المسجّلة وأسئلة النموذج لا تُحذف.
+        </p>
+        <button className="fr-del" onClick={purgeLegacy}>حذف بيانات الطلاب القدامى (بدء نظيف)</button>
       </div>
     </div>
   )

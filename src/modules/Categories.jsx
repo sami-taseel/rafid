@@ -21,9 +21,13 @@ export default function Categories() {
   const confirmDialog = useConfirm()
   const toast = useToast()
 
+  const [counts, setCounts] = useState({})
+  const [viewMembers, setViewMembers] = useState(null)
   async function load() {
     const { data } = await supabase.from('categories').select('*').order('created_at', { ascending: false })
     setCats(data || [])
+    const { data: cnts } = await supabase.rpc('category_counts')
+    const map = {}; (cnts || []).forEach(c => { map[c.category_id] = c.cnt }); setCounts(map)
     setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -95,7 +99,12 @@ export default function Categories() {
               <span className={'cat-type ' + c.member_type}>{c.member_type === 'student' ? 'طلاب' : 'مرافقون'}</span>
             </div>
             <div className="cat-mode">{c.mode === 'auto' ? '⚙️ تلقائية' : '✋ يدوية'}</div>
-            {c.description && <div className="muted" style={{ fontSize: 13 }}>{c.description}</div>}
+            {c.member_type === 'student' && (
+              <button className="cat-count" onClick={() => setViewMembers(c)}>
+                👥 {counts[c.id] ?? 0} عضو — استعراض
+              </button>
+            )}
+            {c.description && <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>{c.description}</div>}
             <div className="cat-actions">
               <button className="mini" onClick={() => setEditor({ ...c, companion_relation: c.rules?.[0]?.field === 'relation' ? c.rules[0].values[0] : '', rules: c.rules || [] })}>تعديل</button>
               <button className="fr-del" onClick={() => delCategory(c)}>حذف</button>
@@ -103,6 +112,8 @@ export default function Categories() {
           </div>
         ))}
       </div>
+
+      {viewMembers && <MembersModal category={viewMembers} onClose={() => setViewMembers(null)} />}
 
       {editor && (
         <div className="modal-overlay" onClick={() => setEditor(null)}>
@@ -233,6 +244,37 @@ function ManualPicker({ category }) {
             {s.persons?.full_name}
           </label>
         ))}
+      </div>
+    </div>
+  )
+}
+
+function MembersModal({ category, onClose }) {
+  const [members, setMembers] = useState(null)
+  useEffect(() => {
+    supabase.rpc('category_students', { p_category: category.id })
+      .then(({ data }) => setMembers(data || []))
+  }, [category.id])
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="modal-head">
+          <h2>أعضاء فئة: {category.name}</h2>
+          <button className="icon-btn" onClick={onClose}>✕</button>
+        </div>
+        {members === null ? <div className="state"><div className="spinner"></div>…</div> : (
+          <>
+            <p className="muted" style={{ marginBottom: 12 }}>{members.length} عضو</p>
+            <div className="picker-list">
+              {members.map(m => (
+                <div key={m.student_id} className="list-line">
+                  {m.full_name} <span className="muted">{m.nationality} · {m.degree_level}</span>
+                </div>
+              ))}
+              {members.length === 0 && <div className="muted">لا أعضاء مطابقون حالياً.</div>}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

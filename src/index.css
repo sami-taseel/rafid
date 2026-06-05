@@ -891,3 +891,10 @@ tr.clickable:hover { background: var(--blue-soft); }
 .acc-toggles { display: flex; align-items: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
 .chk { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 .acc-toggles .fr-del { margin-right: auto; }
+
+/* عدّاد الفئة وأعضاؤها */
+.cat-count { width: 100%; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 8px; padding: 8px; cursor: pointer; font-family: inherit; font-size: 13px; margin-top: 4px; }
+.cat-count:hover { background: #dce8f8; }
+/* وسوم الفئات في جدول الطلاب */
+.cats-cell { max-width: 200px; }
+.cat-tag { display: inline-block; background: var(--blue-soft); color: var(--blue); font-size: 11px; padding: 2px 8px; border-radius: 8px; margin: 2px; }
