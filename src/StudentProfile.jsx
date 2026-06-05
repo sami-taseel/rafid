@@ -117,6 +117,14 @@ function StudentProfileInner({ session }) {
                         <option value="">اختر…</option>
                         {(Array.isArray(f.options) ? f.options : []).map(o => <option key={o}>{o}</option>)}
                       </select>
+                    ) : f.field_type === 'yesno' ? (
+                      <select value={values[f.id] || ''} required={f.required}
+                        onChange={e => setValues({ ...values, [f.id]: e.target.value })}>
+                        <option value="">اختر…</option><option value="نعم">نعم</option><option value="لا">لا</option>
+                      </select>
+                    ) : f.field_type === 'textarea' ? (
+                      <textarea value={values[f.id] || ''} required={f.required} rows={3}
+                        onChange={e => setValues({ ...values, [f.id]: e.target.value })} />
                     ) : (
                       <input type={f.field_type === 'number' ? 'number' : f.field_type === 'date' ? 'date' : 'text'}
                         value={values[f.id] || ''} required={f.required}

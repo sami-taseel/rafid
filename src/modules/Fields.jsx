@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useConfirm } from '../Confirm'
+import OptionsEditor from './OptionsEditor'
 
 export default function Fields() {
   const onClose = null
@@ -32,7 +33,7 @@ export default function Fields() {
       label: f.label, field_type: f.field_type, section: f.section,
       required: f.required, is_active: f.is_active,
       options: f.field_type === 'select'
-        ? (typeof f.options === 'string' ? JSON.parse(f.options || '[]') : f.options)
+        ? (Array.isArray(f.options) ? f.options : (typeof f.options === 'string' && f.options.startsWith('[') ? JSON.parse(f.options) : []))
         : null
     }).eq('id', f.id)
     setMsg('تم الحفظ')
@@ -59,15 +60,17 @@ export default function Fields() {
                 onChange={e => updateField(f.id, { label: e.target.value })} />
               <select value={f.field_type}
                 onChange={e => updateField(f.id, { field_type: e.target.value })}>
-                <option value="text">نص</option>
+                <option value="text">نص قصير</option>
+                <option value="textarea">نص طويل (فقرة)</option>
                 <option value="number">رقم</option>
                 <option value="date">تاريخ</option>
-                <option value="select">قائمة</option>
+                <option value="yesno">نعم / لا</option>
+                <option value="select">قائمة اختيار</option>
               </select>
               {f.field_type === 'select' && (
-                <input className="fr-opts" placeholder='خيارات: ["أ","ب"]'
-                  value={typeof f.options === 'string' ? f.options : JSON.stringify(f.options || [])}
-                  onChange={e => updateField(f.id, { options: e.target.value })} />
+                <OptionsEditor
+                  value={Array.isArray(f.options) ? f.options : (typeof f.options === 'string' && f.options.startsWith('[') ? JSON.parse(f.options) : [])}
+                  onChange={(arr) => updateField(f.id, { options: arr })} />
               )}
               <label className="fr-check">
                 <input type="checkbox" checked={f.required}

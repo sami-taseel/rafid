@@ -856,3 +856,20 @@ tr.clickable:hover { background: var(--blue-soft); }
 
 /* اختيار الفئات المستهدفة في النشاط */
 .cat-pick-list { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ===== محرّر الخيارات ===== */
+.opt-editor { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 6px; }
+.opt-toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.opt-bulk { margin-bottom: 10px; }
+.opt-bulk textarea { width: 100%; min-height: 90px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; }
+.opt-bulk-actions { display: flex; gap: 6px; margin-top: 6px; }
+.opt-list { display: flex; flex-direction: column; gap: 6px; }
+.opt-row { display: flex; align-items: center; gap: 6px; }
+.opt-move { display: flex; flex-direction: column; }
+.opt-move button { background: none; border: 1px solid var(--border); color: var(--text-soft); cursor: pointer; font-size: 9px; line-height: 1; padding: 2px 5px; border-radius: 4px; }
+.opt-move button:first-child { border-radius: 4px 4px 0 0; }
+.opt-move button:last-child { border-radius: 0 0 4px 4px; margin-top: -1px; }
+.opt-move button:disabled { opacity: .3; cursor: default; }
+.opt-row input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; }
+.opt-del { background: #fcecec; color: #a32d2d; border: none; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; flex-shrink: 0; }
+:root[data-theme="dark"] .opt-del { background: #3a1a1a; color: #f0a0a0; }

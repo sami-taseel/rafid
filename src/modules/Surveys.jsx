@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import { useToast } from '../Toast'
+import OptionsEditor from './OptionsEditor'
 
 const TARGETS = ['الجميع', 'الدراسات العليا فقط', 'البكالوريوس فقط', 'المرافقون']
 
@@ -132,7 +133,7 @@ function SurveyEditor({ survey, onBack }) {
       await supabase.from('survey_questions').update({
         q_text: q.q_text, q_type: q.q_type,
         options: (q.q_type === 'single' || q.q_type === 'multi')
-          ? (typeof q.options === 'string' ? q.options.split(',').map(x => x.trim()).filter(Boolean) : q.options) : null
+          ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
       }).eq('id', q.id)
     }
     setSaved(true); setTimeout(() => setSaved(false), 2000)
@@ -161,9 +162,9 @@ function SurveyEditor({ survey, onBack }) {
             <button className="fr-del" onClick={() => delQ(q.id)}>حذف</button>
           </div>
           {(q.q_type === 'single' || q.q_type === 'multi') && (
-            <input className="q-opts" placeholder="الخيارات مفصولة بفاصلة: ممتاز، جيد، ضعيف"
-              value={Array.isArray(q.options) ? q.options.join('، ') : (q.options || '')}
-              onChange={e => patch(q.id, { options: e.target.value })} />
+            <OptionsEditor
+              value={Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])}
+              onChange={(arr) => patch(q.id, { options: arr })} />
           )}
           {q.q_type === 'likert' && <div className="q-preview">معاينة: راضٍ جداً · راضٍ · محايد · غير راضٍ · غير راضٍ إطلاقاً</div>}
           {q.q_type === 'stars' && <div className="q-preview">معاينة: ★ ★ ★ ★ ★</div>}
