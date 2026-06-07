@@ -121,6 +121,7 @@ export default function Login() {
         )}
 
         <p className="login-hint">للطلاب والمشرفين وإدارة المشروع</p>
+        <div className="app-version">الإصدار 1.0.0</div>
       </div>
     </div>
   )

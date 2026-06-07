@@ -21,6 +21,7 @@ const MENU = [
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
   { key: 'tickets',    label: 'البلاغات',        icon: '📨' },
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },
+  { key: 'ticket_ratings', label: 'تقييمات البلاغات', icon: '⭐' },
   { key: 'languages',  label: 'اللغات',         icon: '🌐' },
 ]
 

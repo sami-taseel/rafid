@@ -10,6 +10,7 @@ export default function StudentTickets({ studentId }) {
   const [statuses, setStatuses] = useState([])
   const [sel, setSel] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [ratings, setRatings] = useState({})
 
   async function load() {
     const [tk, ty, st] = await Promise.all([
@@ -17,6 +18,15 @@ export default function StudentTickets({ studentId }) {
       supabase.from('ticket_types').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('ticket_statuses').select('*').order('sort_order'),
     ])
+    // نجلب تقييم النجوم لكل بلاغ مغلق
+    const closedIds = (tk.data || []).filter(t => t.status_code === 'closed').map(t => t.id)
+    let ratingMap = {}
+    if (closedIds.length) {
+      const { data: ans } = await supabase.from('ticket_survey_answers')
+        .select('ticket_id, answer, ticket_survey_questions(q_type)').in('ticket_id', closedIds)
+      ;(ans || []).forEach(a => { if (a.ticket_survey_questions?.q_type === 'stars') ratingMap[a.ticket_id] = Number(a.answer) })
+    }
+    setRatings(ratingMap)
     setTickets(tk.data || []); setTypes(ty.data || []); setStatuses(st.data || [])
     setLoading(false)
   }
@@ -43,6 +53,9 @@ export default function StudentTickets({ studentId }) {
           <div className="ticket-meta">
             <span className="pill">{t.ticket_types?.name}</span>
             <span className="muted">{new Date(t.created_at).toLocaleDateString('ar')}</span>
+            {t.status_code === 'closed' && ratings[t.id] > 0 && (
+              <span className="tk-stars">{'★'.repeat(ratings[t.id])}{'☆'.repeat(5 - ratings[t.id])}</span>
+            )}
           </div>
         </div>
       ))}

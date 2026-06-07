@@ -980,3 +980,17 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .att-box { background: var(--surface); border-radius: 14px; padding: 16px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; gap: 10px; align-items: center; position: relative; }
 .att-box img { max-width: 100%; max-height: 75vh; border-radius: 8px; object-fit: contain; }
 .att-close { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,.5); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+
+/* رقم الإصدار */
+.app-version { text-align: center; font-size: 11px; color: var(--text-soft); margin-top: 14px; opacity: .7; }
+
+/* تقييم النجوم */
+.tk-stars { color: #f5a623; font-size: 14px; letter-spacing: 1px; }
+.tk-stars.big { font-size: 20px; }
+.rating-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rating-details { background: #f7f9fc; border-radius: 10px; padding: 12px; }
+:root[data-theme="dark"] .rating-details { background: #232834; }
+.rating-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.rating-row:last-child { border-bottom: none; }
+.rating-q { color: var(--text-soft); }
+.rating-a { font-weight: 500; }
