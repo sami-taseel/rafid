@@ -627,7 +627,8 @@ tr.clickable:hover { background: var(--blue-soft); }
 .notif-item { padding: 12px 14px; border-bottom: 1px solid var(--border); border-right: 3px solid transparent; }
 .notif-item.warning { border-right-color: #e24b4a; }
 .notif-item.survey { border-right-color: var(--blue); }
-.notif-title { font-size: 14px; font-weight: 500; }
+.notif-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.notif-panel, .notif-panel * { color: var(--text); }
 .notif-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; line-height: 1.6; }
 .notif-date { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 :root[data-theme="dark"] .notif-panel { background: var(--surface); }

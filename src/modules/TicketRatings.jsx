@@ -9,11 +9,20 @@ export default function TicketRatings() {
 
   useEffect(() => {
     async function load() {
+      // نحدّد دور المستخدم: المدير يرى الكل، المشرف يرى بلاغات نوعه
+      const { data: au } = await supabase.auth.getUser()
+      let roles = [], admin = false
+      if (au?.user) {
+        const { data: p } = await supabase.from('persons').select('user_roles(roles(code))').eq('auth_user_id', au.user.id).maybeSingle()
+        roles = (p?.user_roles || []).map(ur => ur.roles?.code).filter(Boolean)
+        admin = roles.includes('system_admin') || roles.includes('project_manager')
+      }
       // البلاغات المغلقة مع نوعها وطالبها
-      const { data: tickets } = await supabase.from('tickets')
-        .select('id, title, closed_at, ticket_types(name), students(persons(full_name))')
+      const { data: tkAll } = await supabase.from('tickets')
+        .select('id, title, closed_at, ticket_types(name, handler_role), students(persons(full_name))')
         .eq('status_code', 'closed').order('closed_at', { ascending: false })
-      const ids = (tickets || []).map(t => t.id)
+      const tickets = (tkAll || []).filter(t => admin || (t.ticket_types?.handler_role && roles.includes(t.ticket_types.handler_role)))
+      const ids = tickets.map(t => t.id)
       let answersByTicket = {}
       if (ids.length) {
         const { data: ans } = await supabase.from('ticket_survey_answers')

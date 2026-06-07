@@ -10,8 +10,15 @@ export default function StudentSurveys({ studentId }) {
   const [msg, setMsg] = useState(null)
 
   useEffect(() => {
-    supabase.from('surveys').select('*').eq('is_active', true)
-      .then(({ data }) => setSurveys(data || []))
+    async function load() {
+      // الاستبانات المرئية للطالب حسب فئته
+      const { data: visIds } = await supabase.rpc('visible_survey_ids')
+      const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_survey_ids : x)
+      if (!visible.length) { setSurveys([]); return }
+      const { data } = await supabase.from('surveys').select('*').in('id', visible)
+      setSurveys(data || [])
+    }
+    load()
   }, [])
 
   async function open(s) {

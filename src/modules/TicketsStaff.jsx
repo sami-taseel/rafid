@@ -15,6 +15,7 @@ export default function TicketsStaff() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [sel, setSel] = useState(null)
   const [fStatus, setFStatus] = useState('')
+  const [ratings, setRatings] = useState({})
 
   async function load() {
     const { data: au } = await supabase.auth.getUser()
@@ -38,6 +39,15 @@ export default function TicketsStaff() {
 
     // المدير يرى الكل، المشرف يرى ما يطابق دوره
     const visible = (tk || []).filter(t => admin || (t.ticket_types?.handler_role && roles.includes(t.ticket_types.handler_role)))
+    // تقييم النجوم للبلاغات المغلقة
+    const closedIds = visible.filter(t => t.status_code === 'closed').map(t => t.id)
+    let ratingMap = {}
+    if (closedIds.length) {
+      const { data: ans } = await supabase.from('ticket_survey_answers')
+        .select('ticket_id, answer, ticket_survey_questions(q_type)').in('ticket_id', closedIds)
+      ;(ans || []).forEach(a => { if (a.ticket_survey_questions?.q_type === 'stars') ratingMap[a.ticket_id] = Number(a.answer) })
+    }
+    setRatings(ratingMap)
     setTickets(visible)
     setLoading(false)
   }
@@ -78,6 +88,9 @@ export default function TicketsStaff() {
             <span className="pill">{t.ticket_types?.name}</span>
             <span className="muted">{t.students?.persons?.full_name || 'طالب'}</span>
             <span className="muted">{new Date(t.created_at).toLocaleDateString('ar')}</span>
+            {t.status_code === 'closed' && ratings[t.id] > 0 && (
+              <span className="tk-stars">{'★'.repeat(ratings[t.id])}{'☆'.repeat(5 - ratings[t.id])}</span>
+            )}
           </div>
         </div>
       ))}

@@ -14,11 +14,15 @@ export default function Surveys() {
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
   const [results, setResults] = useState(null)
+  const [editMeta, setEditMeta] = useState(null)
+  const [categories, setCategories] = useState([])
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', target_audience: 'الجميع' })
+  const [form, setForm] = useState({ title: '', description: '', target_category_id: null })
   const [msg, setMsg] = useState(null)
 
   async function loadAll() {
+    const { data: cats } = await supabase.from('categories').select('id, name, member_type').order('name')
+    setCategories(cats || [])
     const { data } = await supabase.from('surveys').select('*, survey_questions(id)').order('created_at', { ascending: false })
     setSurveys(data || []); setLoading(false)
   }
@@ -27,12 +31,12 @@ export default function Surveys() {
   async function create() {
     if (!form.title.trim()) { setMsg('اكتب عنوان الاستبانة'); return }
     const { data } = await supabase.from('surveys').insert(form).select().single()
-    setCreating(false); setForm({ title: '', description: '', target_audience: 'الجميع' })
+    setCreating(false); setForm({ title: '', description: '', target_category_id: null })
     setEditing(data); loadAll()
   }
   async function duplicate(s) {
     const { data: ns } = await supabase.from('surveys')
-      .insert({ title: s.title + ' (نسخة)', description: s.description, target_audience: s.target_audience }).select().single()
+      .insert({ title: s.title + ' (نسخة)', description: s.description, target_category_id: s.target_category_id }).select().single()
     const { data: qs } = await supabase.from('survey_questions').select('*').eq('survey_id', s.id)
     if (qs?.length) await supabase.from('survey_questions').insert(qs.map(q => ({
       survey_id: ns.id, q_text: q.q_text, q_type: q.q_type, options: q.options, sort_order: q.sort_order
@@ -66,9 +70,11 @@ export default function Surveys() {
           <div className="field"><label>وصف مختصر (اختياري)</label>
             <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
           <div className="field"><label>الفئة المستهدفة</label>
-            <select value={form.target_audience} onChange={e => setForm({ ...form, target_audience: e.target.value })}>
-              {TARGETS.map(t => <option key={t}>{t}</option>)}
-            </select></div>
+            <select value={form.target_category_id || ''} onChange={e => setForm({ ...form, target_category_id: e.target.value || null })}>
+              <option value="">كل الطلاب</option>
+              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>عند تحديد فئة، لا تظهر الاستبانة ولا يصل إشعارها إلا لطلاب تلك الفئة.</p></div>
           {msg && <div className="login-error">{msg}</div>}
           <div className="form-row">
             <button onClick={create}>إنشاء ومتابعة</button>
@@ -83,12 +89,13 @@ export default function Surveys() {
             <div className="survey-title">{s.title}</div>
             {s.description && <div className="muted">{s.description}</div>}
             <div className="survey-tags">
-              <span className="pill">{s.target_audience || 'الجميع'}</span>
+              <span className="pill">{categories.find(c => c.id === s.target_category_id)?.name || 'كل الطلاب'}</span>
               <span className="muted">{s.survey_questions?.length || 0} سؤال</span>
               <span className={s.is_active ? 'pill-on' : 'pill-off'}>{s.is_active ? 'ظاهرة للطلاب' : 'مخفية'}</span>
             </div>
           </div>
           <div className="survey-actions">
+            <button className="mini" onClick={() => setEditMeta({ ...s })}>تعديل البيانات</button>
             <button className="mini" onClick={() => setEditing(s)}>تحرير الأسئلة</button>
             <button className="mini" onClick={() => setResults(s)}>النتائج</button>
             <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
@@ -98,6 +105,27 @@ export default function Surveys() {
           </div>
         </div>
       ))}
+
+      {editMeta && (
+        <div className="modal-overlay" onClick={() => setEditMeta(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="modal-head"><h2>تعديل بيانات الاستبانة</h2><button className="icon-btn" onClick={() => setEditMeta(null)}>✕</button></div>
+            <div className="field"><label>العنوان</label>
+              <input value={editMeta.title} onChange={e => setEditMeta({ ...editMeta, title: e.target.value })} /></div>
+            <div className="field"><label>الوصف</label>
+              <input value={editMeta.description || ''} onChange={e => setEditMeta({ ...editMeta, description: e.target.value })} /></div>
+            <div className="field"><label>الفئة المستهدفة</label>
+              <select value={editMeta.target_category_id || ''} onChange={e => setEditMeta({ ...editMeta, target_category_id: e.target.value || null })}>
+                <option value="">كل الطلاب</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select></div>
+            <button className="save-btn" onClick={async () => {
+              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id }).eq('id', editMeta.id)
+              setEditMeta(null); toast('تم حفظ التعديل'); loadAll()
+            }}>حفظ التعديل</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
