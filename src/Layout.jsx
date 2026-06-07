@@ -19,6 +19,7 @@ const MENU = [
   { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
   { key: 'audit',      label: 'سجل العمليات',   icon: '📜' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
+  { key: 'tickets',    label: 'البلاغات',        icon: '📨' },
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },
   { key: 'languages',  label: 'اللغات',         icon: '🌐' },
 ]

@@ -7,6 +7,7 @@ import Notifications from './modules/Notifications'
 import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
 import StudentHome from './modules/StudentHome'
+import StudentTickets from './modules/StudentTickets'
 
 export default function StudentProfile(props) {
   return <LangProvider><StudentProfileInner {...props} /></LangProvider>
@@ -114,12 +115,13 @@ function StudentProfileInner({ session }) {
 
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['policy',t('policy')]].map(([k, l]) => (
+          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets','البلاغات'],['policy',t('policy')]].map(([k, l]) => (
             <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
 
         {tab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} />}
+        {tab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
         {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
         {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}

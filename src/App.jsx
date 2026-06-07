@@ -22,6 +22,7 @@ import AuditLog from './modules/AuditLog'
 import Languages from './modules/Languages'
 import Categories from './modules/Categories'
 import TicketsAdmin from './modules/TicketsAdmin'
+import TicketsStaff from './modules/TicketsStaff'
 import Fields from './modules/Fields'
 
 export default function App() {
@@ -76,7 +77,7 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }

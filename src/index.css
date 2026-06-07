@@ -924,3 +924,38 @@ tr.clickable:hover { background: var(--blue-soft); }
 .show-all-btn { width: 100%; margin-top: 14px; padding: 11px; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; }
 .show-all-btn:hover { background: #dce8f8; }
 @media (max-width: 768px) { .up-grid, .next-grid { grid-template-columns: 1fr; } }
+
+/* ===== البلاغات ===== */
+.ticket-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; cursor: pointer; box-shadow: var(--shadow); }
+.ticket-card:hover { border-color: var(--blue); }
+.ticket-card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.ticket-title { font-weight: 600; font-size: 15px; }
+.ticket-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tk-status { font-size: 12px; padding: 4px 12px; border-radius: 10px; font-weight: 500; }
+.tk-status.open { background: var(--blue-soft); color: var(--blue); }
+.tk-status.prog { background: #fef3da; color: #92660a; }
+.tk-status.done { background: #e6f6ee; color: #1d7a52; }
+.tk-status.fail { background: #fcecec; color: #a32d2d; }
+.tk-status.closed { background: #eef1f6; color: #6b7280; }
+:root[data-theme="dark"] .tk-status.prog { background: #3a2e14; color: #f0c060; }
+:root[data-theme="dark"] .tk-status.done { background: #143a2a; color: #6dd3a8; }
+:root[data-theme="dark"] .tk-status.fail { background: #3a1a1a; color: #f0a0a0; }
+:root[data-theme="dark"] .tk-status.closed { background: #2a3140; color: #9aa3b2; }
+.ticket-detail-head { display: flex; align-items: center; gap: 10px; margin: 16px 0 6px; }
+.ticket-detail-head h2 { color: var(--navy); font-size: 20px; }
+:root[data-theme="dark"] .ticket-detail-head h2 { color: #8fb5ed; }
+
+/* المحادثة */
+.chat { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.chat-msg { max-width: 80%; padding: 12px 14px; border-radius: 12px; }
+.chat-msg.staff { background: var(--blue-soft); align-self: flex-start; }
+.chat-msg.me { background: var(--navy); color: #fff; align-self: flex-end; }
+.chat-author { font-size: 12px; font-weight: 600; margin-bottom: 4px; opacity: .8; }
+.chat-body { font-size: 14px; line-height: 1.6; }
+.chat-file { display: inline-block; margin-top: 6px; font-size: 13px; color: inherit; text-decoration: underline; }
+.chat-status { font-size: 12px; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(127,127,127,.2); opacity: .85; }
+.reply-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.reply-box textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+.reply-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.reply-actions select { padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+.file-pick { background: var(--blue-soft); color: var(--blue); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
