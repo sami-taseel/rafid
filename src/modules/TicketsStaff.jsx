@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
 import { useToast } from '../Toast'
+import { uploadTicketFile } from '../ticketUtils'
+import Attachment from './Attachment'
 
 // صفحة معالجة البلاغات للمشرف/المدير
 // المدير (system_admin) يرى كل البلاغات. المشرف يرى بلاغات نوعه فقط.
@@ -104,7 +106,7 @@ function TicketThread({ ticket, statuses, onBack }) {
     let personId = null
     if (au?.user) { const { data: p } = await supabase.from('persons').select('id').eq('auth_user_id', au.user.id).maybeSingle(); personId = p?.id }
     let path = null
-    if (file) { path = `tickets/${ticket.id}/${Date.now()}_${file.name}`; await supabase.storage.from('student-docs').upload(path, file) }
+    if (file) { try { path = await uploadTicketFile(ticket.id, file) } catch {} }
     const statusChanged = status !== ticket.status_code
     await supabase.from('ticket_replies').insert({
       ticket_id: ticket.id, author: personId, is_staff: true,
@@ -112,10 +114,13 @@ function TicketThread({ ticket, statuses, onBack }) {
     })
     if (statusChanged) {
       await supabase.from('tickets').update({ status_code: status, updated_at: new Date().toISOString() }).eq('id', ticket.id)
-      // إشعار الطالب
+      // إشعار الطالب بصياغة قابلة للتعديل من المدير
+      const statusLabel = statuses.find(s => s.code === status)?.name || status
+      const { data: tpl } = await supabase.from('app_settings').select('value').eq('key', 'ticket_notif_template').maybeSingle()
+      const template = tpl?.value || 'تحديث على بلاغك «{title}»: الحالة الآن {status}'
+      const text = template.replace('{title}', ticket.title).replace('{status}', statusLabel)
       await supabase.from('notifications').insert({
-        student_id: ticket.student_id, title: 'تحديث بلاغك: ' + ticket.title,
-        body: 'الحالة الآن: ' + (statuses.find(s => s.code === status)?.name || status), kind: 'info',
+        student_id: ticket.student_id, title: 'تحديث بلاغ', body: text, kind: 'info', ticket_id: ticket.id,
       })
     }
     setBody(''); setFile(null); setBusy(false); toast('تم الإرسال'); load()
@@ -136,7 +141,7 @@ function TicketThread({ ticket, statuses, onBack }) {
           <div key={r.id} className={'chat-msg ' + (r.is_staff ? 'staff' : 'me')}>
             <div className="chat-author">{r.is_staff ? (r.persons?.full_name || 'المشرف') : 'الطالب'}</div>
             {r.body && <div className="chat-body">{r.body}</div>}
-            {r.attachment && <a className="chat-file" href="#" onClick={async (e) => { e.preventDefault(); const { data } = await supabase.storage.from('student-docs').createSignedUrl(r.attachment, 3600); if (data) window.open(data.signedUrl) }}>📎 عرض المرفق</a>}
+            {r.attachment && <div style={{ marginTop: 6 }}><Attachment path={r.attachment} /></div>}
             {r.status_set && <div className="chat-status">غُيّرت الحالة إلى: {statuses.find(s => s.code === r.status_set)?.name || r.status_set}</div>}
           </div>
         ))}
@@ -149,7 +154,7 @@ function TicketThread({ ticket, statuses, onBack }) {
           <select value={status} onChange={e => setStatus(e.target.value)}>
             {statuses.filter(s => s.code !== 'closed').map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
           </select>
-          <label className="file-pick">📎 مرفق<input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
+          <label className="file-btn">📎 {file ? 'ملف مرفق' : 'إرفاق ملف'}<input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
           {file && <span className="muted" style={{ fontSize: 12 }}>{file.name}</span>}
           <button className="save-btn" style={{ width: 'auto', padding: '10px 20px' }} disabled={busy} onClick={send}>{busy ? 'جارٍ…' : 'إرسال'}</button>
         </div>

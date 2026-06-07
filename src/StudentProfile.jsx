@@ -96,7 +96,7 @@ function StudentProfileInner({ session }) {
         {/* ترويسة الترحيب */}
         <div className="sp-hero">
           <div className="sp-hero-actions">
-            <Notifications studentId={student?.id} />
+            <Notifications studentId={student?.id} onOpenTicket={() => setTab('tickets')} />
             <LangPicker />
             <button className="sp-logout" onClick={handleLogout}>{t('logout')}</button>
           </div>

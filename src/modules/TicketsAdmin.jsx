@@ -19,10 +19,12 @@ export default function TicketsAdmin() {
         <button className={tab==='types'?'active':''} onClick={()=>setTab('types')}>أنواع البلاغات</button>
         <button className={tab==='statuses'?'active':''} onClick={()=>setTab('statuses')}>الحالات</button>
         <button className={tab==='survey'?'active':''} onClick={()=>setTab('survey')}>استبيان الإغلاق</button>
+        <button className={tab==='notif'?'active':''} onClick={()=>setTab('notif')}>صياغة الإشعار</button>
       </div>
       {tab === 'types' && <TypesManager />}
       {tab === 'statuses' && <StatusesManager />}
       {tab === 'survey' && <SurveyManager />}
+      {tab === 'notif' && <NotifManager />}
     </div>
   )
 }
@@ -113,6 +115,31 @@ function SurveyManager() {
         </div>
       ))}
       <button className="add-field-btn" onClick={add}>+ إضافة سؤال</button>
+    </div>
+  )
+}
+
+function NotifManager() {
+  const [tpl, setTpl] = useState(''); const [loading, setLoading] = useState(true)
+  const toast = useToast()
+  useEffect(() => {
+    supabase.from('app_settings').select('value').eq('key', 'ticket_notif_template').maybeSingle()
+      .then(({ data }) => { setTpl(data?.value || 'تحديث على بلاغك «{title}»: الحالة الآن {status}'); setLoading(false) })
+  }, [])
+  async function save() {
+    await supabase.from('app_settings').upsert({ key: 'ticket_notif_template', value: tpl }, { onConflict: 'key' })
+    toast('تم حفظ الصياغة')
+  }
+  if (loading) return <Spinner />
+  return (
+    <div className="panel">
+      <h3>صياغة إشعار تحديث البلاغ</h3>
+      <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+        النص الذي يصل الطالب عند تغيّر حالة بلاغه. استخدم <b>{'{title}'}</b> لعنوان البلاغ، و<b>{'{status}'}</b> للحالة الجديدة.
+      </p>
+      <textarea style={{ width: '100%', minHeight: 90, padding: 12, border: '1px solid var(--border)', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, boxSizing: 'border-box' }}
+        value={tpl} onChange={e => setTpl(e.target.value)} onBlur={save} />
+      <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>مثال الناتج: تحديث على بلاغك «تسرب ماء»: الحالة الآن تمت المعالجة</div>
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 
 // جرس إشعارات الطالب
-export default function Notifications({ studentId }) {
+export default function Notifications({ studentId, onOpenTicket }) {
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
 
@@ -31,10 +31,11 @@ export default function Notifications({ studentId }) {
           <div className="notif-head">الإشعارات</div>
           {items.length === 0 && <div className="notif-empty">لا توجد إشعارات</div>}
           {items.map(n => (
-            <div key={n.id} className={'notif-item ' + n.kind}>
+            <div key={n.id} className={'notif-item ' + n.kind + (n.ticket_id ? ' clickable' : '')}
+              onClick={() => { if (n.ticket_id && onOpenTicket) { onOpenTicket(); setOpen(false) } }}>
               <div className="notif-title">{n.title}</div>
               {n.body && <div className="notif-body">{n.body}</div>}
-              <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}</div>
+              <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}{n.ticket_id && ' · اضغط لعرض البلاغ'}</div>
             </div>
           ))}
         </div>

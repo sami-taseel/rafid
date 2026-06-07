@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { uploadTicketFile } from '../ticketUtils'
+import Attachment from './Attachment'
 
 export default function StudentTickets({ studentId }) {
   const [view, setView] = useState('list')   // list | new | detail
@@ -63,9 +65,8 @@ function NewTicket({ studentId, types, onBack }) {
     if (error) { setMsg('تعذّر الإرسال: ' + error.message); setBusy(false); return }
     // مرفق اختياري كأول رد
     if (file) {
-      const path = `tickets/${tk.id}/${Date.now()}_${file.name}`
-      await supabase.storage.from('student-docs').upload(path, file)
-      await supabase.from('ticket_replies').insert({ ticket_id: tk.id, body: form.description, attachment: path, is_staff: false })
+      try { const path = await uploadTicketFile(tk.id, file)
+        await supabase.from('ticket_replies').insert({ ticket_id: tk.id, body: form.description, attachment: path, is_staff: false }) } catch {}
     }
     setBusy(false); onBack()
   }
@@ -85,7 +86,8 @@ function NewTicket({ studentId, types, onBack }) {
         <div className="field"><label>وصف البلاغ</label>
           <textarea rows={5} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="اشرح بلاغك بالتفصيل" /></div>
         <div className="field"><label>مرفق (اختياري)</label>
-          <input type="file" onChange={e => setFile(e.target.files[0])} /></div>
+          <label className="file-btn">📎 {file ? file.name : 'اختر ملفاً'}
+            <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label></div>
         {msg && <div className="login-error">{msg}</div>}
         <button className="sp-save" onClick={submit} disabled={busy}>{busy ? 'جارٍ الإرسال…' : 'إرسال البلاغ'}</button>
       </div>
@@ -116,7 +118,7 @@ function TicketDetail({ ticket, statuses, onBack }) {
   async function sendReply() {
     if (!reply.trim() && !file) return
     let path = null
-    if (file) { path = `tickets/${ticket.id}/${Date.now()}_${file.name}`; await supabase.storage.from('student-docs').upload(path, file) }
+    if (file) { try { path = await uploadTicketFile(ticket.id, file) } catch {} }
     await supabase.from('ticket_replies').insert({ ticket_id: ticket.id, body: reply, attachment: path, is_staff: false })
     setReply(''); setFile(null); load()
   }
@@ -153,7 +155,7 @@ function TicketDetail({ ticket, statuses, onBack }) {
             <div key={r.id} className={'chat-msg ' + (r.is_staff ? 'staff' : 'me')}>
               <div className="chat-author">{r.is_staff ? (r.persons?.full_name || 'المشرف') : 'أنا'}</div>
               {r.body && <div className="chat-body">{r.body}</div>}
-              {r.attachment && <a className="chat-file" href={'#'} onClick={async (e) => { e.preventDefault(); const { data } = await supabase.storage.from('student-docs').createSignedUrl(r.attachment, 3600); if (data) window.open(data.signedUrl) }}>📎 عرض المرفق</a>}
+              {r.attachment && <div style={{ marginTop: 6 }}><Attachment path={r.attachment} /></div>}
               {r.status_set && <div className="chat-status">الحالة: {statusName(r.status_set)}</div>}
             </div>
           ))}
@@ -161,10 +163,14 @@ function TicketDetail({ ticket, statuses, onBack }) {
         </div>
 
         {status !== 'closed' && (
-          <div className="chat-input">
-            <textarea rows={2} value={reply} onChange={e => setReply(e.target.value)} placeholder="اكتب رداً…" />
-            <input type="file" onChange={e => setFile(e.target.files[0])} />
-            <button className="mini" onClick={sendReply}>إرسال</button>
+          <div className="reply-box">
+            <textarea rows={3} value={reply} onChange={e => setReply(e.target.value)} placeholder="اكتب رداً…" />
+            <div className="reply-actions">
+              <label className="file-btn">📎 {file ? 'ملف مرفق' : 'إرفاق ملف'}
+                <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
+              {file && <span className="muted" style={{ fontSize: 12 }}>{file.name}</span>}
+              <button className="save-btn" style={{ width: 'auto', padding: '10px 22px' }} onClick={sendReply}>إرسال</button>
+            </div>
           </div>
         )}
       </div>
