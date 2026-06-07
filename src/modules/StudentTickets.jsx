@@ -45,7 +45,7 @@ export default function StudentTickets({ studentId }) {
       <button className="sp-save" style={{ marginBottom: 16 }} onClick={() => setView('new')}>+ إنشاء بلاغ جديد</button>
       {tickets.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 30 }}>لا توجد بلاغات. أنشئ بلاغاً عند الحاجة.</div>}
       {tickets.map(t => (
-        <div key={t.id} className="ticket-card" onClick={() => { setSel(t); setView('detail') }}>
+        <div key={t.id} className={"ticket-card" + (t.status_code === "closed" ? " closed-card" : "")} onClick={() => { setSel(t); setView('detail') }}>
           <div className="ticket-card-head">
             <span className="ticket-title">{t.title}</span>
             <span className={'tk-status ' + statusClass(t.status_code)}>{statusName(t.status_code)}</span>

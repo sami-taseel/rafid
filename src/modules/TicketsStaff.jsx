@@ -79,7 +79,7 @@ export default function TicketsStaff() {
 
       {filtered.length === 0 && <div className="panel muted">لا توجد بلاغات.</div>}
       {filtered.map(t => (
-        <div key={t.id} className="ticket-card" onClick={() => setSel(t)}>
+        <div key={t.id} className={"ticket-card" + (t.status_code === "closed" ? " closed-card" : "")} onClick={() => setSel(t)}>
           <div className="ticket-card-head">
             <span className="ticket-title">{t.title}</span>
             <span className={'tk-status ' + tkClass(t.status_code)}>{statusName(t.status_code)}</span>

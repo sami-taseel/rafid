@@ -995,3 +995,11 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .rating-row:last-child { border-bottom: none; }
 .rating-q { color: var(--text-soft); }
 .rating-a { font-weight: 500; }
+
+/* شارة عدد البلاغات */
+.nav-badge { background: #e24b4a; color: #fff; font-size: 11px; font-weight: 700; min-width: 20px; height: 20px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; padding: 0 6px; margin-right: auto; }
+.title-badge { background: #e24b4a; color: #fff; font-size: 13px; font-weight: 700; min-width: 24px; height: 24px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; padding: 0 8px; margin-right: 10px; vertical-align: middle; }
+
+/* تمييز البلاغ المغلق بخلفية خضراء خفيفة */
+.ticket-card.closed-card { background: #f0f9f4; border-color: #cce8d7; }
+:root[data-theme="dark"] .ticket-card.closed-card { background: #16271e; border-color: #2a4536; }

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDarkMode } from './useDarkMode'
 import { supabase } from './supabaseClient'
 
 const MENU = [
   { key: 'stats',      label: 'الرئيسية',       icon: '📊' },
+  { key: 'tickets',    label: 'البلاغات',        icon: '📨' },
   { key: 'students',   label: 'الطلاب',        icon: '👥' },
   { key: 'tracks',     label: 'المسارات والأنشطة', icon: '📚' },
   { key: 'categories', label: 'الفئات والتصنيفات', icon: '🏷️' },
@@ -19,7 +20,6 @@ const MENU = [
   { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
   { key: 'audit',      label: 'سجل العمليات',   icon: '📜' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
-  { key: 'tickets',    label: 'البلاغات',        icon: '📨' },
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },
   { key: 'ticket_ratings', label: 'تقييمات البلاغات', icon: '⭐' },
   { key: 'languages',  label: 'اللغات',         icon: '🌐' },
@@ -28,6 +28,23 @@ const MENU = [
 export default function Layout({ active, onNavigate, children }) {
   const [open, setOpen] = useState(false)
   const [dark, setDark] = useDarkMode()
+  const [openTickets, setOpenTickets] = useState(0)
+  useEffect(() => {
+    async function countTickets() {
+      // عدد البلاغات غير المغلقة (المدير يرى الكل، المشرف بلاغات نوعه)
+      const { data: au } = await supabase.auth.getUser()
+      let roles = [], admin = false
+      if (au?.user) {
+        const { data: p } = await supabase.from('persons').select('user_roles(roles(code))').eq('auth_user_id', au.user.id).maybeSingle()
+        roles = (p?.user_roles || []).map(ur => ur.roles?.code).filter(Boolean)
+        admin = roles.includes('system_admin') || roles.includes('project_manager')
+      }
+      const { data: tk } = await supabase.from('tickets').select('status_code, ticket_types(handler_role)').neq('status_code', 'closed')
+      const visible = (tk || []).filter(t => admin || (t.ticket_types?.handler_role && roles.includes(t.ticket_types.handler_role)))
+      setOpenTickets(visible.length)
+    }
+    countTickets()
+  }, [active])
   async function handleLogout() { await supabase.auth.signOut() }
 
   return (
@@ -43,6 +60,7 @@ export default function Layout({ active, onNavigate, children }) {
               className={active === m.key ? 'nav-item active' : 'nav-item'}
               onClick={() => { onNavigate(m.key); setOpen(false) }}>
               <span className="nav-icon">{m.icon}</span>{m.label}
+            {m.key === 'tickets' && openTickets > 0 && <span className="nav-badge">{openTickets}</span>}
             </button>
           ))}
         </nav>
@@ -54,7 +72,8 @@ export default function Layout({ active, onNavigate, children }) {
       <div className="main">
         <header className="topbar">
           <button className="menu-toggle" onClick={() => setOpen(!open)}>☰</button>
-          <span className="topbar-title">{MENU.find(m => m.key === active)?.label}</span>
+          <span className="topbar-title">{MENU.find(m => m.key === active)?.label}
+            {active === 'tickets' && openTickets > 0 && <span className="title-badge">{openTickets}</span>}</span>
           <div className="topbar-actions">
             <button className="icon-act" onClick={() => setDark(!dark)} aria-label="الوضع الليلي" title="الوضع الليلي">{dark ? '☀️' : '🌙'}</button>
             <button className="icon-act" onClick={handleLogout} aria-label="تسجيل الخروج" title="تسجيل الخروج">
