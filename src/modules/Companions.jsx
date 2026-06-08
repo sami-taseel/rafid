@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 
 // إدارة المرافقين ورفع الملفات — تُستخدم داخل ملف الطالب
 export default function Companions({ studentId, personId }) {
+  const toast = useToast()
   const [companions, setCompanions] = useState([])
   const [docs, setDocs] = useState([])
   const [nc, setNc] = useState({ full_name: '', relation: 'زوجة', residency_no: '' })
-  const [msg, setMsg] = useState(null)
   const [uploading, setUploading] = useState(false)
 
   async function load() {
@@ -19,11 +20,11 @@ export default function Companions({ studentId, personId }) {
   useEffect(() => { if (studentId) load() }, [studentId])
 
   async function addCompanion() {
-    if (!nc.full_name.trim()) { setMsg('اكتب اسم المرافق'); return }
+    if (!nc.full_name.trim()) { toast('اكتب اسم المرافق', 'error'); return }
     const { data: p } = await supabase.from('persons')
       .insert({ full_name: nc.full_name, residency_no: nc.residency_no }).select().single()
     await supabase.from('companions').insert({ person_id: p.id, student_id: studentId, relation: nc.relation })
-    setNc({ full_name: '', relation: 'زوجة', residency_no: '' }); setMsg('أُضيف المرافق'); load()
+    setNc({ full_name: '', relation: 'زوجة', residency_no: '' }); toast('أُضيف المرافق'); load()
   }
 
   async function uploadDoc(e, docType) {
@@ -33,7 +34,7 @@ export default function Companions({ studentId, personId }) {
     const { error } = await supabase.storage.from('student-docs').upload(path, file)
     if (!error) {
       await supabase.from('documents').insert({ student_id: studentId, person_id: personId, doc_type: docType, file_path: path })
-      setMsg('تم رفع الملف')
+      toast('تم رفع الملف')
     } else setMsg('خطأ في الرفع: ' + error.message)
     setUploading(false); load()
   }

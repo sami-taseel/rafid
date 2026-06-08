@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 import { Spinner } from './Students'
 import ExcelImport from './ExcelImport'
 
 export default function Support() {
+  const toast = useToast()
   const [records, setRecords] = useState([])
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [nr, setNr] = useState({ student_id: '', kind: 'in_kind', description: '', source: '', received_at: '' })
-  const [msg, setMsg] = useState(null)
 
   async function loadAll() {
     const [r, s] = await Promise.all([
@@ -20,9 +21,9 @@ export default function Support() {
   useEffect(() => { loadAll() }, [])
 
   async function add() {
-    if (!nr.student_id || !nr.description) { setMsg('اختر الطالب واكتب الوصف'); return }
+    if (!nr.student_id || !nr.description) { toast('اختر الطالب واكتب الوصف', 'error'); return }
     await supabase.from('support_records').insert(nr)
-    setNr({ student_id: '', kind: 'in_kind', description: '', source: '', received_at: '' }); setMsg('سُجّل الدعم'); loadAll()
+    setNr({ student_id: '', kind: 'in_kind', description: '', source: '', received_at: '' }); toast('سُجّل الدعم'); loadAll()
   }
 
   if (loading) return <Spinner />
@@ -43,7 +44,6 @@ export default function Support() {
           <input type="date" value={nr.received_at} onChange={e => setNr({ ...nr, received_at: e.target.value })} />
           <button onClick={add}>تسجيل</button>
         </div>
-        {msg && <div className="save-ok">{msg}</div>}
       </div>
       <div className="panel">
         <h3>إضافة دعم دفعة واحدة من Excel</h3>

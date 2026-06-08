@@ -1003,3 +1003,33 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* تمييز البلاغ المغلق بخلفية خضراء خفيفة */
 .ticket-card.closed-card { background: #f0f9f4; border-color: #cce8d7; }
 :root[data-theme="dark"] .ticket-card.closed-card { background: #16271e; border-color: #2a4536; }
+
+/* ===== أمان الحساب ===== */
+.security-card h3 { color: var(--navy); }
+:root[data-theme="dark"] .security-card h3 { color: #8fb5ed; }
+.security-alert { background: #fbe4d5; color: #854f0b; padding: 12px 14px; border-radius: 10px; font-size: 14px; margin-bottom: 12px; }
+:root[data-theme="dark"] .security-alert { background: #3a2a14; color: #f0c080; }
+.login-row-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.login-row-item:last-child { border-bottom: none; }
+
+/* ===== حالة النظام ===== */
+.status-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.status-head h3 { color: var(--navy); }
+:root[data-theme="dark"] .status-head h3 { color: #8fb5ed; }
+.status-overall { margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-weight: 500; font-size: 14px; }
+.status-overall.ok { background: #e6f6ee; color: #1d7a52; }
+.status-overall.warn { background: #fcecec; color: #a32d2d; }
+:root[data-theme="dark"] .status-overall.ok { background: #143a2a; color: #6dd3a8; }
+:root[data-theme="dark"] .status-overall.warn { background: #3a1a1a; color: #f0a0a0; }
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.status-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; text-align: center; box-shadow: var(--shadow); }
+.status-icon { font-size: 30px; margin-bottom: 8px; }
+.status-label { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.status-dot { font-size: 13px; font-weight: 500; }
+.status-dot.up { color: #1d9e75; }
+.status-dot.down { color: #c0392b; }
+.status-dot.checking { color: var(--text-soft); }
+
+/* زر تنزيل بيانات الطالب */
+.download-data-btn { width: 100%; margin-top: 10px; padding: 11px; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; }
+.download-data-btn:hover { background: #dce8f8; }

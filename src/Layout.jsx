@@ -23,6 +23,8 @@ const MENU = [
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },
   { key: 'ticket_ratings', label: 'تقييمات البلاغات', icon: '⭐' },
   { key: 'languages',  label: 'اللغات',         icon: '🌐' },
+  { key: 'status',     label: 'حالة النظام',    icon: '🩺' },
+  { key: 'help',       label: 'مساعدة',         icon: '❓' },
 ]
 
 export default function Layout({ active, onNavigate, children }) {

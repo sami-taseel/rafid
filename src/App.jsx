@@ -24,6 +24,8 @@ import Categories from './modules/Categories'
 import TicketsAdmin from './modules/TicketsAdmin'
 import TicketsStaff from './modules/TicketsStaff'
 import TicketRatings from './modules/TicketRatings'
+import SystemStatus from './modules/SystemStatus'
+import Help from './modules/Help'
 import Fields from './modules/Fields'
 
 export default function App() {
@@ -41,6 +43,10 @@ export default function App() {
     const { data: l } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
       if (event === 'PASSWORD_RECOVERY') setRecovery(true)
+      if (event === 'SIGNED_IN' && s?.user) {
+        // نسجّل الدخول في سجل الدخول (لأمان الحساب)
+        supabase.from('login_history').insert({ user_id: s.user.id, user_agent: navigator.userAgent }).then(() => {})
+      }
     })
     return () => l.subscription.unsubscribe()
   }, [])
@@ -78,7 +84,7 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, help: <Help />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }

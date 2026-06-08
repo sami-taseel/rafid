@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 import { Spinner } from './Students'
 
 export default function Languages() {
+  const toast = useToast()
   const [langs, setLangs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [msg, setMsg] = useState(null)
 
   async function load() {
     const { data } = await supabase.from('app_languages').select('*').order('sort_order')
@@ -14,7 +15,7 @@ export default function Languages() {
   useEffect(() => { load() }, [])
 
   async function toggle(code, current) {
-    if (code === 'ar') { setMsg('العربية هي اللغة الأساسية ولا يمكن تعطيلها'); setTimeout(()=>setMsg(null),2000); return }
+    if (code === 'ar') { toast('العربية هي اللغة الأساسية ولا يمكن تعطيلها'); setTimeout(()=>toast(null),2000); return }
     await supabase.from('app_languages').update({ is_active: !current }).eq('code', code)
     load()
   }
@@ -25,7 +26,6 @@ export default function Languages() {
       <p className="muted" style={{ marginBottom: 16 }}>
         فعّل اللغات التي تريد إتاحتها للطلاب في واجهتهم. لوحة الإدارة تبقى بالعربية.
       </p>
-      {msg && <div className="save-ok">{msg}</div>}
       <div className="panel">
         {langs.map(l => (
           <div key={l.code} className="lang-row">

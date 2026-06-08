@@ -81,6 +81,32 @@ function StudentProfileInner({ session }) {
   }
   async function handleLogout() { await supabase.auth.signOut() }
 
+  async function downloadMyData() {
+    const XLSX = await import('xlsx')
+    const sid = student?.id
+    // نجمع بيانات الطالب من الجداول
+    const [att, tickets, surveys, support] = await Promise.all([
+      supabase.from('attendance').select('status, sessions(planned_date, title)').eq('student_id', sid),
+      supabase.from('tickets').select('title, status_code, created_at').eq('student_id', sid),
+      supabase.from('survey_responses').select('survey_id, submitted_at').eq('student_id', sid),
+      supabase.from('support_records').select('kind, description, received_at').eq('student_id', sid),
+    ])
+    const wb = XLSX.utils.book_new()
+    // بياناتي
+    const myData = fields.map(f => ({ 'الحقل': f.label, 'القيمة': values[f.id] || '' }))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(myData), 'بياناتي')
+    // الحضور
+    const attRows = (att.data || []).map(a => ({ 'الجلسة': a.sessions?.title || '', 'التاريخ': a.sessions?.planned_date || '', 'الحالة': a.status }))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(attRows.length ? attRows : [{}]), 'الحضور')
+    // البلاغات
+    const tkRows = (tickets.data || []).map(t => ({ 'العنوان': t.title, 'الحالة': t.status_code, 'التاريخ': t.created_at?.slice(0,10) }))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tkRows.length ? tkRows : [{}]), 'بلاغاتي')
+    // الدعم
+    const spRows = (support.data || []).map(s => ({ 'النوع': s.kind, 'الوصف': s.description, 'التاريخ': s.received_at }))
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(spRows.length ? spRows : [{}]), 'الدعم')
+    XLSX.writeFile(wb, 'بياناتي_رافد.xlsx')
+  }
+
   if (loading) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
 
   const name = values[fields.find(f => f.field_key === 'full_name')?.id] || student?._person?.full_name || 'طالب'
@@ -161,6 +187,7 @@ function StudentProfileInner({ session }) {
             <button type="submit" disabled={saving} className="sp-save">
               {saving ? t('saving') : t('save')}
             </button>
+            <button type="button" className="download-data-btn" onClick={downloadMyData}>⬇ تنزيل نسخة من بياناتي</button>
           </form>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import ExcelImport from './ExcelImport'
@@ -7,6 +8,7 @@ import ExcelImport from './ExcelImport'
 const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
 
 export default function Tracks() {
+  const toast = useToast()
   const confirmDialog = useConfirm()
   const [tracks, setTracks] = useState([])
   const [activities, setActivities] = useState([])
@@ -16,7 +18,6 @@ export default function Tracks() {
   const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
-  const [msg, setMsg] = useState(null)
   const [categories, setCategories] = useState([])
   const [actCats, setActCats] = useState([])  // فئات النشاط قيد التعديل
   const [scope, setScope] = useState('students')  // students | companions | both
@@ -34,11 +35,11 @@ export default function Tracks() {
   }
   useEffect(() => { loadAll() }, [])
 
-  function flash(m) { setMsg(m); setTimeout(() => setMsg(null), 2500) }
+  function flash(m, type) { toast(m, type) }
 
   // ===== الأنشطة =====
   async function addActivity() {
-    if (!newAct.title || !newAct.track_code) { flash('اكتب اسم النشاط واختر المسار'); return }
+    if (!newAct.title || !newAct.track_code) { flash('اكتب اسم النشاط واختر المسار', 'error'); return }
     const track = tracks.find(t => t.code === newAct.track_code)
     await supabase.from('activities').insert({
       title: newAct.title, activity_type: newAct.activity_type,
@@ -90,7 +91,7 @@ export default function Tracks() {
       start_time: s.start_time ? s.start_time.slice(0,5) : '', duration_min: s.duration_min || '', status: s.status })
   }
   async function saveSession() {
-    if (!sessForm.planned_date) { flash('اختر تاريخ الجلسة'); return }
+    if (!sessForm.planned_date) { flash('اختر تاريخ الجلسة', 'error'); return }
     let title = sessForm.title
     if (!title) {
       const act = activities.find(a => a.id === sessFor)
@@ -171,8 +172,6 @@ export default function Tracks() {
         />
         <div className="muted" style={{ marginTop: 8, fontSize: 13 }}>رموز المسارات: educational, skills, social, care, applied, companions</div>
       </div>
-
-      {msg && <div className="save-ok">{msg}</div>}
 
       <h3 className="section-title">الأنشطة والجلسات</h3>
       {activities.length === 0 && <div className="panel muted">لا توجد أنشطة بعد. أضِف نشاطاً أو ارفع جلسات من Excel.</div>}

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import UnitInspection from './UnitInspection'
 
 export default function Housing() {
+  const toast = useToast()
   const confirmDialog = useConfirm()
   const [buildings, setBuildings] = useState([])
   const [violations, setViolations] = useState([])
@@ -12,7 +14,6 @@ export default function Housing() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
   const [nv, setNv] = useState({ student_id: '', description: '', occurred_at: '' })
-  const [msg, setMsg] = useState(null)
 
   async function loadAll() {
     const [b, v, s, sn] = await Promise.all([
@@ -35,9 +36,9 @@ export default function Housing() {
   useEffect(() => { loadAll() }, [])
 
   async function addViolation() {
-    if (!nv.student_id || !nv.description) { setMsg('اختر الطالب واكتب الوصف'); return }
+    if (!nv.student_id || !nv.description) { toast('اختر الطالب واكتب الوصف', 'error'); return }
     await supabase.from('violations').insert(nv)
-    setNv({ student_id: '', description: '', occurred_at: '' }); setMsg('سُجّلت المخالفة'); loadAll()
+    setNv({ student_id: '', description: '', occurred_at: '' }); toast('سُجّلت المخالفة'); loadAll()
   }
 
     if (loading) return <Spinner />
@@ -62,7 +63,6 @@ export default function Housing() {
           <input type="date" value={nv.occurred_at} onChange={e => setNv({ ...nv, occurred_at: e.target.value })} />
           <button onClick={addViolation}>تسجيل</button>
         </div>
-        {msg && <div className="save-ok">{msg}</div>}
       </div>
       <UnitInspection units={[]} students={students} />
       <div className="panel">
