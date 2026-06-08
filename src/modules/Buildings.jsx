@@ -103,6 +103,7 @@ export default function Buildings() {
                     <span className="muted">{bUnits.length} شقة · {totalRooms} غرفة</span>
                   </div>
                   <div className="sess-actions">
+                    <button className="mini" onClick={() => setExpandedB(expanded ? null : b.id)}>{expanded ? 'إخفاء الشقق' : '🏠 إدارة الشقق'}</button>
                     <button className="mini" onClick={() => { setEditId(b.id); setEditB({ name: hidden ? b.name.replace('[مخفي] ', '') : b.name, building_type: b.building_type || 'singles' }) }}>تعديل</button>
                     <button className="mini" onClick={() => toggleHide(b)}>{hidden ? 'إظهار' : 'إخفاء'}</button>
                     <button className="fr-del" onClick={() => delBuilding(b)}>حذف</button>
