@@ -1051,3 +1051,21 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .bulk-action-bar .mini { background: rgba(255,255,255,.18); color: #fff; border: none; }
 .bulk-action-bar .mini:hover { background: rgba(255,255,255,.28); }
 .row-selected { background: var(--blue-soft) !important; }
+
+/* الاتجاهات الزمنية */
+.trend-chart { display: flex; align-items: flex-end; gap: 10px; height: 180px; padding: 10px 0; }
+.trend-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.trend-bar-wrap { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; width: 100%; }
+.trend-val { font-size: 12px; color: var(--navy); font-weight: 600; margin-bottom: 4px; }
+:root[data-theme="dark"] .trend-val { color: #7ba9e8; }
+.trend-bar { width: 60%; max-width: 40px; background: linear-gradient(to top, #2e5496, #5b8fd4); border-radius: 6px 6px 0 0; min-height: 4px; transition: height .3s; }
+.trend-month { font-size: 11px; color: var(--text-soft); margin-top: 6px; }
+
+/* تنبيهات استباقية */
+.proactive-panel h3 { color: var(--navy); }
+:root[data-theme="dark"] .proactive-panel h3 { color: #8fb5ed; }
+.proactive-item { background: #fef3da; color: #92660a; padding: 10px 14px; border-radius: 10px; margin-bottom: 8px; font-size: 14px; }
+:root[data-theme="dark"] .proactive-item { background: #3a2e14; color: #f0c060; }
+
+/* اختيار القالب */
+.tpl-select { padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); }

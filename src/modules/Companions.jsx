@@ -74,7 +74,6 @@ export default function Companions({ studentId, personId }) {
           {docs.map(d => <div key={d.id} className="list-line">📎 {d.doc_type} <span className="muted">{new Date(d.uploaded_at).toLocaleDateString('ar')}</span></div>)}
         </div>
       )}
-      {msg && <div className="save-ok" style={{ marginTop: 10 }}>{msg}</div>}
     </div>
   )
 }

@@ -6,6 +6,8 @@ export default function Stats({ onNavigate }) {
   const [data, setData] = useState(null)
   const [risk, setRisk] = useState([])
   const [userName, setUserName] = useState('')
+  const [trend, setTrend] = useState([])
+  const [proactive, setProactive] = useState([])
 
   useEffect(() => {
     async function load() {
@@ -14,7 +16,7 @@ export default function Stats({ onNavigate }) {
         const { data: p } = await supabase.from('persons').select('full_name').eq('auth_user_id', au.user.id).maybeSingle()
         setUserName(p?.full_name || '')
       }
-      const [students, sessions, attendance, sanctions, support, responses, summary] = await Promise.all([
+      const [students, sessions, attendance, sanctions, support, responses, summary, attTimed, ticketsTimed] = await Promise.all([
         supabase.from('students').select('id, degree_level, profile_reviewed, persons(nationality)'),
         supabase.from('sessions').select('id, status, planned_date'),
         supabase.from('attendance').select('status'),
@@ -22,7 +24,29 @@ export default function Stats({ onNavigate }) {
         supabase.from('support_records').select('kind'),
         supabase.from('survey_responses').select('id'),
         supabase.rpc('students_at_risk'),
+        supabase.from('attendance').select('status, sessions(planned_date)'),
+        supabase.from('tickets').select('created_at, status_code, type_id, ticket_types(name)'),
       ])
+      // اتجاه الحضور الشهري
+      const monthly = {}
+      ;(attTimed.data || []).forEach(a => {
+        const d = a.sessions?.planned_date; if (!d) return
+        const m = d.slice(0, 7)
+        if (!monthly[m]) monthly[m] = { present: 0, total: 0 }
+        monthly[m].total++; if (a.status === 'present') monthly[m].present++
+      })
+      const trend = Object.keys(monthly).sort().slice(-6).map(m => ({
+        month: m, rate: monthly[m].total ? Math.round(monthly[m].present / monthly[m].total * 100) : 0,
+      }))
+      setTrend(trend)
+      // تنبيهات استباقية: تراكم بلاغات نوع معيّن مفتوحة
+      const openByType = {}
+      ;(ticketsTimed.data || []).forEach(t => {
+        if (t.status_code !== 'closed') { const n = t.ticket_types?.name || 'عام'; openByType[n] = (openByType[n]||0)+1 }
+      })
+      const proactive = []
+      Object.entries(openByType).forEach(([name, cnt]) => { if (cnt >= 3) proactive.push(`تراكم ${cnt} بلاغات «${name}» مفتوحة`) })
+      setProactive(proactive)
       setData({
         students: students.data || [], sessions: sessions.data || [],
         attendance: attendance.data || [], sanctions: sanctions.data || [],
@@ -119,6 +143,20 @@ export default function Stats({ onNavigate }) {
       )}
 
       {/* الرسوم */}
+      {proactive.length > 0 && (
+        <div className="panel proactive-panel">
+          <h3>🔔 تنبيهات استباقية</h3>
+          {proactive.map((p, i) => <div key={i} className="proactive-item">{p}</div>)}
+        </div>
+      )}
+
+      {trend.length > 1 && (
+        <div className="panel">
+          <h3>اتجاه الحضور الشهري</h3>
+          <TrendChart data={trend} />
+        </div>
+      )}
+
       <div className="charts-row">
         <div className="panel"><h3>التوزيع حسب الجنسية</h3><BarList data={nats} /></div>
         <div className="panel"><h3>التوزيع حسب المرحلة</h3><BarList data={degs} /></div>
@@ -148,6 +186,23 @@ function BarList({ data }) {
         </div>
       ))}
       {sorted.length === 0 && <div className="muted">لا توجد بيانات بعد.</div>}
+    </div>
+  )
+}
+
+function TrendChart({ data }) {
+  const max = 100
+  return (
+    <div className="trend-chart">
+      {data.map((d, i) => (
+        <div key={i} className="trend-col">
+          <div className="trend-bar-wrap">
+            <div className="trend-val">{d.rate}%</div>
+            <div className="trend-bar" style={{ height: (d.rate / max * 100) + '%' }}></div>
+          </div>
+          <div className="trend-month">{d.month}</div>
+        </div>
+      ))}
     </div>
   )
 }

@@ -16,6 +16,7 @@ export default function Surveys() {
   const [results, setResults] = useState(null)
   const [editMeta, setEditMeta] = useState(null)
   const [categories, setCategories] = useState([])
+  const [templates, setTemplates] = useState([])
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ title: '', description: '', target_category_id: null })
   const [msg, setMsg] = useState(null)
@@ -23,11 +24,29 @@ export default function Surveys() {
   async function loadAll() {
     const { data: cats } = await supabase.from('categories').select('id, name, member_type').order('name')
     setCategories(cats || [])
+    const { data: tpls } = await supabase.from('templates').select('*').eq('type', 'survey').order('created_at', { ascending: false })
+    setTemplates(tpls || [])
     const { data } = await supabase.from('surveys').select('*, survey_questions(id)').order('created_at', { ascending: false })
     setSurveys(data || []); setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
 
+  async function saveAsTemplate(s) {
+    const name = window.prompt('اسم القالب:', s.title)
+    if (!name) return
+    const { data: qs } = await supabase.from('survey_questions').select('q_text, q_type, options, sort_order, required').eq('survey_id', s.id)
+    await supabase.from('templates').insert({ type: 'survey', name, payload: { title: s.title, description: s.description, questions: qs || [] } })
+    toast('تم حفظ القالب'); loadAll()
+  }
+  async function createFromTemplate(tplId) {
+    const tpl = templates.find(t => t.id === tplId); if (!tpl) return
+    const p = tpl.payload
+    const { data: sv } = await supabase.from('surveys').insert({ title: p.title, description: p.description }).select().single()
+    if (p.questions?.length) await supabase.from('survey_questions').insert(p.questions.map(q => ({
+      survey_id: sv.id, q_text: q.q_text, q_type: q.q_type, options: q.options, sort_order: q.sort_order, required: q.required,
+    })))
+    toast('أُنشئت استبانة من القالب'); setEditing(sv)
+  }
   async function create() {
     if (!form.title.trim()) { setMsg('اكتب عنوان الاستبانة'); return }
     const { data } = await supabase.from('surveys').insert(form).select().single()
@@ -61,7 +80,15 @@ export default function Surveys() {
   return (
     <div>
       {!creating ? (
-        <button className="save-btn" style={{ marginBottom: 16 }} onClick={() => setCreating(true)}>+ إنشاء استبانة جديدة</button>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="save-btn" style={{ width: 'auto', padding: '12px 22px' }} onClick={() => setCreating(true)}>+ إنشاء استبانة جديدة</button>
+          {templates.length > 0 && (
+            <select className="tpl-select" defaultValue="" onChange={e => { if (e.target.value) createFromTemplate(e.target.value) }}>
+              <option value="">أو أنشئ من قالب…</option>
+              {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+          )}
+        </div>
       ) : (
         <div className="panel create-survey">
           <h3>استبانة جديدة</h3>
@@ -101,6 +128,7 @@ export default function Surveys() {
             <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
             <button className="mini" onClick={() => notifyStudents(s)}>إشعار الطلاب</button>
             <button className="mini" onClick={() => duplicate(s)}>نسخ</button>
+            <button className="mini" onClick={() => saveAsTemplate(s)}>حفظ كقالب</button>
             <button className="fr-del" onClick={() => del(s.id)}>حذف</button>
           </div>
         </div>
