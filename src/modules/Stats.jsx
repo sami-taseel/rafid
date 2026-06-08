@@ -13,7 +13,7 @@ export default function Stats({ onNavigate }) {
         if (p?.full_name) setUserName(p.full_name.split(' ')[0])
       }
       const [students, sessions, activities, attendance, sanctions, support, responses,
-             surveys, tickets, categories, buildings, units, risk, attTimed] = await Promise.all([
+             surveys, tickets, categories, buildings, units, risk, attTimed, travelers] = await Promise.all([
         supabase.from('students').select('id, degree_level, profile_reviewed, persons(nationality)'),
         supabase.from('sessions').select('id, status, planned_date, activities(track_id, tracks(name_ar))'),
         supabase.from('activities').select('id, tracks(name_ar)'),
@@ -28,6 +28,7 @@ export default function Stats({ onNavigate }) {
         supabase.from('units').select('id'),
         supabase.rpc('students_at_risk'),
         supabase.from('attendance').select('status, sessions(planned_date)'),
+        supabase.rpc('travelers_count'),
       ])
 
       const S = students.data || [], SES = sessions.data || [], ATT = attendance.data || []
@@ -90,6 +91,7 @@ export default function Stats({ onNavigate }) {
         byNat, byDeg, byTrack, trend, proactive,
         risk: risk.data || [], pendingEvict, incomplete, todaySessions,
         completeRate: S.length ? Math.round(S.filter(s=>s.profile_reviewed).length/S.length*100) : 0,
+        travelers: travelers.data ?? 0,
       })
     }
     load()
@@ -209,6 +211,7 @@ export default function Stats({ onNavigate }) {
             <MiniStat label="ردود الاستبانات" value={d.responses} />
             <MiniStat label="الجزاءات" value={d.sanctions} />
             <MiniStat label="طلاب معرّضون" value={d.risk.length} warn={d.risk.length>0} />
+            <MiniStat label="مسافرون حالياً" value={d.travelers} />
           </div>
         </div>
       </div>

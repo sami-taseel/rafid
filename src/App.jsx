@@ -32,6 +32,9 @@ import Help from './modules/Help'
 import Fields from './modules/Fields'
 import TabGroup from './modules/TabGroup'
 import MyAccount from './modules/MyAccount'
+import AttachmentTypes from './modules/AttachmentTypes'
+import EvalCriteria from './modules/EvalCriteria'
+import FormsAdmin from './modules/FormsAdmin'
 import { registerSW } from './push'
 
 export default function App() {
@@ -108,6 +111,8 @@ function StaffApp() {
     students: <TabGroup tabs={[
       { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
       { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
+      { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
+      { key: 'eval_criteria', label: 'معايير التقييم', el: <EvalCriteria /> },
     ]} />,
     activities: <TabGroup tabs={[
       { key: 'acts', label: 'الأنشطة', el: <Tracks /> },
@@ -117,6 +122,7 @@ function StaffApp() {
     housing: <TabGroup tabs={[
       { key: 'buildings', label: 'العمارات والوحدات', el: <Buildings /> },
       { key: 'violations', label: 'المخالفات', el: <Housing /> },
+      { key: 'forms', label: 'النماذج والموافقات', el: <FormsAdmin /> },
       { key: 'policy', label: 'لائحة السكن', el: <Policy /> },
     ]} />,
     support_reports: <TabGroup tabs={[

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import StudentEval, { statusLabel } from './StudentEval'
 import { Spinner } from './Students'
 import { useState as useCertState } from 'react'
 import Certificate from './Certificate'
@@ -9,6 +10,7 @@ export default function StudentDetail({ studentId, onBack }) {
   const toast = useToast()
   const [d, setD] = useState(null)
   const [buildings, setBuildings] = useState([])
+  const [detailTab, setDetailTab] = useState('info')
   const [cert, setCert] = useCertState(false)
 
   useEffect(() => {
@@ -30,12 +32,6 @@ export default function StudentDetail({ studentId, onBack }) {
 
   useEffect(() => { supabase.rpc('active_buildings').then(({ data }) => setBuildings(data || [])) }, [])
 
-  async function setBuilding(bid) {
-    await supabase.from('students').update({ housing_building_id: bid || null }).eq('id', studentId)
-    setD({ ...d, s: { ...d.s, housing_building_id: bid || null } })
-    toast('تم تحديث سكن الطالب')
-  }
-
   if (!d) return <Spinner />
   const present = d.att.filter(a => a.status === 'present').length
   const absent = d.att.filter(a => a.status === 'absent').length
@@ -49,11 +45,20 @@ export default function StudentDetail({ studentId, onBack }) {
         <div>
           <h2>{p?.full_name || '—'}</h2>
           <span className="muted">{d.s?.degree_level} · {p?.nationality}</span>
+          {d.s?.admission_status && d.s.admission_status !== 'active' && <span className={'adm-badge adm-' + d.s.admission_status}>{statusLabel(d.s.admission_status)}</span>}
         </div>
         <button className="mini" style={{ marginRight: 'auto' }} onClick={() => setCert(true)}>إصدار شهادة</button>
       </div>
+
+      <div className="detail-tabs">
+        <button className={detailTab === 'info' ? 'on' : ''} onClick={() => setDetailTab('info')}>المعلومات</button>
+        <button className={detailTab === 'eval' ? 'on' : ''} onClick={() => setDetailTab('eval')}>التقييم والقبول</button>
+      </div>
       {cert && <Certificate name={p?.full_name} activity="أنشطة مشروع طلاب المنح" date={new Date().toLocaleDateString('ar')} onClose={() => setCert(false)} />}
 
+      {detailTab === 'eval' && <StudentEval studentId={studentId} currentStatus={d.s?.admission_status} onStatusChange={s => setD({ ...d, s: { ...d.s, admission_status: s } })} />}
+
+      {detailTab === 'info' && <>
       <div className="stats">
         <div className="stat-card"><div className="num">{present}</div><div className="label">حضور</div></div>
         <div className="stat-card"><div className="num">{absent}</div><div className="label">غياب</div></div>
@@ -69,13 +74,7 @@ export default function StudentDetail({ studentId, onBack }) {
           <Info label="الجنسية" val={p?.nationality} />
           <Info label="البريد" val={p?.email} />
         </div>
-        <div className="field" style={{ marginTop: 14, maxWidth: 320 }}>
-          <label>مكان السكن (العمارة) — يمكن لمدير النظام تعديله</label>
-          <select value={d.s?.housing_building_id || ''} onChange={e => setBuilding(e.target.value)}>
-            <option value="">غير محدّد</option>
-            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-        </div>
+        <HousingAssign d={d} setD={setD} studentId={studentId} buildings={buildings} toast={toast} />
       </div>
 
       {d.vals.length > 0 && (
@@ -105,9 +104,60 @@ export default function StudentDetail({ studentId, onBack }) {
           {d.sanc.map(s => <div key={s.id} className="list-line">⚠️ {sanctionLabel(s.level)} — {s.cited_article}</div>)}
         </div>
       )}
+      </>}
     </div>
   )
 }
+function HousingAssign({ d, setD, studentId, buildings, toast }) {
+  const [units, setUnits] = useState([])
+  const buildingId = d.s?.housing_building_id || ''
+
+  useEffect(() => {
+    if (buildingId) supabase.rpc('building_units', { p_building: buildingId }).then(({ data }) => setUnits(data || []))
+    else setUnits([])
+  }, [buildingId])
+
+  async function pickBuilding(bid) {
+    await supabase.from('students').update({ housing_building_id: bid || null, unit_id: null }).eq('id', studentId)
+    setD({ ...d, s: { ...d.s, housing_building_id: bid || null, unit_id: null } })
+    toast('تم تحديث العمارة')
+  }
+  async function pickUnit(uid) {
+    const { data } = await supabase.rpc('assign_unit', { p_student: studentId, p_unit: uid || null })
+    toast(data || 'تم')
+    if (data && data.includes('بنجاح')) setD({ ...d, s: { ...d.s, unit_id: uid } })
+    else if (!uid) setD({ ...d, s: { ...d.s, unit_id: null } })
+    // إعادة تحميل عدد الساكنين
+    if (buildingId) supabase.rpc('building_units', { p_building: buildingId }).then(({ data }) => setUnits(data || []))
+  }
+
+  const bType = buildings.find(b => b.id === buildingId)?.building_type
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div className="form-row">
+        <div className="field" style={{ flex: 1 }}>
+          <label>العمارة</label>
+          <select value={buildingId} onChange={e => pickBuilding(e.target.value)}>
+            <option value="">غير محدّد</option>
+            {buildings.map(b => <option key={b.id} value={b.id}>{b.name} ({b.building_type === 'families' ? 'عوائل' : 'عزّاب'})</option>)}
+          </select>
+        </div>
+        {buildingId && (
+          <div className="field" style={{ flex: 1 }}>
+            <label>الشقة {bType === 'families' ? '(طالب واحد)' : '(عدة طلاب)'}</label>
+            <select value={d.s?.unit_id || ''} onChange={e => pickUnit(e.target.value)}>
+              <option value="">غير محدّدة</option>
+              {units.map(u => <option key={u.id} value={u.id}>شقة {u.unit_no} · {u.rooms} غرفة · {u.occupants} ساكن</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+      {buildingId && units.length === 0 && <p className="muted" style={{ fontSize: 13 }}>لا شقق معرّفة في هذه العمارة. أضفها من «العمارات والوحدات».</p>}
+    </div>
+  )
+}
+
 function Info({ label, val }) {
   return <div className="info-item"><span className="info-label">{label}</span><span className="info-val">{val || '—'}</span></div>
 }
