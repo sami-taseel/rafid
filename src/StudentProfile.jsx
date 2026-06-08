@@ -8,6 +8,7 @@ import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
 import StudentHome from './modules/StudentHome'
 import StudentTickets from './modules/StudentTickets'
+import { pushSupported, subscribePush, pushStatus } from './push'
 
 export default function StudentProfile(props) {
   return <LangProvider><StudentProfileInner {...props} /></LangProvider>
@@ -122,6 +123,7 @@ function StudentProfileInner({ session }) {
         {/* ترويسة الترحيب */}
         <div className="sp-hero">
           <div className="sp-hero-actions">
+            <PushToggle />
             <Notifications studentId={student?.id} onOpenTicket={() => setTab('tickets')} />
             <LangPicker />
             <button className="sp-logout" onClick={handleLogout}>{t('logout')}</button>
@@ -192,5 +194,21 @@ function StudentProfileInner({ session }) {
         )}
       </div>
     </div>
+  )
+}
+
+function PushToggle() {
+  const [status, setStatus] = useState('default')
+  useEffect(() => { pushStatus().then(setStatus) }, [])
+  if (!pushSupported()) return null
+  if (status === 'granted') return null  // مُفعّل بالفعل
+  async function enable() {
+    const r = await subscribePush()
+    if (r.ok) setStatus('granted')
+    else if (r.reason === 'denied') setStatus('denied')
+  }
+  if (status === 'denied') return null
+  return (
+    <button className="push-toggle" onClick={enable} title="تفعيل إشعارات الجوال">🔔 تفعيل التنبيهات</button>
   )
 }

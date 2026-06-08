@@ -30,18 +30,24 @@ import SupervisorMetrics from './modules/SupervisorMetrics'
 import SponsorsAdmin from './modules/SponsorsAdmin'
 import Help from './modules/Help'
 import Fields from './modules/Fields'
+import { registerSW } from './push'
 
 export default function App() {
   const [session, setSession] = useState(null)
   const [ready, setReady] = useState(false)
   const [recovery, setRecovery] = useState(false)
   const [checkin, setCheckin] = useState(null)
+  const [offline, setOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
     // كشف رابط استعادة كلمة المرور
     if (window.location.hash.includes('type=recovery')) setRecovery(true)
     const ci = window.location.hash.match(/checkin=([\w-]+)/)
     if (ci) setCheckin(ci[1])
+    registerSW()  // تفعيل وضع عدم الاتصال والإشعارات
+    const goOnline = () => setOffline(false), goOffline = () => setOffline(true)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
     supabase.auth.getSession().then(({ data }) => { setSession(data.session); setReady(true) })
     const { data: l } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
@@ -51,14 +57,15 @@ export default function App() {
         supabase.from('login_history').insert({ user_id: s.user.id, user_agent: navigator.userAgent }).then(() => {})
       }
     })
-    return () => l.subscription.unsubscribe()
+    return () => { l.subscription.unsubscribe(); window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline) }
   }, [])
 
   if (!ready) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
+  const offlineBar = offline ? <div className="offline-bar">📡 أنت غير متصل بالإنترنت — تُعرض آخر البيانات المحفوظة</div> : null
   if (recovery) return <ResetPassword onDone={() => { setRecovery(false); window.location.hash = '' }} />
   if (checkin && session) return <CheckIn sessionId={checkin} onDone={() => { setCheckin(null); window.location.hash = '' }} />
   if (!session) return <Login />
-  return <RoleRouter session={session} />
+  return <>{offlineBar}<RoleRouter session={session} /></>
 }
 
 function RoleRouter({ session }) {
