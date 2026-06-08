@@ -31,6 +31,9 @@ export default function StudentSurveys({ studentId }) {
       .insert({ survey_id: active.id, student_id: studentId }).select().single()
     const rows = questions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
     await supabase.from('survey_answers').insert(rows)
+    // منح نقاط تعبئة الاستبانة
+    const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
+    await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' })
     setMsg('شكراً، تم إرسال إجابتك.'); setActive(null)
   }
 

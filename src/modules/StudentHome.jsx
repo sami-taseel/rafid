@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useLang } from '../i18n/LangContext'
 
 export default function StudentHome({ studentId, onGoTab }) {
+  const [points, setPoints] = useState(0)
   const [data, setData] = useState(null)
   const { t } = useLang()
   const [showAll, setShowAll] = useState(false)
@@ -36,6 +37,11 @@ export default function StudentHome({ studentId, onGoTab }) {
     if (studentId) load()
   }, [studentId])
 
+  useEffect(() => {
+    if (!studentId) return
+    supabase.rpc('student_points', { p_student: studentId }).then(({ data }) => setPoints(data || 0))
+  }, [studentId])
+
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
 
   const attRate = data.total ? Math.round(data.present / (data.present + data.absent || 1) * 100) : null
@@ -49,6 +55,16 @@ export default function StudentHome({ studentId, onGoTab }) {
 
   return (
     <div className="st-home">
+      {points > 0 && (
+        <div className="points-banner">
+          <div className="points-icon">⭐</div>
+          <div>
+            <div className="points-num">{points} نقطة</div>
+            <div className="points-lbl">{badgeFor(points)}</div>
+          </div>
+        </div>
+      )}
+
       {/* أقرب موعد قادم */}
       {nextDaySessions.length > 0 ? (
         <div className="next-wrap">
@@ -126,4 +142,12 @@ export default function StudentHome({ studentId, onGoTab }) {
       )}
     </div>
   )
+}
+
+function badgeFor(p) {
+  if (p >= 500) return '🏆 طالب متميّز'
+  if (p >= 300) return '🥇 طالب نشيط'
+  if (p >= 150) return '🥈 طالب مواظب'
+  if (p >= 50) return '🥉 بداية موفّقة'
+  return 'واصل التقدّم!'
 }

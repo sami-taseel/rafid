@@ -1085,3 +1085,49 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .metric-stat { text-align: center; background: var(--blue-soft); border-radius: 10px; padding: 12px 8px; }
 .ms-num { display: block; font-size: 18px; font-weight: 700; color: var(--blue); }
 .ms-lbl { display: block; font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+
+/* ========== التقويم الموحّد — تحسينات احترافية ========== */
+.cal-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.cal-toolbar select { padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); }
+.cal-cell { min-height: 92px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px; position: relative; overflow: hidden; }
+.cal-cell.empty { background: transparent; border: none; }
+.cal-cell.today { border: 2px solid var(--blue); background: var(--blue-soft); }
+.cal-cell.today .cal-num { background: var(--navy); color: #fff; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.cal-num { font-size: 13px; color: var(--text-soft); font-weight: 600; }
+.cal-event { font-size: 11px; padding: 3px 7px; border-radius: 6px; margin-top: 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-right: 3px solid; transition: transform .1s; }
+.cal-event:hover { transform: translateX(-2px); }
+.cal-time { font-weight: 700; opacity: .85; }
+.cal-more { font-size: 11px; color: var(--blue); cursor: pointer; margin-top: 4px; font-weight: 600; padding-right: 4px; }
+
+/* ألوان المسارات (تُطابق رموز المسارات الستة، مع افتراضي) */
+.track-educational { background: #e8f0fc; color: #2e5496; border-right-color: #2e5496; }
+.track-skills      { background: #e7f6ef; color: #1d7a52; border-right-color: #1d7a52; }
+.track-social      { background: #fdeef4; color: #b03060; border-right-color: #b03060; }
+.track-care        { background: #fef3da; color: #92660a; border-right-color: #92660a; }
+.track-applied     { background: #efe8fc; color: #6b3fc0; border-right-color: #6b3fc0; }
+.track-companions  { background: #e6f4f6; color: #157080; border-right-color: #157080; }
+.track-x           { background: var(--blue-soft); color: var(--blue); border-right-color: var(--blue); }
+:root[data-theme="dark"] .cal-event { filter: brightness(1.4); }
+
+/* مفتاح الألوان */
+.cal-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.legend-item { font-size: 12px; padding: 5px 12px; border-radius: 14px; border-right: 3px solid; font-weight: 500; }
+
+/* نافذة تفاصيل اليوم */
+.day-event-row { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.day-event-row:last-child { border-bottom: none; }
+.day-event-time { background: var(--blue-soft); color: var(--blue); font-weight: 700; font-size: 13px; padding: 6px 10px; border-radius: 8px; min-width: 52px; text-align: center; flex-shrink: 0; }
+.day-event-title { font-weight: 600; font-size: 15px; }
+
+/* ========== التقرير المخصّص — اختيار الأعمدة الاحترافي ========== */
+.col-pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.col-chip { padding: 8px 16px; border: 1.5px solid var(--border); background: var(--surface); border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text); transition: all .15s; user-select: none; }
+.col-chip:hover { border-color: var(--blue); }
+.col-chip.on { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 600; }
+.col-chip.on::before { content: '✓ '; }
+
+/* بطاقة النقاط */
+.points-banner { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #f5a623, #f7b955); border-radius: 16px; padding: 16px 20px; margin-bottom: 16px; color: #fff; }
+.points-icon { font-size: 36px; }
+.points-num { font-size: 24px; font-weight: 800; }
+.points-lbl { font-size: 14px; opacity: .95; margin-top: 2px; }
