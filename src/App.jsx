@@ -30,6 +30,7 @@ import SupervisorMetrics from './modules/SupervisorMetrics'
 import SponsorsAdmin from './modules/SponsorsAdmin'
 import Help from './modules/Help'
 import Fields from './modules/Fields'
+import TabGroup from './modules/TabGroup'
 import { registerSW } from './push'
 
 export default function App() {
@@ -96,7 +97,42 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, sup_metrics: <SupervisorMetrics />, sponsors_admin: <SponsorsAdmin />, help: <Help />,
+    // مجموعات مدموجة بتبويبات داخلية
+    tickets: <TabGroup tabs={[
+      { key: 'process', label: 'البلاغات', el: <TicketsStaff /> },
+      { key: 'setup', label: 'الإعداد', el: <TicketsAdmin /> },
+      { key: 'ratings', label: 'التقييمات', el: <TicketRatings /> },
+      { key: 'metrics', label: 'أداء المشرفين', el: <SupervisorMetrics /> },
+    ]} />,
+    students: <TabGroup tabs={[
+      { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
+      { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
+    ]} />,
+    activities: <TabGroup tabs={[
+      { key: 'acts', label: 'الأنشطة', el: <Tracks /> },
+      { key: 'att', label: 'الحضور', el: <Attendance /> },
+      { key: 'cal', label: 'التقويم', el: <Calendar /> },
+    ]} />,
+    housing: <TabGroup tabs={[
+      { key: 'buildings', label: 'العمارات والوحدات', el: <Buildings /> },
+      { key: 'violations', label: 'المخالفات', el: <Housing /> },
+      { key: 'policy', label: 'لائحة السكن', el: <Policy /> },
+    ]} />,
+    support_reports: <TabGroup tabs={[
+      { key: 'support', label: 'سجل الدعم', el: <Support /> },
+      { key: 'reports', label: 'التقارير والتصدير', el: <Reports /> },
+    ]} />,
+    sponsors: <TabGroup tabs={[
+      { key: 'dashboard', label: 'اللوحة التنفيذية', el: <Sponsor /> },
+      { key: 'manage', label: 'إدارة الجهات', el: <SponsorsAdmin /> },
+    ]} />,
+    system: <TabGroup tabs={[
+      { key: 'users', label: 'المستخدمون والأدوار', el: <Users /> },
+      { key: 'languages', label: 'اللغات', el: <Languages /> },
+      { key: 'audit', label: 'سجل العمليات', el: <AuditLog /> },
+      { key: 'status', label: 'حالة النظام', el: <SystemStatus /> },
+    ]} />,
+    surveys: <Surveys />, categories: <Categories />, help: <Help />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }

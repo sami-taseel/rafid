@@ -73,17 +73,17 @@ export default function Stats({ onNavigate }) {
   if (pendingEvict > 0) tasks.push({ icon: '🚨', text: `${pendingEvict} إخلاء معلّق يحتاج مراجعتك`, type: 'urgent', go: 'housing' })
   if (highRisk > 0) tasks.push({ icon: '⚠️', text: `${highRisk} طالب معرّض للخطر`, type: 'urgent', go: null })
   if (incomplete > 0) tasks.push({ icon: '📝', text: `${incomplete} طالب لم يكمل بياناته`, type: 'warn', go: 'students' })
-  if (todaySessions.length > 0) tasks.push({ icon: '📅', text: `${todaySessions.length} جلسة مجدولة اليوم`, type: 'info', go: 'calendar' })
+  if (todaySessions.length > 0) tasks.push({ icon: '📅', text: `${todaySessions.length} جلسة مجدولة اليوم`, type: 'info', go: 'activities' })
 
   const gregDate = new Date().toLocaleDateString('ar-SA-u-ca-gregory', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
   let hijri = ''
   try { hijri = new Date().toLocaleDateString('ar-SA-u-ca-islamic', { year:'numeric', month:'long', day:'numeric' }) } catch {}
 
   const actions = [
-    { label: 'إضافة نشاط', icon: '➕', go: 'tracks' },
-    { label: 'رصد الحضور', icon: '✓', go: 'attendance' },
+    { label: 'إضافة نشاط', icon: '➕', go: 'activities' },
+    { label: 'رصد الحضور', icon: '✓', go: 'activities' },
     { label: 'إنشاء استبانة', icon: '📋', go: 'surveys' },
-    { label: 'تسجيل دعم', icon: '🎁', go: 'support' },
+    { label: 'تسجيل دعم', icon: '🎁', go: 'support_reports' },
   ]
 
   return (

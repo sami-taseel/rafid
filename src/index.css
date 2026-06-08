@@ -1163,3 +1163,10 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* زر تفعيل الإشعارات */
 .push-toggle { background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-family: inherit; font-size: 13px; white-space: nowrap; }
 .push-toggle:hover { background: rgba(255,255,255,.28); }
+
+/* ===== تبويبات الصفحات المدموجة ===== */
+.tabgroup-bar { display: flex; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 6px; margin-bottom: 18px; flex-wrap: wrap; box-shadow: var(--shadow); }
+.tabgroup-btn { flex: 1; min-width: 120px; padding: 11px 16px; border: none; background: transparent; border-radius: 9px; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--text-soft); transition: all .15s; white-space: nowrap; }
+.tabgroup-btn:hover { background: var(--blue-soft); color: var(--blue); }
+.tabgroup-btn.on { background: var(--navy); color: #fff; }
+:root[data-theme="dark"] .tabgroup-btn.on { background: var(--blue); }
