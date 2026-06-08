@@ -198,8 +198,11 @@ function StudentProfileInner({ session }) {
 }
 
 function PushToggle() {
+  // إشعارات الجوال مؤجّلة حالياً (تحتاج إعداد إرسال). الكود جاهز للتفعيل لاحقاً.
+  const PUSH_ENABLED = false
   const [status, setStatus] = useState('default')
   useEffect(() => { pushStatus().then(setStatus) }, [])
+  if (!PUSH_ENABLED) return null
   if (!pushSupported()) return null
   if (status === 'granted') return null  // مُفعّل بالفعل
   async function enable() {
