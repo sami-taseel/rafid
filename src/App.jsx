@@ -25,6 +25,7 @@ import TicketsAdmin from './modules/TicketsAdmin'
 import TicketsStaff from './modules/TicketsStaff'
 import TicketRatings from './modules/TicketRatings'
 import SystemStatus from './modules/SystemStatus'
+import SupervisorMetrics from './modules/SupervisorMetrics'
 import Help from './modules/Help'
 import Fields from './modules/Fields'
 
@@ -84,7 +85,7 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, help: <Help />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, sup_metrics: <SupervisorMetrics />, help: <Help />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }

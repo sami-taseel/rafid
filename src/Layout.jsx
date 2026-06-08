@@ -22,6 +22,7 @@ const MENU = [
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },
   { key: 'ticket_ratings', label: 'تقييمات البلاغات', icon: '⭐' },
+  { key: 'sup_metrics', label: 'أداء المشرفين', icon: '📊' },
   { key: 'languages',  label: 'اللغات',         icon: '🌐' },
   { key: 'status',     label: 'حالة النظام',    icon: '🩺' },
   { key: 'help',       label: 'مساعدة',         icon: '❓' },

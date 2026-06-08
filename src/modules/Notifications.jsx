@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 
 // جرس إشعارات الطالب
 export default function Notifications({ studentId, onOpenTicket }) {
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
+  const ref = useRef(null)
 
   async function load() {
     if (!studentId) return
@@ -14,6 +15,13 @@ export default function Notifications({ studentId, onOpenTicket }) {
   }
   useEffect(() => { load() }, [studentId])
 
+  // إغلاق اللوحة عند النقر خارجها (كقائمة اللغة)
+  useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+
   const unread = items.filter(i => !i.is_read).length
 
   async function markAll() {
@@ -22,7 +30,7 @@ export default function Notifications({ studentId, onOpenTicket }) {
   }
 
   return (
-    <div className="notif-wrap">
+    <div className="notif-wrap" ref={ref}>
       <button className="notif-bell" onClick={() => { setOpen(!open); if (!open && unread) markAll() }}>
         🔔{unread > 0 && <span className="notif-badge">{unread}</span>}
       </button>

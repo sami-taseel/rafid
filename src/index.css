@@ -1073,3 +1073,15 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* نافذة الإدخال الاحترافية */
 .prompt-input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 15px; box-sizing: border-box; margin-bottom: 18px; background: var(--surface); color: var(--text); }
 .prompt-input:focus { border-color: var(--blue); outline: none; }
+
+/* مؤشرات أداء المشرفين */
+.metrics-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
+.metrics-head select { padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; }
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+.metric-name { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 14px; }
+:root[data-theme="dark"] .metric-name { color: #8fb5ed; }
+.metric-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.metric-stat { text-align: center; background: var(--blue-soft); border-radius: 10px; padding: 12px 8px; }
+.ms-num { display: block; font-size: 18px; font-weight: 700; color: var(--blue); }
+.ms-lbl { display: block; font-size: 12px; color: var(--text-soft); margin-top: 4px; }
