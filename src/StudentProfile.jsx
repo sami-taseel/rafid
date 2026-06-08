@@ -141,7 +141,7 @@ function StudentProfileInner({ session }) {
 
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets','البلاغات'],['policy',t('policy')]].map(([k, l]) => (
+          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets',t('tickets')],['policy',t('policy')]].map(([k, l]) => (
             <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useLang } from '../i18n/LangContext'
 import { uploadTicketFile } from '../ticketUtils'
 import Attachment from './Attachment'
 
 export default function StudentTickets({ studentId }) {
+  const { t } = useLang()
   const [view, setView] = useState('list')   // list | new | detail
   const [tickets, setTickets] = useState([])
   const [types, setTypes] = useState([])
@@ -42,8 +44,8 @@ export default function StudentTickets({ studentId }) {
 
   return (
     <div>
-      <button className="sp-save" style={{ marginBottom: 16 }} onClick={() => setView('new')}>+ إنشاء بلاغ جديد</button>
-      {tickets.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 30 }}>لا توجد بلاغات. أنشئ بلاغاً عند الحاجة.</div>}
+      <button className="sp-save" style={{ marginBottom: 16 }} onClick={() => setView('new')}>+ {t('newTicket')}</button>
+      {tickets.length === 0 && <div className="muted" style={{ textAlign: 'center', padding: 30 }}>{t('noTickets')}</div>}
       {tickets.map(t => (
         <div key={t.id} className={"ticket-card" + (t.status_code === "closed" ? " closed-card" : "")} onClick={() => { setSel(t); setView('detail') }}>
           <div className="ticket-card-head">

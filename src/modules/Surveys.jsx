@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import { useToast } from '../Toast'
+import { usePrompt } from '../Confirm'
 import OptionsEditor from './OptionsEditor'
 
 const TARGETS = ['الجميع', 'الدراسات العليا فقط', 'البكالوريوس فقط', 'المرافقون']
@@ -10,6 +11,7 @@ const TARGETS = ['الجميع', 'الدراسات العليا فقط', 'الب
 export default function Surveys() {
   const confirmDialog = useConfirm()
   const toast = useToast()
+  const promptDialog = usePrompt()
   const [surveys, setSurveys] = useState([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(null)
@@ -32,7 +34,7 @@ export default function Surveys() {
   useEffect(() => { loadAll() }, [])
 
   async function saveAsTemplate(s) {
-    const name = window.prompt('اسم القالب:', s.title)
+    const name = await promptDialog({ title: 'حفظ كقالب', message: 'اسم القالب:', defaultValue: s.title, confirmText: 'حفظ' })
     if (!name) return
     const { data: qs } = await supabase.from('survey_questions').select('q_text, q_type, options, sort_order, required').eq('survey_id', s.id)
     await supabase.from('templates').insert({ type: 'survey', name, payload: { title: s.title, description: s.description, questions: qs || [] } })

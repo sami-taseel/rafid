@@ -11,6 +11,7 @@ export const translations = {
     submitted: 'شكراً، تم إرسال إجابتك.', back: 'رجوع', acceptPolicy: 'أقرّ بأنني اطّلعت وأوافق على اللائحة',
     accepted: 'لقد وافقت على اللائحة. شكراً لك.', notifications: 'الإشعارات', noNotifications: 'لا توجد إشعارات',
     selectLang: 'اللغة', residencyNo: 'رقم الإقامة', phone: 'رقم الجوال', nationality: 'الجنسية',
+    tickets: "البلاغات", newTicket: "إنشاء بلاغ جديد", myTickets: "بلاغاتي", ticketType: "نوع البلاغ", ticketTitle: "عنوان البلاغ", ticketDesc: "وصف البلاغ", attachment: "مرفق (اختياري)", sendTicket: "إرسال البلاغ", noTickets: "لا توجد بلاغات. أنشئ بلاغاً عند الحاجة.", priority: "مستوى الأهمية", normal: "عادي", urgent: "عاجل", critical: "طارئ", reopen: "إعادة فتح البلاغ", confirmCloseT: "تأكيد إغلاق البلاغ", reply: "اكتب رداً…", send: "إرسال", home: "الرئيسية", nextAppt: "أقرب موعد قادم", upcoming: "المواعيد القادمة", noUpcoming: "لا توجد مواعيد قادمة حالياً", viewAll: "عرض الكل",
   },
   en: {
     welcome: 'Welcome', profileComplete: 'Profile completion', myData: 'My Data',
@@ -23,6 +24,7 @@ export const translations = {
     submitted: 'Thank you, your response was submitted.', back: 'Back', acceptPolicy: 'I acknowledge and accept the policy',
     accepted: 'You have accepted the policy. Thank you.', notifications: 'Notifications', noNotifications: 'No notifications',
     selectLang: 'Language', residencyNo: 'Residency No.', phone: 'Phone', nationality: 'Nationality',
+    tickets: "Tickets", newTicket: "New ticket", myTickets: "My tickets", ticketType: "Ticket type", ticketTitle: "Ticket title", ticketDesc: "Description", attachment: "Attachment (optional)", sendTicket: "Send ticket", noTickets: "No tickets yet. Create one when needed.", priority: "Priority", normal: "Normal", urgent: "Urgent", critical: "Critical", reopen: "Reopen ticket", confirmCloseT: "Confirm close", reply: "Write a reply…", send: "Send", home: "Home", nextAppt: "Next appointment", upcoming: "Upcoming", noUpcoming: "No upcoming appointments", viewAll: "View all",
   },
   id: {
     welcome: 'Selamat datang', profileComplete: 'Kelengkapan profil', myData: 'Data Saya',
@@ -35,6 +37,7 @@ export const translations = {
     submitted: 'Terima kasih, jawaban Anda terkirim.', back: 'Kembali', acceptPolicy: 'Saya menyetujui peraturan ini',
     accepted: 'Anda telah menyetujui peraturan. Terima kasih.', notifications: 'Notifikasi', noNotifications: 'Tidak ada notifikasi',
     selectLang: 'Bahasa', residencyNo: 'No. Izin Tinggal', phone: 'Telepon', nationality: 'Kebangsaan',
+    tickets: "Laporan", newTicket: "Laporan baru", myTickets: "Laporan saya", ticketType: "Jenis laporan", ticketTitle: "Judul laporan", ticketDesc: "Deskripsi", attachment: "Lampiran (opsional)", sendTicket: "Kirim laporan", noTickets: "Belum ada laporan.", priority: "Prioritas", normal: "Normal", urgent: "Mendesak", critical: "Darurat", reopen: "Buka kembali", confirmCloseT: "Konfirmasi tutup", reply: "Tulis balasan…", send: "Kirim", home: "Beranda", nextAppt: "Janji berikutnya", upcoming: "Mendatang", noUpcoming: "Tidak ada janji mendatang", viewAll: "Lihat semua",
   },
   ur: {
     welcome: 'خوش آمدید', profileComplete: 'پروفائل کی تکمیل', myData: 'میرا ڈیٹا',
@@ -47,6 +50,7 @@ export const translations = {
     submitted: 'شکریہ، آپ کا جواب موصول ہو گیا۔', back: 'واپس', acceptPolicy: 'میں قواعد سے متفق ہوں',
     accepted: 'آپ نے قواعد قبول کر لیے۔ شکریہ۔', notifications: 'اطلاعات', noNotifications: 'کوئی اطلاع نہیں',
     selectLang: 'زبان', residencyNo: 'اقامہ نمبر', phone: 'فون', nationality: 'قومیت',
+    tickets: "شکایات", newTicket: "نئی شکایت", myTickets: "میری شکایات", ticketType: "شکایت کی قسم", ticketTitle: "عنوان", ticketDesc: "تفصیل", attachment: "منسلکہ (اختیاری)", sendTicket: "بھیجیں", noTickets: "کوئی شکایت نہیں۔", priority: "ترجیح", normal: "عام", urgent: "فوری", critical: "ہنگامی", reopen: "دوبارہ کھولیں", confirmCloseT: "بند کرنے کی تصدیق", reply: "جواب لکھیں…", send: "بھیجیں", home: "ہوم", nextAppt: "اگلی ملاقات", upcoming: "آنے والے", noUpcoming: "کوئی آنے والی ملاقات نہیں", viewAll: "سب دیکھیں",
   },
   tr: {
     welcome: 'Hoş geldiniz', profileComplete: 'Profil tamamlanma', myData: 'Verilerim',
@@ -59,6 +63,7 @@ export const translations = {
     submitted: 'Teşekkürler, yanıtınız gönderildi.', back: 'Geri', acceptPolicy: 'Yönetmeliği kabul ediyorum',
     accepted: 'Yönetmeliği kabul ettiniz. Teşekkürler.', notifications: 'Bildirimler', noNotifications: 'Bildirim yok',
     selectLang: 'Dil', residencyNo: 'İkamet No.', phone: 'Telefon', nationality: 'Uyruk',
+    tickets: "Talepler", newTicket: "Yeni talep", myTickets: "Taleplerim", ticketType: "Talep türü", ticketTitle: "Başlık", ticketDesc: "Açıklama", attachment: "Ek (isteğe bağlı)", sendTicket: "Gönder", noTickets: "Henüz talep yok.", priority: "Öncelik", normal: "Normal", urgent: "Acil", critical: "Kritik", reopen: "Yeniden aç", confirmCloseT: "Kapatmayı onayla", reply: "Yanıt yaz…", send: "Gönder", home: "Ana sayfa", nextAppt: "Sonraki randevu", upcoming: "Yaklaşan", noUpcoming: "Yaklaşan randevu yok", viewAll: "Tümünü gör",
   },
   fr: {
     welcome: 'Bienvenue', profileComplete: 'Profil complété', myData: 'Mes données',
@@ -71,6 +76,7 @@ export const translations = {
     submitted: 'Merci, votre réponse a été envoyée.', back: 'Retour', acceptPolicy: 'J’accepte le règlement',
     accepted: 'Vous avez accepté le règlement. Merci.', notifications: 'Notifications', noNotifications: 'Aucune notification',
     selectLang: 'Langue', residencyNo: 'N° de résidence', phone: 'Téléphone', nationality: 'Nationalité',
+    tickets: "Signalements", newTicket: "Nouveau signalement", myTickets: "Mes signalements", ticketType: "Type", ticketTitle: "Titre", ticketDesc: "Description", attachment: "Pièce jointe (option)", sendTicket: "Envoyer", noTickets: "Aucun signalement.", priority: "Priorité", normal: "Normal", urgent: "Urgent", critical: "Critique", reopen: "Rouvrir", confirmCloseT: "Confirmer la fermeture", reply: "Écrire une réponse…", send: "Envoyer", home: "Accueil", nextAppt: "Prochain rendez-vous", upcoming: "À venir", noUpcoming: "Aucun rendez-vous à venir", viewAll: "Tout voir",
   },
   ms: {
     welcome: 'Selamat datang', profileComplete: 'Kelengkapan profil', myData: 'Data Saya',
@@ -83,6 +89,7 @@ export const translations = {
     submitted: 'Terima kasih, jawapan anda dihantar.', back: 'Kembali', acceptPolicy: 'Saya bersetuju dengan peraturan',
     accepted: 'Anda telah bersetuju. Terima kasih.', notifications: 'Pemberitahuan', noNotifications: 'Tiada pemberitahuan',
     selectLang: 'Bahasa', residencyNo: 'No. Permit', phone: 'Telefon', nationality: 'Kewarganegaraan',
+    tickets: "Laporan", newTicket: "Laporan baharu", myTickets: "Laporan saya", ticketType: "Jenis laporan", ticketTitle: "Tajuk", ticketDesc: "Penerangan", attachment: "Lampiran (pilihan)", sendTicket: "Hantar", noTickets: "Tiada laporan lagi.", priority: "Keutamaan", normal: "Biasa", urgent: "Segera", critical: "Kritikal", reopen: "Buka semula", confirmCloseT: "Sahkan tutup", reply: "Tulis balasan…", send: "Hantar", home: "Utama", nextAppt: "Janji temu seterusnya", upcoming: "Akan datang", noUpcoming: "Tiada janji temu akan datang", viewAll: "Lihat semua",
   },
   bn: {
     welcome: 'স্বাগতম', profileComplete: 'প্রোফাইল সম্পূর্ণতা', myData: 'আমার তথ্য',
@@ -95,6 +102,7 @@ export const translations = {
     submitted: 'ধন্যবাদ, আপনার উত্তর জমা হয়েছে।', back: 'ফিরে', acceptPolicy: 'আমি নীতি গ্রহণ করছি',
     accepted: 'আপনি নীতি গ্রহণ করেছেন। ধন্যবাদ।', notifications: 'বিজ্ঞপ্তি', noNotifications: 'কোনো বিজ্ঞপ্তি নেই',
     selectLang: 'ভাষা', residencyNo: 'রেসিডেন্সি নং', phone: 'ফোন', nationality: 'জাতীয়তা',
+    tickets: "অভিযোগ", newTicket: "নতুন অভিযোগ", myTickets: "আমার অভিযোগ", ticketType: "ধরন", ticketTitle: "শিরোনাম", ticketDesc: "বিবরণ", attachment: "সংযুক্তি (ঐচ্ছিক)", sendTicket: "পাঠান", noTickets: "কোনো অভিযোগ নেই।", priority: "অগ্রাধিকার", normal: "সাধারণ", urgent: "জরুরি", critical: "সংকটপূর্ণ", reopen: "পুনরায় খুলুন", confirmCloseT: "বন্ধ নিশ্চিত করুন", reply: "উত্তর লিখুন…", send: "পাঠান", home: "হোম", nextAppt: "পরবর্তী সাক্ষাৎ", upcoming: "আসন্ন", noUpcoming: "কোনো আসন্ন সাক্ষাৎ নেই", viewAll: "সব দেখুন",
   },
   fa: {
     welcome: 'خوش آمدید', profileComplete: 'تکمیل پروفایل', myData: 'اطلاعات من',
@@ -107,6 +115,7 @@ export const translations = {
     submitted: 'سپاس، پاسخ شما ارسال شد.', back: 'بازگشت', acceptPolicy: 'مقررات را می‌پذیرم',
     accepted: 'شما مقررات را پذیرفتید. سپاسگزاریم.', notifications: 'اعلان‌ها', noNotifications: 'اعلانی نیست',
     selectLang: 'زبان', residencyNo: 'شماره اقامت', phone: 'تلفن', nationality: 'ملیت',
+    tickets: "گزارش‌ها", newTicket: "گزارش جدید", myTickets: "گزارش‌های من", ticketType: "نوع گزارش", ticketTitle: "عنوان", ticketDesc: "توضیحات", attachment: "پیوست (اختیاری)", sendTicket: "ارسال", noTickets: "گزارشی وجود ندارد.", priority: "اولویت", normal: "عادی", urgent: "فوری", critical: "بحرانی", reopen: "بازگشایی", confirmCloseT: "تأیید بستن", reply: "پاسخ بنویسید…", send: "ارسال", home: "خانه", nextAppt: "قرار بعدی", upcoming: "آینده", noUpcoming: "قرار آینده‌ای نیست", viewAll: "مشاهده همه",
   },
   ha: {
     welcome: 'Barka da zuwa', profileComplete: 'Cikar bayani', myData: 'Bayanaina',
@@ -119,6 +128,7 @@ export const translations = {
     submitted: 'Na gode, an aika amsarka.', back: 'Komawa', acceptPolicy: 'Na yarda da dokoki',
     accepted: 'Ka yarda da dokoki. Na gode.', notifications: 'Sanarwa', noNotifications: 'Babu sanarwa',
     selectLang: 'Harshe', residencyNo: 'Lambar Zama', phone: 'Waya', nationality: 'Ƙasa',
+    tickets: "Korafe-korafe", newTicket: "Sabon korafi", myTickets: "Korafe-korafena", ticketType: "Nau'in korafi", ticketTitle: "Take", ticketDesc: "Bayani", attachment: "Harhada (na zabi)", sendTicket: "Aika", noTickets: "Babu korafi tukuna.", priority: "Fifiko", normal: "Na yau", urgent: "Gaggawa", critical: "Mai muhimmanci", reopen: "Sake budewa", confirmCloseT: "Tabbatar rufewa", reply: "Rubuta amsa…", send: "Aika", home: "Gida", nextAppt: "Alkawari na gaba", upcoming: "Masu zuwa", noUpcoming: "Babu alkawari mai zuwa", viewAll: "Duba duka",
   },
   sw: {
     welcome: 'Karibu', profileComplete: 'Ukamilifu wa wasifu', myData: 'Data Yangu',
@@ -131,5 +141,6 @@ export const translations = {
     submitted: 'Asante, jibu lako limewasilishwa.', back: 'Rudi', acceptPolicy: 'Nakubali kanuni',
     accepted: 'Umekubali kanuni. Asante.', notifications: 'Arifa', noNotifications: 'Hakuna arifa',
     selectLang: 'Lugha', residencyNo: 'Nambari ya Makazi', phone: 'Simu', nationality: 'Utaifa',
+    tickets: "Malalamiko", newTicket: "Lalamiko jipya", myTickets: "Malalamiko yangu", ticketType: "Aina", ticketTitle: "Kichwa", ticketDesc: "Maelezo", attachment: "Kiambatisho (hiari)", sendTicket: "Tuma", noTickets: "Hakuna malalamiko bado.", priority: "Kipaumbele", normal: "Kawaida", urgent: "Haraka", critical: "Muhimu sana", reopen: "Fungua tena", confirmCloseT: "Thibitisha kufunga", reply: "Andika jibu…", send: "Tuma", home: "Nyumbani", nextAppt: "Miadi ifuatayo", upcoming: "Zijazo", noUpcoming: "Hakuna miadi ijayo", viewAll: "Ona zote",
   },
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import StudentDetail from './StudentDetail'
-import { useConfirm } from '../Confirm'
+import { useConfirm, usePrompt } from '../Confirm'
 import { useToast } from '../Toast'
 
 export function Spinner() { return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div> }
@@ -9,6 +9,7 @@ export function Stat({ num, label }) { return <div className="stat-card"><div cl
 
 export default function Students() {
   const confirmDialog = useConfirm()
+  const promptDialog = usePrompt()
   const toast = useToast()
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -64,7 +65,7 @@ export default function Students() {
     toast('تم إسناد ' + selected.length + ' طالب للفئة'); setSelected([]); setBulkCat('')
   }
   async function bulkNotify() {
-    const text = window.prompt('نص الإشعار للطلاب المحدّدين:')
+    const text = await promptDialog({ title: 'إرسال إشعار', message: 'نص الإشعار الذي سيصل الطلاب المحدّدين:', placeholder: 'اكتب نص الإشعار…', multiline: true, confirmText: 'إرسال' })
     if (!text) return
     const rows = selected.map(sid => ({ student_id: sid, title: 'إشعار', body: text, kind: 'info' }))
     await supabase.from('notifications').insert(rows)
