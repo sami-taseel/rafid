@@ -18,6 +18,7 @@ const MENU = [
   { key: 'reports',    label: 'التقارير',       icon: '📤' },
   { key: 'users',      label: 'المستخدمون',     icon: '🔑' },
   { key: 'sponsor',    label: 'لوحة الراعي',    icon: '📈' },
+  { key: 'sponsors_admin', label: 'الجهات الداعمة', icon: '🤝' },
   { key: 'audit',      label: 'سجل العمليات',   icon: '📜' },
   { key: 'fields',     label: 'أسئلة النموذج',  icon: '⚙️' },
   { key: 'tickets_admin', label: 'إعداد البلاغات', icon: '🎫' },

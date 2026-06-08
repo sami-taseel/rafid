@@ -1131,3 +1131,29 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .points-icon { font-size: 36px; }
 .points-num { font-size: 24px; font-weight: 800; }
 .points-lbl { font-size: 14px; opacity: .95; margin-top: 2px; }
+
+/* ===== بوابة الجهة الداعمة ===== */
+.sponsor-portal { min-height: 100vh; background: var(--bg); }
+.sp-portal-head { display: flex; justify-content: space-between; align-items: center; background: var(--navy); padding: 16px 28px; }
+.sp-portal-head > div { display: flex; align-items: center; gap: 12px; }
+.sp-portal-logo { height: 36px; }
+.sp-portal-title { color: #fff; font-size: 18px; font-weight: 600; }
+.sp-portal-body { max-width: 1000px; margin: 0 auto; padding: 28px 20px; }
+.sp-greeting { font-size: 24px; color: var(--navy); }
+:root[data-theme="dark"] .sp-greeting { color: #8fb5ed; }
+.sp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.sp-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; text-align: center; box-shadow: var(--shadow); }
+.sp-kpi-num { font-size: 32px; font-weight: 800; color: var(--navy); }
+:root[data-theme="dark"] .sp-kpi-num { color: #7ba9e8; }
+.sp-kpi-lbl { font-size: 13px; color: var(--text-soft); margin-top: 6px; }
+.sp-students { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.sp-student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+.sp-student-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.sp-student-meta { font-size: 13px; color: var(--text-soft); margin: 4px 0 12px; }
+.sp-student-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.sp-bar-track { flex: 1; height: 10px; background: #eef1f6; border-radius: 5px; overflow: hidden; }
+:root[data-theme="dark"] .sp-bar-track { background: #2a3140; }
+.sp-bar-fill { height: 100%; background: linear-gradient(to left, #2e5496, #5b8fd4); border-radius: 5px; }
+.sp-bar-val { font-size: 12px; font-weight: 600; color: var(--blue); }
+.sp-student-stats { display: flex; gap: 14px; font-size: 13px; color: var(--text-soft); }
+.sp-warn { color: #c0392b; }

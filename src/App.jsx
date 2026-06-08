@@ -4,6 +4,7 @@ import Login from './Login'
 import ResetPassword from './ResetPassword'
 import CheckIn from './CheckIn'
 import StudentProfile from './StudentProfile'
+import SponsorPortal from './SponsorPortal'
 import Layout from './Layout'
 import Students from './modules/Students'
 import Tracks from './modules/Tracks'
@@ -26,6 +27,7 @@ import TicketsStaff from './modules/TicketsStaff'
 import TicketRatings from './modules/TicketRatings'
 import SystemStatus from './modules/SystemStatus'
 import SupervisorMetrics from './modules/SupervisorMetrics'
+import SponsorsAdmin from './modules/SponsorsAdmin'
 import Help from './modules/Help'
 import Fields from './modules/Fields'
 
@@ -69,7 +71,8 @@ function RoleRouter({ session }) {
         const { data } = await supabase.from('persons')
           .select('id, user_roles(roles(code))').eq('auth_user_id', session.user.id).maybeSingle()
         const codes = (data?.user_roles || []).map(ur => ur.roles?.code)
-        setRole(codes.some(c => c && c !== 'student') ? 'staff' : 'student')
+        if (codes.includes('sponsor')) setRole('sponsor')
+        else setRole(codes.some(c => c && c !== 'student') ? 'staff' : 'student')
       } catch { setRole('student') }
       finally { setChecking(false) }
     }
@@ -77,6 +80,7 @@ function RoleRouter({ session }) {
   }, [session])
 
   if (checking) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
+  if (role === 'sponsor') return <SponsorPortal session={session} />
   if (role === 'staff') return <StaffApp />
   return <StudentProfile session={session} />
 }
@@ -85,7 +89,7 @@ function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
     stats: <Stats onNavigate={setActive} />, students: <Students />, tracks: <Tracks />, attendance: <Attendance />,
-    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, sup_metrics: <SupervisorMetrics />, help: <Help />,
+    buildings: <Buildings />, housing: <Housing />, surveys: <Surveys />, support: <Support />, fields: <Fields />, users: <Users />, reports: <Reports />, policy: <Policy />, calendar: <Calendar />, sponsor: <Sponsor />, audit: <AuditLog />, languages: <Languages />, categories: <Categories />, tickets_admin: <TicketsAdmin />, tickets: <TicketsStaff />, ticket_ratings: <TicketRatings />, status: <SystemStatus />, sup_metrics: <SupervisorMetrics />, sponsors_admin: <SponsorsAdmin />, help: <Help />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }
