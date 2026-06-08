@@ -1321,3 +1321,6 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .form-body-text { background: var(--blue-soft); border-radius: 10px; padding: 16px; line-height: 2; font-size: 15px; margin: 14px 0; white-space: pre-wrap; }
 .notice-card { background: #fef3da; border-right: 4px solid #f5a623; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
 :root[data-theme="dark"] .notice-card { background: #3a2e14; }
+
+/* صف المرافق */
+.comp-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; gap: 10px; flex-wrap: wrap; }

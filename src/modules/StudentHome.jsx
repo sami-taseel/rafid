@@ -39,7 +39,7 @@ export default function StudentHome({ studentId, onGoTab }) {
 
   useEffect(() => {
     if (!studentId) return
-    supabase.rpc('student_points', { p_student: studentId }).then(({ data }) => setPoints(data || 0))
+    supabase.rpc('student_points', { p_student: studentId }).then(({ data, error }) => { if (!error) setPoints(data || 0) }).catch(() => {})
   }, [studentId])
 
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
