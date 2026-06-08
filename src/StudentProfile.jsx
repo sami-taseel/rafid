@@ -21,6 +21,7 @@ function StudentProfileInner({ session }) {
   const [values, setValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [buildings, setBuildings] = useState([])
   const [msg, setMsg] = useState(null)
   const [tab, setTab] = useState('home')
 
@@ -70,6 +71,7 @@ function StudentProfileInner({ session }) {
       }
       const studentUpd = { profile_reviewed: true }
       if ('degree_level' in byKey) studentUpd.degree_level = byKey.degree_level
+      if ('housing_building' in byKey) studentUpd.housing_building_id = byKey.housing_building || null
       if ('university' in byKey) studentUpd.university = byKey.university
       if ('college' in byKey) studentUpd.college = byKey.college
       if ('major' in byKey) studentUpd.major = byKey.major
@@ -80,6 +82,7 @@ function StudentProfileInner({ session }) {
       setMsg({ type: 'error', text: 'تعذّر الحفظ: ' + (err.message || err) })
     } finally { setSaving(false) }
   }
+  useEffect(() => { supabase.rpc('active_buildings').then(({ data }) => setBuildings(data || [])) }, [])
   async function handleLogout() { await supabase.auth.signOut() }
 
   async function downloadMyData() {
@@ -161,7 +164,13 @@ function StudentProfileInner({ session }) {
                 {fields.filter(f => (f.section || 'بيانات') === sec).map(f => (
                   <div className="sp-field" key={f.id}>
                     <label>{f.label}{f.required && <span className="req"> *</span>}</label>
-                    {f.field_type === 'select' ? (
+                    {f.field_type === 'building_select' ? (
+                      <select value={values[f.id] || ''} required={f.required}
+                        onChange={e => setValues({ ...values, [f.id]: e.target.value })}>
+                        <option value="">اختر العمارة…</option>
+                        {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                      </select>
+                    ) : f.field_type === 'select' ? (
                       <select value={values[f.id] || ''} required={f.required}
                         onChange={e => setValues({ ...values, [f.id]: e.target.value })}>
                         <option value="">اختر…</option>

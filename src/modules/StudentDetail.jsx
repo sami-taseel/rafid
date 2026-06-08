@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 import { Spinner } from './Students'
 import { useState as useCertState } from 'react'
 import Certificate from './Certificate'
 
 export default function StudentDetail({ studentId, onBack }) {
+  const toast = useToast()
   const [d, setD] = useState(null)
+  const [buildings, setBuildings] = useState([])
   const [cert, setCert] = useCertState(false)
 
   useEffect(() => {
@@ -24,6 +27,14 @@ export default function StudentDetail({ studentId, onBack }) {
     }
     load()
   }, [studentId])
+
+  useEffect(() => { supabase.rpc('active_buildings').then(({ data }) => setBuildings(data || [])) }, [])
+
+  async function setBuilding(bid) {
+    await supabase.from('students').update({ housing_building_id: bid || null }).eq('id', studentId)
+    setD({ ...d, s: { ...d.s, housing_building_id: bid || null } })
+    toast('تم تحديث سكن الطالب')
+  }
 
   if (!d) return <Spinner />
   const present = d.att.filter(a => a.status === 'present').length
@@ -57,6 +68,13 @@ export default function StudentDetail({ studentId, onBack }) {
           <Info label="رقم الإقامة" val={p?.residency_no} />
           <Info label="الجنسية" val={p?.nationality} />
           <Info label="البريد" val={p?.email} />
+        </div>
+        <div className="field" style={{ marginTop: 14, maxWidth: 320 }}>
+          <label>مكان السكن (العمارة) — يمكن لمدير النظام تعديله</label>
+          <select value={d.s?.housing_building_id || ''} onChange={e => setBuilding(e.target.value)}>
+            <option value="">غير محدّد</option>
+            {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
         </div>
       </div>
 

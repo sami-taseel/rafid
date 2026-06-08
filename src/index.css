@@ -1242,3 +1242,20 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .mini-n.warn { color: #c0392b; }
 .mini-l { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
 @media (max-width: 768px) { .dash-charts { grid-template-columns: 1fr; } .dash-greeting { font-size: 20px; } }
+
+/* ===== العمارات والشقق المطوّرة ===== */
+.bldg-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; background: var(--surface); }
+.bldg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.bldg-info { display: flex; align-items: center; gap: 10px; cursor: pointer; flex-wrap: wrap; }
+.bldg-chevron { color: var(--text-soft); font-size: 12px; }
+.bldg-type { font-size: 11px; padding: 3px 10px; border-radius: 10px; }
+.bldg-type.singles { background: var(--blue-soft); color: var(--blue); }
+.bldg-type.families { background: #f3e8fc; color: #7c3aed; }
+.units-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.units-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.unit-chip { display: flex; align-items: center; gap: 8px; background: var(--blue-soft); border-radius: 10px; padding: 8px 12px; }
+.unit-no { font-weight: 600; font-size: 13px; color: var(--blue); }
+.unit-rooms { font-size: 12px; color: var(--text-soft); }
+.unit-del { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 14px; padding: 0; }
+.add-unit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.add-unit-row input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; }

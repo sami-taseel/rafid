@@ -31,6 +31,7 @@ import SponsorsAdmin from './modules/SponsorsAdmin'
 import Help from './modules/Help'
 import Fields from './modules/Fields'
 import TabGroup from './modules/TabGroup'
+import MyAccount from './modules/MyAccount'
 import { registerSW } from './push'
 
 export default function App() {
@@ -132,7 +133,7 @@ function StaffApp() {
       { key: 'audit', label: 'سجل العمليات', el: <AuditLog /> },
       { key: 'status', label: 'حالة النظام', el: <SystemStatus /> },
     ]} />,
-    surveys: <Surveys />, categories: <Categories />, help: <Help />,
+    surveys: <Surveys />, categories: <Categories />, help: <Help />, account: <MyAccount />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
 }
