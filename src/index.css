@@ -1033,3 +1033,21 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* زر تنزيل بيانات الطالب */
 .download-data-btn { width: 100%; margin-top: 10px; padding: 11px; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; }
 .download-data-btn:hover { background: #dce8f8; }
+
+/* شارة أولوية البلاغ */
+.pri-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 600; }
+.pri-badge.urgent { background: #fef3da; color: #92660a; }
+.pri-badge.critical { background: #fcecec; color: #c0392b; }
+:root[data-theme="dark"] .pri-badge.urgent { background: #3a2e14; color: #f0c060; }
+:root[data-theme="dark"] .pri-badge.critical { background: #3a1a1a; color: #f0a0a0; }
+/* صف التحويل */
+.transfer-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.transfer-row select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; }
+
+/* شريط الإجراءات المجمّعة */
+.bulk-action-bar { position: sticky; top: 70px; z-index: 20; display: flex; align-items: center; gap: 10px; background: var(--navy); color: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; flex-wrap: wrap; box-shadow: 0 4px 16px rgba(0,0,0,.18); }
+.bulk-count { font-weight: 600; font-size: 14px; }
+.bulk-action-bar select { padding: 8px 12px; border-radius: 8px; border: none; font-family: inherit; font-size: 13px; }
+.bulk-action-bar .mini { background: rgba(255,255,255,.18); color: #fff; border: none; }
+.bulk-action-bar .mini:hover { background: rgba(255,255,255,.28); }
+.row-selected { background: var(--blue-soft) !important; }

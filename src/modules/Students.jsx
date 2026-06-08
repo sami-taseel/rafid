@@ -21,6 +21,8 @@ export default function Students() {
   const [catMap, setCatMap] = useState({})   // student_id -> [أسماء الفئات]
   const [allCats, setAllCats] = useState([])
   const [fCat, setFCat] = useState('')
+  const [selected, setSelected] = useState([])
+  const [bulkCat, setBulkCat] = useState('')
 
   useEffect(() => {
     async function load() {
@@ -53,6 +55,30 @@ export default function Students() {
     if (!ok) return
     const { data } = await supabase.rpc('purge_legacy_students')
     toast(data || 'تم'); setTimeout(() => window.location.reload(), 1200)
+  }
+
+  async function bulkAssign() {
+    if (!bulkCat) return
+    const rows = selected.map(sid => ({ category_id: bulkCat, student_id: sid }))
+    await supabase.from('category_members').upsert(rows, { onConflict: 'category_id,student_id' })
+    toast('تم إسناد ' + selected.length + ' طالب للفئة'); setSelected([]); setBulkCat('')
+  }
+  async function bulkNotify() {
+    const text = window.prompt('نص الإشعار للطلاب المحدّدين:')
+    if (!text) return
+    const rows = selected.map(sid => ({ student_id: sid, title: 'إشعار', body: text, kind: 'info' }))
+    await supabase.from('notifications').insert(rows)
+    toast('تم إرسال الإشعار لـ ' + selected.length + ' طالب'); setSelected([])
+  }
+  async function bulkExport() {
+    const XLSX = await import('xlsx')
+    const rows = students.filter(s => selected.includes(s.id)).map(s => ({
+      'الاسم': s.persons?.full_name || '', 'الجنسية': s.persons?.nationality || '',
+      'المرحلة': s.degree_level || '', 'الإقامة': s.persons?.residency_no || '', 'الجوال': s.persons?.phone || '',
+    }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'الطلاب المحدّدون')
+    XLSX.writeFile(wb, 'طلاب_محددون.xlsx')
   }
 
   if (loading) return <Spinner />
@@ -123,14 +149,34 @@ export default function Students() {
           </div>
         ))}
       </div>
+      {selected.length > 0 && (
+        <div className="bulk-action-bar">
+          <span className="bulk-count">{selected.length} محدّد</span>
+          <select value={bulkCat} onChange={e => setBulkCat(e.target.value)}>
+            <option value="">إسناد لفئة…</option>
+            {allCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <button className="mini" onClick={bulkAssign} disabled={!bulkCat}>إسناد</button>
+          <button className="mini" onClick={bulkNotify}>إرسال إشعار</button>
+          <button className="mini" onClick={bulkExport}>تصدير المحدّدين</button>
+          <button className="mini" onClick={() => setSelected([])}>إلغاء التحديد</button>
+        </div>
+      )}
       <div className="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الفئات</th><th>الملف</th></tr></thead>
+          <thead><tr>
+            <th style={{ width: 36 }}><input type="checkbox"
+              checked={filtered.length > 0 && selected.length === filtered.length}
+              onChange={e => setSelected(e.target.checked ? filtered.map(s => s.id) : [])} /></th>
+            <th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الفئات</th><th>الملف</th>
+          </tr></thead>
           <tbody>
             {filtered.map((s, i) => (
-              <tr key={s.id} className="clickable" onClick={() => setSel(s.id)}>
-                <td className="muted">{i+1}</td>
-                <td>{s.persons?.full_name || '—'}</td>
+              <tr key={s.id} className={selected.includes(s.id) ? 'row-selected' : ''}>
+                <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selected.includes(s.id)}
+                  onChange={() => setSelected(selected.includes(s.id) ? selected.filter(x => x !== s.id) : [...selected, s.id])} /></td>
+                <td className="muted clickable" onClick={() => setSel(s.id)}>{i+1}</td>
+                <td className="clickable" onClick={() => setSel(s.id)}>{s.persons?.full_name || '—'}</td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>
                 <td>{s.degree_level || '—'}</td>
                 <td className="cats-cell">

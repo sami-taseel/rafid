@@ -48,7 +48,10 @@ export default function StudentTickets({ studentId }) {
         <div key={t.id} className={"ticket-card" + (t.status_code === "closed" ? " closed-card" : "")} onClick={() => { setSel(t); setView('detail') }}>
           <div className="ticket-card-head">
             <span className="ticket-title">{t.title}</span>
-            <span className={'tk-status ' + statusClass(t.status_code)}>{statusName(t.status_code)}</span>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {t.priority && t.priority !== 'normal' && <span className={'pri-badge ' + t.priority}>{t.priority === 'urgent' ? 'عاجل' : 'طارئ'}</span>}
+              <span className={'tk-status ' + statusClass(t.status_code)}>{statusName(t.status_code)}</span>
+            </div>
           </div>
           <div className="ticket-meta">
             <span className="pill">{t.ticket_types?.name}</span>
@@ -64,7 +67,7 @@ export default function StudentTickets({ studentId }) {
 }
 
 function NewTicket({ studentId, types, onBack }) {
-  const [form, setForm] = useState({ type_id: '', title: '', description: '' })
+  const [form, setForm] = useState({ type_id: '', title: '', description: '', priority: 'normal' })
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState(null)
@@ -73,7 +76,7 @@ function NewTicket({ studentId, types, onBack }) {
     if (!form.type_id || !form.title.trim()) { setMsg('اختر النوع واكتب العنوان'); return }
     setBusy(true)
     const { data: tk, error } = await supabase.from('tickets').insert({
-      student_id: studentId, type_id: form.type_id, title: form.title, description: form.description, status_code: 'open',
+      student_id: studentId, type_id: form.type_id, title: form.title, description: form.description, status_code: 'open', priority: form.priority,
     }).select().single()
     if (error) { setMsg('تعذّر الإرسال: ' + error.message); setBusy(false); return }
     // مرفق اختياري كأول رد
@@ -98,6 +101,12 @@ function NewTicket({ studentId, types, onBack }) {
           <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="عنوان مختصر" /></div>
         <div className="field"><label>وصف البلاغ</label>
           <textarea rows={5} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="اشرح بلاغك بالتفصيل" /></div>
+        <div className="field"><label>مستوى الأهمية</label>
+          <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
+            <option value="normal">عادي</option>
+            <option value="urgent">عاجل</option>
+            <option value="critical">طارئ</option>
+          </select></div>
         <div className="field"><label>مرفق (اختياري)</label>
           <label className="file-btn">📎 {file ? file.name : 'اختر ملفاً'}
             <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label></div>
@@ -136,6 +145,11 @@ function TicketDetail({ ticket, statuses, onBack }) {
     setReply(''); setFile(null); load()
   }
 
+  async function reopen() {
+    await supabase.from('tickets').update({ status_code: 'in_progress', closed_at: null }).eq('id', ticket.id)
+    await supabase.from('ticket_replies').insert({ ticket_id: ticket.id, body: 'أعاد الطالب فتح البلاغ', is_staff: false, status_set: 'in_progress' })
+    setStatus('in_progress'); load()
+  }
   async function confirmClose() {
     // نجلب أسئلة الاستبيان
     const { data } = await supabase.from('ticket_survey_questions').select('*').eq('is_active', true).order('sort_order')
@@ -175,6 +189,12 @@ function TicketDetail({ ticket, statuses, onBack }) {
           {replies.length === 0 && <div className="muted">لا ردود بعد.</div>}
         </div>
 
+        {status === 'closed' && (
+          <div className="sp-card" style={{ textAlign: 'center', marginTop: 12 }}>
+            <p className="muted" style={{ marginBottom: 10 }}>هذا البلاغ مغلق. إن لم تُحلّ مشكلتك فعلاً، يمكنك إعادة فتحه.</p>
+            <button className="sp-save" style={{ width: 'auto', padding: '10px 22px' }} onClick={reopen}>إعادة فتح البلاغ</button>
+          </div>
+        )}
         {status !== 'closed' && (
           <div className="reply-box">
             <textarea rows={3} value={reply} onChange={e => setReply(e.target.value)} placeholder="اكتب رداً…" />
