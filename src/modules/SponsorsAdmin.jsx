@@ -13,6 +13,7 @@ export default function SponsorsAdmin() {
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
   const [sel, setSel] = useState(null)
+  const [linkEmail, setLinkEmail] = useState({})  // sponsorId -> email
 
   async function load() {
     const [sp, st] = await Promise.all([
@@ -41,7 +42,11 @@ export default function SponsorsAdmin() {
     load()
   }
   async function linkAccount(sponsorId) {
-    const email = window.prompt && null // placeholder
+    const email = (linkEmail[sponsorId] || '').trim()
+    if (!email) { toast('اكتب بريد حساب الجهة', 'error'); return }
+    const { data } = await supabase.rpc('link_sponsor_account', { p_email: email, p_sponsor: sponsorId })
+    toast(data || 'تم')
+    setLinkEmail({ ...linkEmail, [sponsorId]: '' })
   }
 
   if (loading) return <Spinner />
@@ -69,7 +74,11 @@ export default function SponsorsAdmin() {
               <strong>{s.name}</strong>
               <span className="muted"> · {countFor(s.id)} طالب مكفول</span>
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+              <input placeholder="بريد حساب الجهة لربطه" value={linkEmail[s.id] || ''}
+                onChange={e => setLinkEmail({ ...linkEmail, [s.id]: e.target.value })}
+                dir="ltr" style={{ width: 200, padding: '7px 10px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', fontSize: 13 }} />
+              <button className="mini" onClick={() => linkAccount(s.id)}>ربط الحساب</button>
               <button className="mini" onClick={() => setSel(sel === s.id ? null : s.id)}>{sel === s.id ? 'إغلاق' : 'إسناد طلاب'}</button>
               <button className="fr-del" onClick={() => delSponsor(s)}>حذف</button>
             </div>

@@ -7,6 +7,7 @@ const ROLES = [
   ['system_admin','مدير النظام'],['project_manager','مدير المشروع'],['care_supervisor','مشرف الرعاية'],
   ['housing_supervisor','مشرف السكن'],['edu_supervisor','المشرف التعليمي'],['follow_supervisor','مشرف المتابعة'],
   ['social_supervisor','المشرف الاجتماعي'],['interview_panel','لجنة المقابلة'],
+  ['sponsor','جهة داعمة'],
 ]
 
 export default function Users() {
