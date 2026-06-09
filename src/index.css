@@ -626,6 +626,10 @@ tr.clickable:hover { background: var(--blue-soft); }
 .notif-empty { padding: 24px; text-align: center; color: var(--text-soft); font-size: 14px; }
 .notif-item { padding: 12px 14px; border-bottom: 1px solid var(--border); border-right: 3px solid transparent; }
 .notif-item.warning { border-right-color: #e24b4a; }
+.notif-item.violation { background: #fcecec; border-right: 4px solid #c0392b; }
+.notif-item.violation .notif-title { color: #a32d2d; font-weight: 700; }
+:root[data-theme="dark"] .notif-item.violation { background: #3a1a1a; }
+:root[data-theme="dark"] .notif-item.violation .notif-title { color: #f0a0a0; }
 .notif-item.survey { border-right-color: var(--blue); }
 .notif-title { font-size: 14px; font-weight: 500; color: var(--text); }
 .notif-panel, .notif-panel * { color: var(--text); }

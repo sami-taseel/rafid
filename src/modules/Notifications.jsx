@@ -41,7 +41,7 @@ export default function Notifications({ studentId, onOpenTicket }) {
           {items.map(n => (
             <div key={n.id} className={'notif-item ' + n.kind + (n.ticket_id ? ' clickable' : '')}
               onClick={() => { if (n.ticket_id && onOpenTicket) { onOpenTicket(); setOpen(false) } }}>
-              <div className="notif-title">{n.title}</div>
+              <div className="notif-title">{n.kind === 'violation' ? '⚠️ ' : ''}{n.title}</div>
               {n.body && <div className="notif-body">{n.body}</div>}
               <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}{n.ticket_id && ' · اضغط لعرض البلاغ'}</div>
             </div>
