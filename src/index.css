@@ -1426,3 +1426,9 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .notif-item-title { font-weight: 600; font-size: 14px; color: var(--text); }
 .notif-item-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; line-height: 1.7; }
 .notif-item-time { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+
+/* أزرار بطاقة المرافق */
+.comp-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.comp-edit-btn { background: var(--blue-soft); color: var(--blue); border: none; border-radius: 8px; padding: 7px 13px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; }
+.comp-edit-btn:hover { background: #dce8f8; }
+:root[data-theme="dark"] .comp-edit-btn:hover { background: #1f3148; }
