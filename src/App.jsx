@@ -123,7 +123,6 @@ function StaffApp() {
       { key: 'buildings', label: 'العمارات والوحدات', el: <Buildings /> },
       { key: 'violations', label: 'المخالفات', el: <Housing /> },
       { key: 'forms', label: 'النماذج والموافقات', el: <FormsAdmin /> },
-      { key: 'policy', label: 'لائحة السكن', el: <Policy /> },
     ]} />,
     support_reports: <TabGroup tabs={[
       { key: 'support', label: 'سجل الدعم', el: <Support /> },

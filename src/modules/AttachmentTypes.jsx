@@ -29,7 +29,7 @@ export default function AttachmentTypes() {
   async function save(r) {
     await supabase.from('attachment_types').update({
       name: r.name, owner_type: r.owner_type, required: r.required,
-      renew_months: r.renew_months || null, condition: r.condition || null, is_active: r.is_active,
+      renew_months: r.renew_months || null, condition: r.condition || null, is_active: r.is_active, per_person: r.per_person,
     }).eq('id', r.id)
     setSavedId(r.id); setTimeout(() => setSavedId(null), 1500)
   }
@@ -79,6 +79,7 @@ export default function AttachmentTypes() {
                     </select></div>
                   <div className="acc-toggles">
                     <label className="chk"><input type="checkbox" checked={r.required} onChange={e => { patch(r.id, { required: e.target.checked }); setTimeout(() => save({ ...r, required: e.target.checked }), 0) }} /> إلزامي</label>
+                    <label className="chk"><input type="checkbox" checked={r.per_person} onChange={e => { patch(r.id, { per_person: e.target.checked }); setTimeout(() => save({ ...r, per_person: e.target.checked }), 0) }} /> لكل شخص (الطالب ومرافقوه)</label>
                     <label className="chk"><input type="checkbox" checked={r.is_active} onChange={e => { patch(r.id, { is_active: e.target.checked }); setTimeout(() => save({ ...r, is_active: e.target.checked }), 0) }} /> ظاهر للطلاب</label>
                     <button className="fr-del" onClick={() => del(r.id)}>حذف</button>
                   </div>
