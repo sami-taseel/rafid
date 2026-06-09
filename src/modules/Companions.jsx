@@ -65,9 +65,9 @@ export default function Companions({ studentId, personId }) {
             </select></div>
           <div className="field" style={{ flex: 1 }}><label>تاريخ الميلاد</label>
             <input type="date" value={nc.birth_date} onChange={e => setNc({ ...nc, birth_date: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>رقم الإقامة</label>
+            <input placeholder="رقم الإقامة" value={nc.residency_no} onChange={e => setNc({ ...nc, residency_no: e.target.value })} dir="ltr" /></div>
         </div>
-        <div className="field"><label>رقم الإقامة</label>
-          <input placeholder="رقم الإقامة" value={nc.residency_no} onChange={e => setNc({ ...nc, residency_no: e.target.value })} dir="ltr" /></div>
         <button className="save-btn" style={{ width: 'auto', padding: '11px 22px' }} onClick={addCompanion} disabled={busy}>
           {busy ? 'جارٍ…' : 'إضافة مرافق'}
         </button>

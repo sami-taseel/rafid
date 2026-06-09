@@ -11,16 +11,18 @@ export default function StudentAttachments({ studentId }) {
   const [building, setBuilding] = useState(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(null)
+  const [myName, setMyName] = useState('')
 
   async function load() {
     const [ty, at, comp, st] = await Promise.all([
       supabase.from('attachment_types').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('student_attachments').select('*, attachment_types(name)').eq('student_id', studentId),
       supabase.from('companions').select('id, persons(full_name)').eq('student_id', studentId),
-      supabase.from('students').select('housing_building_id, buildings(building_type)').eq('id', studentId).maybeSingle(),
+      supabase.from('students').select('housing_building_id, buildings(building_type), persons(full_name)').eq('id', studentId).maybeSingle(),
     ])
     setTypes(ty.data || []); setMine(at.data || []); setCompanions(comp.data || [])
     setBuilding(st.data?.buildings?.building_type || null)
+    setMyName(st.data?.persons?.full_name || 'أنا')
     setLoading(false)
   }
   useEffect(() => { if (studentId) load() }, [studentId])
@@ -43,6 +45,7 @@ export default function StudentAttachments({ studentId }) {
     await supabase.from('student_attachments').delete().eq('id', id); load()
   }
 
+  const firstName = (n) => (n || '').trim().split(' ')[0] || n
   if (loading) return <div className="state"><div className="spinner"></div>…</div>
 
   const visibleTypes = types.filter(t => {
@@ -59,22 +62,28 @@ export default function StudentAttachments({ studentId }) {
   const findUpload = (typeId, companionId) => mine.find(m => m.type_id === typeId && (companionId ? m.companion_id === companionId : !m.companion_id))
   const isExpired = (a) => a?.expires_at && new Date(a.expires_at) < new Date()
 
-  // صفّ رفع واحد (لشخص محدّد)
-  function UploadRow({ type, label, companionId }) {
+  // بطاقة أيقونة رفع لشخص محدّد (ضمن شبكة)
+  function UploadTile({ type, label, companionId }) {
     const up = findUpload(type.id, companionId)
     const expired = isExpired(up)
     const key = type.id + (companionId || 'self')
+    const loading = busy === key
     return (
-      <div className="attach-person-row">
-        <span className="attach-person-name">{label}</span>
-        <div className="attach-actions">
-          {up && !expired && <span className="attach-ok">✓</span>}
-          {expired && <span className="attach-expired">⚠ منتهٍ</span>}
-          {up && <Attachment path={up.file_path} label="عرض" />}
-          {up && <button className="mini-del" onClick={() => remove(up.id)}>حذف</button>}
-          <label className="file-btn">{busy === key ? 'جارٍ…' : up ? 'استبدال' : 'رفع'}
-            <input type="file" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} /></label>
-        </div>
+      <div className={'upload-tile' + (up && !expired ? ' done' : '') + (expired ? ' expired' : '')}>
+        <label className="upload-tile-main">
+          <div className="upload-tile-icon">
+            {loading ? '⏳' : up && !expired ? '✓' : expired ? '⚠' : '＋'}
+          </div>
+          <div className="upload-tile-name">{label}</div>
+          <div className="upload-tile-status">{loading ? 'جارٍ…' : up && !expired ? 'مرفوع' : expired ? 'منتهٍ' : 'رفع'}</div>
+          <input type="file" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
+        </label>
+        {up && (
+          <div className="upload-tile-actions">
+            <Attachment path={up.file_path} label="عرض" />
+            <button className="tile-del" onClick={() => remove(up.id)} title="حذف">🗑</button>
+          </div>
+        )}
       </div>
     )
   }
@@ -85,12 +94,14 @@ export default function StudentAttachments({ studentId }) {
       {perPersonTypes.map(t => (
         <div className="sp-card" key={t.id}>
           <div className="sp-card-title">{t.name}{t.required && <span className="req-star">*</span>}</div>
-          <p className="muted" style={{ fontSize: 13, marginBottom: 10 }}>ارفع نسخة لك ولكل مرافق.</p>
-          <UploadRow type={t} label="أنا (الطالب)" companionId={null} />
-          {companions.map(c => (
-            <UploadRow key={c.id} type={t} label={c.persons?.full_name} companionId={c.id} />
-          ))}
-          {companions.length === 0 && <p className="muted" style={{ fontSize: 12 }}>أضف مرافقيك من تبويب «المرافقون» لرفع مرفقاتهم.</p>}
+          <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>ارفع نسخة لك ولكل مرافق.</p>
+          <div className="upload-grid">
+            <UploadTile type={t} label={firstName(myName)} companionId={null} />
+            {companions.map(c => (
+              <UploadTile key={c.id} type={t} label={firstName(c.persons?.full_name)} companionId={c.id} />
+            ))}
+          </div>
+          {companions.length === 0 && <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>أضف مرافقيك من تبويب «المرافقون» لرفع مرفقاتهم.</p>}
         </div>
       ))}
 
@@ -117,7 +128,9 @@ export default function StudentAttachments({ studentId }) {
           {companions.map(c => (
             <div key={c.id} className="companion-attach">
               <div className="companion-name">{c.persons?.full_name}</div>
-              {companionTypes.map(t => <UploadRow key={t.id} type={t} label={t.name} companionId={c.id} />)}
+              <div className="upload-grid">
+                {companionTypes.map(t => <UploadTile key={t.id} type={t} label={t.name} companionId={c.id} />)}
+              </div>
             </div>
           ))}
         </div>
