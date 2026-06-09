@@ -35,7 +35,13 @@ export default function StudentForms({ studentId }) {
   }
 
   async function approve(tpl) {
-    await supabase.from('form_records').insert({ template_id: tpl.id, student_id: studentId, status: 'approved' })
+    const existing = recordFor(tpl.id)
+    if (existing) {
+      // إعادة موافقة بعد تحديث: نحدّث السجل القائم
+      await supabase.from('form_records').update({ status: 'approved', signed_version: tpl.version || 1, signed_at: new Date().toISOString() }).eq('id', existing.id)
+    } else {
+      await supabase.from('form_records').insert({ template_id: tpl.id, student_id: studentId, status: 'approved', signed_version: tpl.version || 1 })
+    }
     toast('تم التوقيع على «' + tpl.title + '»'); setActive(null); load()
   }
   async function submitRequest(tpl) {
@@ -49,7 +55,9 @@ export default function StudentForms({ studentId }) {
   const approvals = templates.filter(t => t.category === 'approval')
   const requests = templates.filter(t => t.category === 'request')
   const notices = records.filter(r => r.form_templates?.category === 'notice')
+  const recordFor = (tplId) => records.find(r => r.template_id === tplId)
   const isApproved = (tplId) => records.find(r => r.template_id === tplId && r.status === 'approved')
+  const isPending = (tplId) => records.find(r => r.template_id === tplId && r.status === 'pending')
 
   // عرض نموذج مفتوح
   if (active) {
@@ -59,8 +67,11 @@ export default function StudentForms({ studentId }) {
         <div className="sp-card">
           <button className="mini" onClick={() => setActive(null)}>→ رجوع</button>
           <h3 style={{ marginTop: 12 }}>{tpl.title}</h3>
+          {isPending(tpl.id) && tpl.change_note && (
+            <div className="update-note">🔔 حُدّث هذا النموذج. ملخّص التغيير: {tpl.change_note}</div>
+          )}
           <div className="form-body-text">{fillBody(tpl.body)}</div>
-          <button className="sp-save" onClick={() => approve(tpl)}>أوافق وأوقّع</button>
+          <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>
         </div>
       )
     }
@@ -89,11 +100,14 @@ export default function StudentForms({ studentId }) {
         <div className="sp-card-title">الموافقات المطلوبة</div>
         {approvals.map(t => {
           const done = isApproved(t.id)
+          const pending = isPending(t.id)
           return (
-            <div key={t.id} className="form-list-row">
-              <span>{t.title}{t.required && <span className="req-star">*</span>}</span>
+            <div key={t.id} className={'form-list-row' + (pending ? ' pending-row' : '')}>
+              <span>{t.title}{t.required && <span className="req-star">*</span>}
+                {pending && <span className="pending-tag">يحتاج إعادة موافقة</span>}
+              </span>
               {done ? <span className="attach-ok">✓ موقّعة</span>
-                : <button className="mini" onClick={() => setActive(t)}>عرض وتوقيع</button>}
+                : <button className={pending ? 'save-btn' : 'mini'} style={pending ? { width: 'auto', padding: '7px 16px' } : {}} onClick={() => setActive(t)}>{pending ? 'مراجعة والموافقة' : 'عرض وتوقيع'}</button>}
             </div>
           )
         })}

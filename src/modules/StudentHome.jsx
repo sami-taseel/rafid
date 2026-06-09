@@ -4,6 +4,7 @@ import { useLang } from '../i18n/LangContext'
 
 export default function StudentHome({ studentId, onGoTab }) {
   const [points, setPoints] = useState(0)
+  const [pending, setPending] = useState([])
   const [data, setData] = useState(null)
   const { t } = useLang()
   const [showAll, setShowAll] = useState(false)
@@ -40,6 +41,9 @@ export default function StudentHome({ studentId, onGoTab }) {
   useEffect(() => {
     if (!studentId) return
     supabase.rpc('student_points', { p_student: studentId }).then(({ data, error }) => { if (!error) setPoints(data || 0) }).catch(() => {})
+    // الموافقات المعلّقة بعد تحديث جوهري
+    supabase.from('form_records').select('id, form_templates(title)').eq('student_id', studentId).eq('status', 'pending')
+      .then(({ data }) => setPending(data || [])).catch(() => {})
   }, [studentId])
 
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
@@ -55,6 +59,16 @@ export default function StudentHome({ studentId, onGoTab }) {
 
   return (
     <div className="st-home">
+      {pending.length > 0 && (
+        <div className="pending-banner" onClick={() => onGoTab && onGoTab('forms')}>
+          <span style={{ fontSize: 22 }}>🔔</span>
+          <div>
+            <strong>لديك {pending.length} نموذج بحاجة لإعادة موافقة</strong>
+            <div style={{ fontSize: 13, opacity: .9 }}>تم تحديثها — اضغط للمراجعة والموافقة</div>
+          </div>
+        </div>
+      )}
+
       {points > 0 && (
         <div className="points-banner">
           <div className="points-icon">⭐</div>

@@ -69,16 +69,36 @@ export default function FormsAdmin() {
 function FormEditor({ form, onBack }) {
   const toast = useToast()
   const [f, setF] = useState({ ...form, fields: form.fields || [] })
+  const [showSave, setShowSave] = useState(false)
+  const [changeNote, setChangeNote] = useState('')
 
   function set(p) { setF({ ...f, ...p }) }
-  async function save() {
+
+  // حفظ البيانات (يُستدعى في الحالتين)
+  async function persist() {
     await supabase.from('form_templates').update({
       title: f.title, category: f.category, body: f.body, fields: f.fields,
       direction: f.category === 'request' ? 'from_student' : 'to_student',
       required: f.required, is_active: f.is_active,
     }).eq('id', f.id)
-    toast('تم حفظ النموذج'); onBack()
   }
+
+  // تعديل بسيط: حفظ فقط (الموافقات تبقى سارية)
+  async function saveMinor() {
+    await persist()
+    toast('تم حفظ التعديل البسيط'); onBack()
+  }
+  // تعديل جوهري: حفظ + إلغاء الموافقات السابقة + رفع الإصدار
+  async function saveMajor() {
+    if (!changeNote.trim()) { toast('اكتب ملخّص التغيير ليظهر للطلاب', 'error'); return }
+    await persist()
+    const { data } = await supabase.rpc('publish_major_update', { p_template: f.id, p_note: changeNote.trim() })
+    toast(data || 'تم نشر التحديث'); onBack()
+  }
+
+  // النماذج التي يوقّعها الطالب (الموافقات) فقط هي ما يتطلب التمييز
+  const isApproval = f.category === 'approval'
+
   function addField() { set({ fields: [...f.fields, { key: 'field_' + Date.now(), label: 'حقل جديد', type: 'text' }] }) }
   function patchField(i, p) { const fl = [...f.fields]; fl[i] = { ...fl[i], ...p }; set({ fields: fl }) }
   function delField(i) { set({ fields: f.fields.filter((_, idx) => idx !== i) }) }
@@ -122,8 +142,46 @@ function FormEditor({ form, onBack }) {
           <label className="chk"><input type="checkbox" checked={f.required} onChange={e => set({ required: e.target.checked })} /> إلزامي على الطالب</label>
           <label className="chk"><input type="checkbox" checked={f.is_active} onChange={e => set({ is_active: e.target.checked })} /> ظاهر</label>
         </div>
-        <button className="save-btn" style={{ width: 'auto', padding: '11px 24px', marginTop: 14 }} onClick={save}>حفظ النموذج</button>
+        <button className="save-btn" style={{ width: 'auto', padding: '11px 24px', marginTop: 14 }} onClick={() => setShowSave(true)}>حفظ النموذج</button>
+        {form.version > 1 && <span className="muted" style={{ fontSize: 12, marginRight: 10 }}>الإصدار الحالي: {form.version}</span>}
       </div>
+
+      {showSave && (
+        <div className="confirm-overlay" onClick={() => setShowSave(false)}>
+          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ maxWidth: 480, textAlign: 'right' }}>
+            <div className="confirm-title">حفظ التعديل</div>
+            {isApproval ? (
+              <>
+                <p className="confirm-msg" style={{ textAlign: 'right' }}>اختر نوع التعديل على هذا النموذج الذي يوقّعه الطلاب:</p>
+                <div className="save-choice" onClick={saveMinor}>
+                  <div className="save-choice-icon">✏️</div>
+                  <div>
+                    <strong>تعديل بسيط</strong>
+                    <p className="muted" style={{ fontSize: 13 }}>تصحيح لغوي أو تنسيقي لا يغيّر المضمون. تبقى موافقات الطلاب سارية.</p>
+                  </div>
+                </div>
+                <div className="save-choice major">
+                  <div className="save-choice-icon">⚠️</div>
+                  <div style={{ flex: 1 }}>
+                    <strong>تعديل جوهري</strong>
+                    <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>يغيّر الالتزامات. تُلغى موافقات الطلاب، وتنقص نسبة اكتمال حساباتهم، ويُطالبون بالموافقة من جديد.</p>
+                    <textarea rows={2} value={changeNote} onChange={e => setChangeNote(e.target.value)} placeholder="ملخّص التغيير (يظهر للطالب)" style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                    <button className="confirm-ok danger" style={{ marginTop: 8 }} onClick={saveMajor}>نشر التعديل الجوهري</button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="confirm-msg" style={{ textAlign: 'right' }}>سيُحفظ النموذج.</p>
+                <div className="confirm-actions">
+                  <button className="confirm-cancel" onClick={() => setShowSave(false)}>إلغاء</button>
+                  <button className="confirm-ok" onClick={saveMinor}>حفظ</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
