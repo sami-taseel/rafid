@@ -10,6 +10,7 @@ import StudentHome from './modules/StudentHome'
 import StudentTickets from './modules/StudentTickets'
 import StudentAttachments from './modules/StudentAttachments'
 import StudentForms from './modules/StudentForms'
+import SignaturePad from './modules/SignaturePad'
 import { pushSupported, subscribePush, pushStatus } from './push'
 
 export default function StudentProfile(props) {
@@ -154,7 +155,7 @@ function StudentProfileInner({ session }) {
 
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets',t('tickets')],['attachments','المرفقات'],['forms','النماذج']].map(([k, l]) => (
+          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets',t('tickets')],['attachments','المرفقات'],['forms','النماذج'],['signature','توقيعي']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -163,6 +164,7 @@ function StudentProfileInner({ session }) {
         {tab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
         {tab === 'attachments' && <StudentAttachments studentId={student?.id} />}
         {tab === 'forms' && <StudentForms studentId={student?.id} />}
+        {tab === 'signature' && <div className="sp-card"><div className="sp-card-title">توقيعي الإلكتروني</div><p className="muted" style={{fontSize:13,marginBottom:14}}>سيُستخدم هذا التوقيع في النماذج التي توافق عليها.</p><SignaturePad studentId={student?.id} currentPath={student?.signature_path} onSaved={() => window.location.reload()} /></div>}
         {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
         {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}

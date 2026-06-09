@@ -35,6 +35,7 @@ import MyAccount from './modules/MyAccount'
 import AttachmentTypes from './modules/AttachmentTypes'
 import EvalCriteria from './modules/EvalCriteria'
 import FormsAdmin from './modules/FormsAdmin'
+import FormRecords from './modules/FormRecords'
 import { registerSW } from './push'
 
 export default function App() {
@@ -123,6 +124,7 @@ function StaffApp() {
       { key: 'buildings', label: 'العمارات والوحدات', el: <Buildings /> },
       { key: 'violations', label: 'المخالفات', el: <Housing /> },
       { key: 'forms', label: 'النماذج والموافقات', el: <FormsAdmin /> },
+      { key: 'form_records', label: 'سجلات النماذج', el: <FormRecords /> },
     ]} />,
     support_reports: <TabGroup tabs={[
       { key: 'support', label: 'سجل الدعم', el: <Support /> },

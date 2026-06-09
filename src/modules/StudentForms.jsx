@@ -35,12 +35,13 @@ export default function StudentForms({ studentId }) {
   }
 
   async function approve(tpl) {
+    if (!student?.signature_path) { toast('يرجى حفظ توقيعك أولاً من تبويب «توقيعي»', 'error'); return }
     const existing = recordFor(tpl.id)
+    const payload = { status: 'approved', signed_version: tpl.version || 1, signed_at: new Date().toISOString(), signature_path: student.signature_path }
     if (existing) {
-      // إعادة موافقة بعد تحديث: نحدّث السجل القائم
-      await supabase.from('form_records').update({ status: 'approved', signed_version: tpl.version || 1, signed_at: new Date().toISOString() }).eq('id', existing.id)
+      await supabase.from('form_records').update(payload).eq('id', existing.id)
     } else {
-      await supabase.from('form_records').insert({ template_id: tpl.id, student_id: studentId, status: 'approved', signed_version: tpl.version || 1 })
+      await supabase.from('form_records').insert({ template_id: tpl.id, student_id: studentId, ...payload })
     }
     toast('تم التوقيع على «' + tpl.title + '»'); setActive(null); load()
   }
@@ -71,9 +72,17 @@ export default function StudentForms({ studentId }) {
             <div className="update-note">🔔 حُدّث هذا النموذج. ملخّص التغيير: {tpl.change_note}</div>
           )}
           <div className="form-body-text">{fillBody(tpl.body)}</div>
-          {isApproved(tpl.id) && !isPending(tpl.id)
-            ? <div className="approved-note">✓ وقّعت على هذا النموذج بتاريخ {new Date(isApproved(tpl.id).signed_at || isApproved(tpl.id).created_at).toLocaleDateString('ar')}</div>
-            : <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>}
+          {isApproved(tpl.id) && !isPending(tpl.id) ? (
+            <div className="approved-note">
+              ✓ وقّعت على هذا النموذج بتاريخ {new Date(isApproved(tpl.id).signed_at || isApproved(tpl.id).created_at).toLocaleDateString('ar')}
+              <SignatureView path={isApproved(tpl.id).signature_path} />
+            </div>
+          ) : (
+            <>
+              {!student?.signature_path && <div className="update-note">✍ لتوقيع هذا النموذج، احفظ توقيعك أولاً من تبويب «توقيعي».</div>}
+              <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>
+            </>
+          )}
         </div>
       )
     }
@@ -155,6 +164,20 @@ export default function StudentForms({ studentId }) {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function SignatureView({ path }) {
+  const [url, setUrl] = useState(null)
+  useEffect(() => {
+    if (path) supabase.storage.from('student-docs').createSignedUrl(path, 3600).then(({ data }) => { if (data) setUrl(data.signedUrl) })
+  }, [path])
+  if (!path) return null
+  return (
+    <div className="sig-on-form">
+      <span className="muted" style={{ fontSize: 12 }}>التوقيع:</span>
+      {url && <img src={url} alt="التوقيع" className="sig-form-img" />}
     </div>
   )
 }

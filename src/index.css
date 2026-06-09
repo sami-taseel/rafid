@@ -1432,3 +1432,17 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .comp-edit-btn { background: var(--blue-soft); color: var(--blue); border: none; border-radius: 8px; padding: 7px 13px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; }
 .comp-edit-btn:hover { background: #dce8f8; }
 :root[data-theme="dark"] .comp-edit-btn:hover { background: #1f3148; }
+
+/* لوحة التوقيع */
+.sig-pad { max-width: 540px; }
+.sig-hint { font-size: 14px; margin-bottom: 10px; color: var(--text-soft); }
+.sig-canvas { border: 2px dashed var(--border); border-radius: 12px; background: #fff; touch-action: none; cursor: crosshair; width: 100%; max-width: 500px; }
+.sig-actions { display: flex; gap: 8px; margin-top: 12px; }
+.sig-view-label { font-size: 13px; color: var(--text-soft); margin-bottom: 8px; }
+.sig-img { max-width: 300px; border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: 8px; display: block; margin-bottom: 12px; }
+.sig-on-form { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.sig-form-img { max-width: 200px; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 6px; }
+
+/* بيانات الطلبات في السجلات */
+.req-data { background: var(--blue-soft); border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 13px; line-height: 1.9; }
+.req-data div { margin-bottom: 4px; }
