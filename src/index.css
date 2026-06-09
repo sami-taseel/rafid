@@ -974,7 +974,9 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .file-btn:hover { border-color: var(--blue); }
 
 /* ===== رابط المرفق وعارضه ===== */
-.att-link { background: rgba(255,255,255,.15); border: none; color: inherit; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; text-decoration: underline; }
+.att-link { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-soft); border: 1px solid transparent; color: var(--blue); padding: 6px 13px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; transition: all .15s; }
+.att-link:hover { background: #dce8f8; border-color: var(--blue); }
+:root[data-theme="dark"] .att-link:hover { background: #1f3148; }
 .chat-msg.staff .att-link { background: rgba(46,84,150,.12); color: var(--blue); }
 .att-err { color: #c0392b; font-size: 12px; margin-right: 8px; }
 .att-overlay { position: fixed; inset: 0; background: rgba(20,30,55,.7); display: flex; align-items: center; justify-content: center; z-index: 210; padding: 20px; }
@@ -1400,7 +1402,8 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 
 /* أزرار العرض والحذف الواضحة في المرفقات */
 .upload-tile-actions { display: flex; justify-content: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-.upload-tile-actions .att-link { font-size: 11px !important; padding: 5px 9px !important; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 7px; cursor: pointer; font-family: inherit; }
+.upload-tile-actions .att-link { font-size: 11px !important; padding: 5px 10px !important; }
+.upload-tile-actions .tile-del-btn { display: inline-flex; align-items: center; gap: 4px; }
 .tile-del-btn { font-size: 11px; padding: 5px 9px; background: #fcecec; color: #c0392b; border: none; border-radius: 7px; cursor: pointer; font-family: inherit; font-weight: 500; }
 .tile-del-btn:hover { background: #f8d7d7; }
 :root[data-theme="dark"] .tile-del-btn { background: #3a1a1a; color: #f0a0a0; }

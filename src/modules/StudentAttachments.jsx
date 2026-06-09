@@ -101,7 +101,7 @@ export default function StudentAttachments({ studentId }) {
         </label>
         {up && (
           <div className="upload-tile-actions">
-            <Attachment path={up.file_path} label="👁 عرض" />
+            <Attachment path={up.file_path} label="عرض" />
             <button className="tile-del-btn" onClick={() => remove(up.id)} title="حذف">🗑 حذف</button>
           </div>
         )}
@@ -185,7 +185,7 @@ export default function StudentAttachments({ studentId }) {
               <div key={r.id} className="termly-row">
                 <span className="termly-term">📄 {r.term_label || 'سجل'}</span>
                 <div className="attach-actions">
-                  <Attachment path={r.file_path} label="👁 عرض" />
+                  <Attachment path={r.file_path} label="عرض" />
                   <button className="tile-del-btn" onClick={() => remove(r.id)}>🗑 حذف</button>
                 </div>
               </div>

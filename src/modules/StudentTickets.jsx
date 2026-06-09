@@ -111,7 +111,7 @@ function NewTicket({ studentId, types, onBack }) {
           </select></div>
         <div className="field"><label>مرفق (اختياري)</label>
           <label className="file-btn">📎 {file ? file.name : 'اختر ملفاً'}
-            <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label></div>
+            <input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label></div>
         {msg && <div className="login-error">{msg}</div>}
         <button className="sp-save" onClick={submit} disabled={busy}>{busy ? 'جارٍ الإرسال…' : 'إرسال البلاغ'}</button>
       </div>
@@ -202,7 +202,7 @@ function TicketDetail({ ticket, statuses, onBack }) {
             <textarea rows={3} value={reply} onChange={e => setReply(e.target.value)} placeholder="اكتب رداً…" />
             <div className="reply-actions">
               <label className="file-btn">📎 {file ? 'ملف مرفق' : 'إرفاق ملف'}
-                <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
+                <input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label>
               {file && <span className="muted" style={{ fontSize: 12 }}>{file.name}</span>}
               <button className="save-btn" style={{ width: 'auto', padding: '10px 22px' }} onClick={sendReply}>إرسال</button>
             </div>
