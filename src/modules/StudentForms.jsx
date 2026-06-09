@@ -71,7 +71,9 @@ export default function StudentForms({ studentId }) {
             <div className="update-note">🔔 حُدّث هذا النموذج. ملخّص التغيير: {tpl.change_note}</div>
           )}
           <div className="form-body-text">{fillBody(tpl.body)}</div>
-          <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>
+          {isApproved(tpl.id) && !isPending(tpl.id)
+            ? <div className="approved-note">✓ وقّعت على هذا النموذج بتاريخ {new Date(isApproved(tpl.id).signed_at || isApproved(tpl.id).created_at).toLocaleDateString('ar')}</div>
+            : <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>}
         </div>
       )
     }
@@ -106,7 +108,7 @@ export default function StudentForms({ studentId }) {
               <span>{t.title}{t.required && <span className="req-star">*</span>}
                 {pending && <span className="pending-tag">يحتاج إعادة موافقة</span>}
               </span>
-              {done ? <span className="attach-ok">✓ موقّعة</span>
+              {done ? <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><span className="attach-ok">✓ موقّعة</span><button className="mini" onClick={() => setActive(t)}>اطّلاع</button></span>
                 : <button className={pending ? 'save-btn' : 'mini'} style={pending ? { width: 'auto', padding: '7px 16px' } : {}} onClick={() => setActive(t)}>{pending ? 'مراجعة والموافقة' : 'عرض وتوقيع'}</button>}
             </div>
           )

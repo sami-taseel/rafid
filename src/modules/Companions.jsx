@@ -3,17 +3,18 @@ import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
 import { useConfirm } from '../Confirm'
 
-// إدارة المرافقين — تُستخدم داخل ملف الطالب
+const EDU_LEVELS = ['ما قبل المدرسة', 'الروضة', 'الابتدائية', 'المتوسطة', 'الثانوية', 'الجامعية', 'دراسات عليا', 'غير ملتحق']
+
 export default function Companions({ studentId, personId }) {
   const toast = useToast()
   const confirmDialog = useConfirm()
   const [companions, setCompanions] = useState([])
-  const [nc, setNc] = useState({ full_name: '', relation: 'زوجة', residency_no: '', birth_date: '' })
+  const [nc, setNc] = useState({ full_name: '', relation: 'زوجة', residency_no: '', birth_date: '', education_level: '' })
   const [busy, setBusy] = useState(false)
 
   async function load() {
     const { data: c } = await supabase.from('companions')
-      .select('id, relation, persons(full_name, residency_no, birth_date)').eq('student_id', studentId)
+      .select('id, relation, education_level, persons(full_name, residency_no, birth_date)').eq('student_id', studentId)
     setCompanions(c || [])
   }
   useEffect(() => { if (studentId) load() }, [studentId])
@@ -24,10 +25,11 @@ export default function Companions({ studentId, personId }) {
     const { error } = await supabase.rpc('add_companion', {
       p_student: studentId, p_full_name: nc.full_name.trim(), p_relation: nc.relation,
       p_residency_no: nc.residency_no || null, p_birth_date: nc.birth_date || null,
+      p_education_level: nc.education_level || null,
     })
     setBusy(false)
     if (error) { toast('تعذّرت الإضافة: ' + error.message, 'error'); return }
-    setNc({ full_name: '', relation: 'زوجة', residency_no: '', birth_date: '' })
+    setNc({ full_name: '', relation: 'زوجة', residency_no: '', birth_date: '', education_level: '' })
     toast('أُضيف المرافق'); load()
   }
 
@@ -43,11 +45,20 @@ export default function Companions({ studentId, personId }) {
     <div>
       <h2 className="section-title">المرافقون</h2>
       {companions.map(c => (
-        <div key={c.id} className="comp-row">
-          <div>
-            👤 <strong>{c.persons?.full_name}</strong> <span className="pill">{c.relation}</span>
-            {c.persons?.residency_no && <span className="muted"> · إقامة {c.persons.residency_no}</span>}
-            {c.persons?.birth_date && <span className="muted"> · {c.persons.birth_date}</span>}
+        <div key={c.id} className="comp-card">
+          <div className="comp-card-main">
+            <div className="comp-avatar">👤</div>
+            <div className="comp-details">
+              <div className="comp-name-line">
+                <strong>{c.persons?.full_name || '(بلا اسم)'}</strong>
+                <span className="pill">{c.relation}</span>
+              </div>
+              <div className="comp-meta">
+                {c.persons?.residency_no && <span>إقامة: {c.persons.residency_no}</span>}
+                {c.persons?.birth_date && <span>الميلاد: {c.persons.birth_date}</span>}
+                {c.education_level && <span>المستوى: {c.education_level}</span>}
+              </div>
+            </div>
           </div>
           <button className="mini-del" onClick={() => delCompanion(c.id)}>حذف</button>
         </div>
@@ -68,6 +79,11 @@ export default function Companions({ studentId, personId }) {
           <div className="field" style={{ flex: 1 }}><label>رقم الإقامة</label>
             <input placeholder="رقم الإقامة" value={nc.residency_no} onChange={e => setNc({ ...nc, residency_no: e.target.value })} dir="ltr" /></div>
         </div>
+        <div className="field"><label>المستوى الدراسي</label>
+          <select value={nc.education_level} onChange={e => setNc({ ...nc, education_level: e.target.value })}>
+            <option value="">— اختر (اختياري) —</option>
+            {EDU_LEVELS.map(l => <option key={l}>{l}</option>)}
+          </select></div>
         <button className="save-btn" style={{ width: 'auto', padding: '11px 22px' }} onClick={addCompanion} disabled={busy}>
           {busy ? 'جارٍ…' : 'إضافة مرافق'}
         </button>

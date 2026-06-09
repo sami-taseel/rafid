@@ -134,26 +134,6 @@ export default function StudentHome({ studentId, onGoTab }) {
           </button>
         )}
       </div>
-
-      {/* روابط سريعة */}
-      <div className="quick-links">
-        <button onClick={() => onGoTab('surveys')} className="quick-link">📋 الاستبانات المتاحة</button>
-        <button onClick={() => onGoTab('data')} className="quick-link">📝 إكمال بياناتي</button>
-        <button onClick={() => onGoTab('policy')} className="quick-link">📜 لائحة السكن</button>
-      </div>
-
-      {/* آخر الإشعارات */}
-      {data.notifs.length > 0 && (
-        <div className="st-section">
-          <h3>آخر الإشعارات</h3>
-          {data.notifs.map(n => (
-            <div key={n.id} className={'home-notif ' + n.kind}>
-              <div className="hn-title">{n.title}</div>
-              {n.body && <div className="hn-body">{n.body}</div>}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   )
 }

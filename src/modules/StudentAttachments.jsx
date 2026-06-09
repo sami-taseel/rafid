@@ -27,6 +27,16 @@ export default function StudentAttachments({ studentId }) {
   }
   useEffect(() => { if (studentId) load() }, [studentId])
 
+  async function uploadTermly(typeId, file, termLabel) {
+    if (!file || !termLabel) return
+    setBusy('term_' + typeId)
+    try {
+      const path = await uploadTicketFile('attach_' + studentId, file)
+      await supabase.from('student_attachments').insert({ student_id: studentId, type_id: typeId, file_path: path, term_label: termLabel })
+      await load()
+    } catch {}
+    setBusy(null)
+  }
   async function upload(typeId, file, companionId, renewMonths) {
     if (!file) return
     setBusy(typeId + (companionId || 'self'))
@@ -53,10 +63,12 @@ export default function StudentAttachments({ studentId }) {
     if (t.condition === 'families_only') return building === 'families'
     return true
   })
+  // المرفقات الفصلية (سجل أكاديمي لكل فصل)
+  const termlyTypes = visibleTypes.filter(t => t.is_termly)
   // مرفقات لكل شخص (الطالب + المرافقون)
-  const perPersonTypes = visibleTypes.filter(t => t.per_person)
+  const perPersonTypes = visibleTypes.filter(t => t.per_person && !t.is_termly)
   // مرفقات الطالب وحده
-  const studentTypes = visibleTypes.filter(t => !t.per_person && t.owner_type === 'student')
+  const studentTypes = visibleTypes.filter(t => !t.per_person && !t.is_termly && t.owner_type === 'student')
   // مرفقات المرافق (النوع القديم — يبقى للتوافق)
   const companionTypes = visibleTypes.filter(t => !t.per_person && t.owner_type === 'companion')
 
@@ -107,6 +119,9 @@ export default function StudentAttachments({ studentId }) {
         </div>
       ))}
 
+      {/* المرفقات الفصلية (السجل الأكاديمي) */}
+      {termlyTypes.map(t => <TermlyCard key={t.id} type={t} />)}
+
       {/* مرفقات الطالب وحده */}
       {studentTypes.length > 0 && (
         <div className="sp-card">
@@ -139,6 +154,52 @@ export default function StudentAttachments({ studentId }) {
       )}
     </div>
   )
+
+  function TermlyCard({ type }) {
+    const records = mine.filter(m => m.type_id === type.id).sort((a, b) => (b.term_label || '').localeCompare(a.term_label || ''))
+    const [term, setTerm] = useState('')
+    const [file, setFile] = useState(null)
+    const year = new Date().getFullYear()
+    const termOptions = []
+    for (let y = year; y >= year - 5; y--) {
+      termOptions.push(`الفصل الأول ${y}`, `الفصل الثاني ${y}`, `الفصل الصيفي ${y}`)
+    }
+    return (
+      <div className="sp-card">
+        <div className="sp-card-title">{type.name}{type.required && <span className="req-star">*</span>}</div>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>ارفع سجلك لكل فصل دراسي، مع الاحتفاظ بسجلات الفصول السابقة.</p>
+
+        {/* السجلات السابقة */}
+        {records.length > 0 ? (
+          <div className="termly-list">
+            {records.map(r => (
+              <div key={r.id} className="termly-row">
+                <span className="termly-term">📄 {r.term_label || 'سجل'}</span>
+                <div className="attach-actions">
+                  <Attachment path={r.file_path} label="عرض" />
+                  <button className="mini-del" onClick={() => remove(r.id)}>حذف</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>لا سجلات بعد.</p>}
+
+        {/* إضافة سجل جديد */}
+        <div className="termly-add">
+          <select value={term} onChange={e => setTerm(e.target.value)}>
+            <option value="">اختر الفصل…</option>
+            {termOptions.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+          <label className="file-btn">{file ? file.name.slice(0, 14) : 'اختر ملفاً'}
+            <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
+          <button className="mini" disabled={!term || !file || busy === 'term_' + type.id}
+            onClick={() => { uploadTermly(type.id, file, term); setTerm(''); setFile(null) }}>
+            {busy === 'term_' + type.id ? 'جارٍ…' : '+ رفع'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   function UploadRowInline({ type }) {
     const up = findUpload(type.id, null)
