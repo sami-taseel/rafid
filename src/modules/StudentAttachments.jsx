@@ -18,7 +18,7 @@ export default function StudentAttachments({ studentId }) {
     const [ty, at, comp, st] = await Promise.all([
       supabase.from('attachment_types').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('student_attachments').select('*, attachment_types(name)').eq('student_id', studentId),
-      supabase.from('companions').select('id, relation, persons(full_name)').eq('student_id', studentId),
+      supabase.rpc('my_companions', { p_student: studentId }),
       supabase.from('students').select('housing_building_id, buildings(building_type), persons(full_name)').eq('id', studentId).maybeSingle(),
     ])
     setTypes(ty.data || []); setMine(at.data || []); setCompanions(comp.data || [])
@@ -63,7 +63,7 @@ export default function StudentAttachments({ studentId }) {
   }
 
   const firstName = (n) => (n || '').trim().split(' ')[0] || n
-  const personLabel = (c) => firstName(c.persons?.full_name) || c.relation || 'مرافق'
+  const personLabel = (c) => firstName(c.full_name) || c.relation || 'مرافق'
   if (loading) return <div className="state"><div className="spinner"></div>…</div>
 
   const visibleTypes = types.filter(t => {
@@ -152,7 +152,7 @@ export default function StudentAttachments({ studentId }) {
           <div className="sp-card-title">مرفقات المرافقين</div>
           {companions.map(c => (
             <div key={c.id} className="companion-attach">
-              <div className="companion-name">{c.persons?.full_name}</div>
+              <div className="companion-name">{firstName(c.full_name) || c.relation}</div>
               <div className="upload-grid">
                 {companionTypes.map(t => <UploadTile key={t.id} type={t} label={t.name} companionId={c.id} />)}
               </div>
