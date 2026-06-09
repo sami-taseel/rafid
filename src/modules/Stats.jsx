@@ -13,8 +13,9 @@ export default function Stats({ onNavigate }) {
         if (p?.full_name) setUserName(p.full_name.split(' ')[0])
       }
       const [students, sessions, activities, attendance, sanctions, support, responses,
-             surveys, tickets, categories, buildings, units, risk, attTimed, travelers] = await Promise.all([
-        supabase.from('students').select('id, degree_level, profile_reviewed, persons(nationality)'),
+             surveys, tickets, categories, buildings, units, risk, attTimed, travelers,
+             admissions, evals, points, formRecs, formTpls] = await Promise.all([
+        supabase.from('students').select('id, degree_level, profile_reviewed, admission_status, unit_id, persons(nationality)'),
         supabase.from('sessions').select('id, status, planned_date, activities(track_id, tracks(name_ar))'),
         supabase.from('activities').select('id, tracks(name_ar)'),
         supabase.from('attendance').select('status'),
@@ -24,11 +25,16 @@ export default function Stats({ onNavigate }) {
         supabase.from('surveys').select('id, is_active'),
         supabase.from('tickets').select('status_code, priority, created_at, ticket_types(name)'),
         supabase.from('categories').select('id'),
-        supabase.from('buildings').select('id'),
-        supabase.from('units').select('id'),
+        supabase.from('buildings').select('id, building_type'),
+        supabase.from('units').select('id, building_id'),
         supabase.rpc('students_at_risk'),
         supabase.from('attendance').select('status, sessions(planned_date)'),
         supabase.rpc('travelers_count'),
+        supabase.from('students').select('admission_status'),
+        supabase.from('evaluations').select('total_score, max_total'),
+        supabase.from('points_log').select('points'),
+        supabase.from('form_records').select('status, form_templates(category)'),
+        supabase.from('form_templates').select('id, category, required, is_active'),
       ])
 
       const S = students.data || [], SES = sessions.data || [], ATT = attendance.data || []
@@ -81,6 +87,29 @@ export default function Stats({ onNavigate }) {
       const today = new Date().toISOString().slice(0,10)
       const todaySessions = SES.filter(s=>s.planned_date===today).length
 
+      // توزيع حالات القبول
+      const admMap = {}
+      ;(admissions.data||[]).forEach(a => { const k = a.admission_status || 'active'; admMap[k] = (admMap[k]||0)+1 })
+
+      // متوسط درجات التقييم
+      const EV = evals.data || []
+      const avgEval = EV.length ? Math.round(EV.reduce((s,e)=> s + (e.max_total ? (e.total_score/e.max_total*100) : 0), 0) / EV.length) : 0
+
+      // مجموع النقاط الممنوحة
+      const totalPoints = (points.data||[]).reduce((s,p)=> s + (p.points||0), 0)
+
+      // إشغال السكن: عدد الطلاب المسكّنين مقابل عدد الشقق
+      const housedStudents = S.filter(s=>s.unit_id).length
+      const totalUnits = (units.data||[]).length
+      const familyBuildings = (buildings.data||[]).filter(b=>b.building_type==='families').length
+      const singleBuildings = (buildings.data||[]).filter(b=>b.building_type==='singles').length
+
+      // الموافقات: موقّعة مقابل معلّقة
+      const FR = formRecs.data || []
+      const approvedForms = FR.filter(r=>r.form_templates?.category==='approval' && r.status==='approved').length
+      const pendingForms = FR.filter(r=>r.form_templates?.category==='approval' && r.status==='pending').length
+      const requestForms = FR.filter(r=>r.form_templates?.category==='request').length
+
       setD({
         students: S.length, sessions: SES.length, activities: (activities.data||[]).length,
         attRate, sanctions: SAN.length, support: (support.data||[]).length,
@@ -92,6 +121,8 @@ export default function Stats({ onNavigate }) {
         risk: risk.data || [], pendingEvict, incomplete, todaySessions,
         completeRate: S.length ? Math.round(S.filter(s=>s.profile_reviewed).length/S.length*100) : 0,
         travelers: travelers.data ?? 0,
+        admMap, avgEval, totalPoints, housedStudents, totalUnits, familyBuildings, singleBuildings,
+        approvedForms, pendingForms, requestForms,
       })
     }
     load()
@@ -200,6 +231,53 @@ export default function Stats({ onNavigate }) {
             <BarChart data={d.byTrack} color="#157080" />
           </div>
         )}
+
+        <div className="panel chart-panel">
+          <h3 className="dash-sec">حالات القبول</h3>
+          <Donut segments={[
+            {label:'نشط',value:d.admMap.active||0,color:'#1d9e75'},
+            {label:'قيد المراجعة',value:d.admMap.pending||0,color:'#f5a623'},
+            {label:'مقابلة',value:d.admMap.interview||0,color:'#2e5496'},
+            {label:'مقبول',value:d.admMap.accepted||0,color:'#1d7a52'},
+            {label:'مرفوض',value:d.admMap.rejected||0,color:'#c0392b'},
+            {label:'مجمّد',value:d.admMap.frozen||0,color:'#9aa3b2'},
+          ]} unit="طالب" />
+        </div>
+
+        <div className="panel chart-panel">
+          <h3 className="dash-sec">الموافقات والنماذج</h3>
+          <BarChart data={[
+            {label:'موافقات موقّعة',value:d.approvedForms},
+            {label:'بانتظار التوقيع',value:d.pendingForms},
+            {label:'طلبات مقدّمة',value:d.requestForms},
+          ]} color="#6b3fc0" />
+        </div>
+
+        <div className="panel chart-panel">
+          <h3 className="dash-sec">السكن والإشغال</h3>
+          <div className="mini-stats">
+            <MiniStat label="طلاب مسكّنون" value={d.housedStudents} />
+            <MiniStat label="إجمالي الشقق" value={d.totalUnits} />
+            <MiniStat label="عمائر عوائل" value={d.familyBuildings} />
+            <MiniStat label="عمائر عزّاب" value={d.singleBuildings} />
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <div className="bar-row">
+              <span className="bar-label">نسبة التسكين</span>
+              <div className="bar-track"><div className="bar-fill" style={{ width: (d.students ? Math.round(d.housedStudents/d.students*100) : 0) + '%', background: '#2e5496' }}></div></div>
+              <span className="bar-val">{d.students ? Math.round(d.housedStudents/d.students*100) : 0}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel chart-panel">
+          <h3 className="dash-sec">التقييم والتحفيز</h3>
+          <div className="mini-stats">
+            <MiniStat label="متوسط التقييم" value={d.avgEval + '%'} />
+            <MiniStat label="مجموع النقاط الممنوحة" value={d.totalPoints} />
+          </div>
+        </div>
+
         <div className="panel chart-panel">
           <h3 className="dash-sec">نظرة عامة</h3>
           <div className="mini-stats">
@@ -249,7 +327,7 @@ function BarChart({ data, color='#2e5496', suffix='', max=null }) {
 }
 
 // رسم حلقي (donut) عبر conic-gradient
-function Donut({ segments }) {
+function Donut({ segments, unit = 'بلاغ' }) {
   const total = segments.reduce((s,x)=>s+x.value,0)
   if (total===0) return <div className="muted" style={{textAlign:'center',padding:20}}>لا بيانات</div>
   let acc = 0
@@ -260,7 +338,7 @@ function Donut({ segments }) {
   return (
     <div className="donut-wrap">
       <div className="donut" style={{background:`conic-gradient(${stops})`}}>
-        <div className="donut-hole"><span className="donut-total">{total}</span><span className="donut-lbl">بلاغ</span></div>
+        <div className="donut-hole"><span className="donut-total">{total}</span><span className="donut-lbl">{unit}</span></div>
       </div>
       <div className="donut-legend">
         {segments.filter(s=>s.value>0).map((s,i)=>(

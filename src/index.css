@@ -1450,3 +1450,92 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* بيانات الطلبات في السجلات */
 .req-data { background: var(--blue-soft); border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 13px; line-height: 1.9; }
 .req-data div { margin-bottom: 4px; }
+
+/* رسوم بوابة المتبرع */
+.sp-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 24px; }
+.sp-chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; box-shadow: var(--shadow); }
+.sp-student-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sp-student-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.sp-chip { font-size: 12px; padding: 4px 10px; border-radius: 12px; background: var(--blue-soft); color: var(--text-soft); }
+.sp-chip.gold { background: #fef3da; color: #92660a; }
+.sp-chip.blue { background: #e8f0fc; color: #2e5496; }
+.sp-chip.warn { background: #fcecec; color: #c0392b; }
+:root[data-theme="dark"] .sp-chip.gold { background: #3a2e14; color: #f0c060; }
+:root[data-theme="dark"] .sp-chip.warn { background: #3a1a1a; color: #f0a0a0; }
+
+/* ============================================================
+   تحسينات الجوال لصفحة الطالب (كل الطلاب يدخلون من الجوال)
+   ============================================================ */
+@media (max-width: 768px) {
+  .sp-app { padding: 12px 10px 32px; }
+  .sp-hero { padding: 18px 16px; border-radius: 16px; }
+
+  /* صف الأيقونات العلوي: يلتف ولا يتزاحم */
+  .sp-hero-actions { gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .sp-hero-actions .sp-logout { padding: 7px 12px; font-size: 12px; }
+
+  /* الترحيب والصورة */
+  .sp-avatar { width: 44px; height: 44px; font-size: 18px; }
+  .sp-greet { font-size: 17px; }
+
+  /* التبويبات: شريط أفقي قابل للتمرير بدل التزاحم */
+  .sp-tabs {
+    gap: 4px; padding: 5px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap; scrollbar-width: none;
+  }
+  .sp-tabs::-webkit-scrollbar { display: none; }
+  .sp-tabs button {
+    flex: 0 0 auto; padding: 9px 14px; font-size: 13px; white-space: nowrap;
+  }
+
+  /* البطاقات */
+  .sp-card { padding: 16px; border-radius: 14px; margin-bottom: 12px; }
+  .sp-card-title { font-size: 15px; }
+
+  /* الحقول: حجم خط مناسب لتفادي التكبير التلقائي في iOS */
+  .sp-field input, .sp-field select, .sp-field textarea { font-size: 16px; padding: 12px; }
+
+  /* أقرب موعد */
+  .next-head { font-size: 14px; line-height: 1.7; }
+  .next-card { padding: 16px; }
+
+  /* بطاقات المرافقين: تتراصّ عمودياً بوضوح */
+  .comp-card { flex-direction: column; align-items: stretch; gap: 10px; }
+  .comp-card-main { width: 100%; }
+  .comp-actions { width: 100%; justify-content: flex-end; }
+
+  /* شبكة رفع المرفقات: 3 في الصف بحجم مناسب للمس */
+  .upload-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .upload-tile { padding: 10px 6px; }
+  .upload-tile-icon { width: 38px; height: 38px; font-size: 18px; }
+  .upload-tile-name { font-size: 12px; }
+  .upload-tile-actions { flex-direction: column; gap: 5px; }
+  .upload-tile-actions .att-link, .upload-tile-actions .tile-del-btn { width: 100%; justify-content: center; }
+
+  /* السجل الفصلي: عناصر الإضافة تتراصّ */
+  .termly-add { flex-direction: column; align-items: stretch; }
+  .termly-add select, .termly-add input, .termly-add .file-btn-primary { width: 100%; text-align: center; }
+
+  /* النماذج */
+  .form-list-row { flex-wrap: wrap; gap: 8px; }
+
+  /* أزرار العرض/الحذف في صفوف المرفقات */
+  .attach-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .attach-actions { justify-content: flex-end; }
+
+  /* لوحة الإشعارات: أوسع على الجوال */
+  .notif-panel { width: calc(100vw - 32px); max-width: 340px; }
+
+  /* لوحة التوقيع */
+  .sig-canvas { height: 160px; }
+
+  /* قوائم اللغة */
+  .langpick-menu { min-width: 160px; }
+}
+
+/* شاشات صغيرة جداً (أقل من 380px) */
+@media (max-width: 380px) {
+  .upload-grid { grid-template-columns: repeat(2, 1fr); }
+  .st-stats { gap: 8px; }
+  .sp-hero-actions .sp-logout { padding: 6px 10px; }
+}
