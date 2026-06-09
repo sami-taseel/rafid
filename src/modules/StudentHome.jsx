@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 
 export default function StudentHome({ studentId, onGoTab }) {
@@ -82,14 +83,14 @@ export default function StudentHome({ studentId, onGoTab }) {
       {/* أقرب موعد قادم */}
       {nextDaySessions.length > 0 ? (
         <div className="next-wrap">
-          <div className="next-head">📌 أقرب موعد قادم — {dayName(nextDay)} {nextDay}</div>
+          <div className="next-head">📌 أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="next-grid">
             {nextDaySessions.map(s => (
               <div className="next-card" key={s.id}>
                 <div className="next-sess">{sessName(s)}</div>
                 {s.activities?.title && s.activities.title !== sessName(s) && <div className="next-act">{s.activities.title}</div>}
                 <div className="next-meta">
-                  {s.start_time && <span>🕐 {s.start_time.slice(0,5)}</span>}
+                  {s.start_time && <span>🕐 {formatTime(s.start_time)}</span>}
                   {s.activities?.location && <span>📍 {s.activities.location}</span>}
                 </div>
                 {s.activities?.tracks?.name_ar && <span className="pill">{s.activities.tracks.name_ar}</span>}
@@ -123,7 +124,7 @@ export default function StudentHome({ studentId, onGoTab }) {
               <div className="up-info">
                 <div className="up-sess">{sessName(s)}</div>
                 {s.activities?.title && s.activities.title !== sessName(s) && <div className="up-title">{s.activities.title}</div>}
-                <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + s.start_time.slice(0,5)}</div>
+                <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + formatTime(s.start_time)}</div>
               </div>
             </div>
           ))}

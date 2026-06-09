@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDarkMode } from './useDarkMode'
 import { supabase } from './supabaseClient'
 
@@ -66,6 +66,7 @@ export default function Layout({ active, onNavigate, children }) {
           <span className="topbar-title">{MENU.find(m => m.key === active)?.label}
             {active === 'tickets' && openTickets > 0 && <span className="title-badge">{openTickets}</span>}</span>
           <div className="topbar-actions">
+            <StaffBell onNavigate={onNavigate} />
             <button className="icon-act" onClick={() => onNavigate('account')} aria-label="حسابي" title="حسابي">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
             </button>
@@ -77,6 +78,47 @@ export default function Layout({ active, onNavigate, children }) {
         </header>
         <div className="content">{children}</div>
       </div>
+    </div>
+  )
+}
+
+function StaffBell({ onNavigate }) {
+  const [items, setItems] = useState([])
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  async function load() {
+    const { data } = await supabase.from('staff_notifications').select('*').order('created_at', { ascending: false }).limit(20)
+    setItems(data || [])
+  }
+  useEffect(() => { load(); const t = setInterval(load, 60000); return () => clearInterval(t) }, [])
+  useEffect(() => {
+    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+  const unread = items.filter(i => !i.is_read).length
+  async function openPanel() {
+    setOpen(!open)
+    if (!open && unread) { await supabase.from('staff_notifications').update({ is_read: true }).eq('is_read', false); load() }
+  }
+  return (
+    <div className="notif-wrap" ref={ref}>
+      <button className="icon-act" onClick={openPanel} aria-label="الإشعارات" title="الإشعارات" style={{ position: 'relative' }}>
+        🔔{unread > 0 && <span className="notif-badge">{unread}</span>}
+      </button>
+      {open && (
+        <div className="notif-panel">
+          <div className="notif-panel-head">الإشعارات</div>
+          {items.length === 0 && <div className="muted" style={{ padding: 14, fontSize: 13 }}>لا إشعارات.</div>}
+          {items.map(n => (
+            <div key={n.id} className={'notif-item' + (n.link ? ' clickable' : '')} onClick={() => { if (n.link) { onNavigate(n.link); setOpen(false) } }}>
+              <div className="notif-item-title">{n.title}</div>
+              {n.body && <div className="notif-item-body">{n.body}</div>}
+              <div className="notif-item-time">{new Date(n.created_at).toLocaleDateString('ar')}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

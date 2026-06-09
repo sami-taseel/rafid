@@ -1414,3 +1414,15 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 
 /* السجل الفصلي: أزرار عرض/حذف واضحة */
 .termly-row .att-link { font-size: 12px !important; padding: 5px 10px !important; background: var(--blue-soft); color: var(--blue); border: none; border-radius: 7px; cursor: pointer; font-family: inherit; }
+
+/* لوحة إشعارات الموظفين */
+.notif-panel { position: absolute; top: 46px; inset-inline-end: 0; width: 320px; max-height: 420px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 10px 34px rgba(0,0,0,.22); z-index: 200; }
+.notif-panel-head { padding: 14px 16px; font-weight: 700; color: var(--navy); border-bottom: 1px solid var(--border); }
+:root[data-theme="dark"] .notif-panel-head { color: #8fb5ed; }
+.notif-item { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.notif-item:last-child { border-bottom: none; }
+.notif-item.clickable { cursor: pointer; }
+.notif-item.clickable:hover { background: var(--blue-soft); }
+.notif-item-title { font-weight: 600; font-size: 14px; color: var(--text); }
+.notif-item-body { font-size: 13px; color: var(--text-soft); margin-top: 3px; line-height: 1.7; }
+.notif-item-time { font-size: 11px; color: var(--text-soft); margin-top: 4px; }

@@ -21,6 +21,7 @@ export default function Companions({ studentId, personId }) {
 
   async function addCompanion() {
     if (!nc.full_name.trim()) { toast('اكتب اسم المرافق', 'error'); return }
+    if (nc.residency_no && !/^2\d{9}$/.test(nc.residency_no.trim())) { toast('رقم الإقامة يجب أن يكون ١٠ أرقام ويبدأ بالرقم ٢', 'error'); return }
     setBusy(true)
     const { error } = await supabase.rpc('add_companion', {
       p_student: studentId, p_full_name: nc.full_name.trim(), p_relation: nc.relation,

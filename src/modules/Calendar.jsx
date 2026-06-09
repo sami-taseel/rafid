@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
+import { formatTime } from '../dateUtils'
 
 const DAYS = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']
 const MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']
@@ -72,7 +73,7 @@ export default function Calendar() {
                 {evs.slice(0, 3).map(s => (
                   <div key={s.id} className={'cal-event track-' + (s.activities?.tracks?.code || 'x')}
                     title={sessName(s)} onClick={() => setDayDetail({ date: d, list: evs })}>
-                    {s.start_time && <span className="cal-time">{s.start_time.slice(0,5)}</span>} {sessName(s)}
+                    {s.start_time && <span className="cal-time">{formatTime(s.start_time)}</span>} {sessName(s)}
                   </div>
                 ))}
                 {evs.length > 3 && <div className="cal-more" onClick={() => setDayDetail({ date: d, list: evs })}>+{evs.length - 3} المزيد</div>}
@@ -97,7 +98,7 @@ export default function Calendar() {
             </div>
             {dayDetail.list.map(s => (
               <div key={s.id} className="day-event-row">
-                <div className="day-event-time">{s.start_time ? s.start_time.slice(0,5) : '—'}</div>
+                <div className="day-event-time">{s.start_time ? formatTime(s.start_time) : '—'}</div>
                 <div>
                   <div className="day-event-title">{sessName(s)}</div>
                   <div className="muted" style={{ fontSize: 13 }}>
