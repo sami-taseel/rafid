@@ -12,6 +12,7 @@ export default function StudentAttachments({ studentId }) {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(null)
   const [myName, setMyName] = useState('')
+  const [err, setErr] = useState('')
 
   async function load() {
     const [ty, at, comp, st] = await Promise.all([
@@ -29,26 +30,32 @@ export default function StudentAttachments({ studentId }) {
 
   async function uploadTermly(typeId, file, termLabel) {
     if (!file || !termLabel) return
+    setErr('')
+    if (!/^image\//.test(file.type)) { setErr('يُقبل رفع الصور فقط.'); return }
     setBusy('term_' + typeId)
     try {
       const path = await uploadTicketFile('attach_' + studentId, file)
-      await supabase.from('student_attachments').insert({ student_id: studentId, type_id: typeId, file_path: path, term_label: termLabel })
+      const { error } = await supabase.from('student_attachments').insert({ student_id: studentId, type_id: typeId, file_path: path, term_label: termLabel })
+      if (error) throw new Error(error.message)
       await load()
-    } catch {}
+    } catch (e) { setErr('تعذّر رفع السجل: ' + (e.message || 'حاول مجدداً')) }
     setBusy(null)
   }
   async function upload(typeId, file, companionId, renewMonths) {
     if (!file) return
+    setErr('')
+    if (!/^image\//.test(file.type)) { setErr('يُقبل رفع الصور فقط (JPG أو PNG).'); return }
     setBusy(typeId + (companionId || 'self'))
     try {
       const path = await uploadTicketFile('attach_' + studentId, file)
       let expires = null
       if (renewMonths) { const d = new Date(); d.setMonth(d.getMonth() + Number(renewMonths)); expires = d.toISOString().slice(0, 10) }
-      await supabase.from('student_attachments').insert({
+      const { error } = await supabase.from('student_attachments').insert({
         student_id: studentId, type_id: typeId, companion_id: companionId || null, file_path: path, expires_at: expires,
       })
+      if (error) throw new Error(error.message)
       await load()
-    } catch {}
+    } catch (e) { setErr('تعذّر رفع الملف: ' + (e.message || 'حاول مجدداً')) }
     setBusy(null)
   }
   async function remove(id) {
@@ -90,12 +97,12 @@ export default function StudentAttachments({ studentId }) {
           <div className="upload-tile-name">{label}</div>
           {sublabel && <div className="upload-tile-sub">{sublabel}</div>}
           <div className="upload-tile-status">{loading ? 'جارٍ…' : up && !expired ? 'مرفوع' : expired ? 'منتهٍ' : 'رفع'}</div>
-          <input type="file" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
+          <input type="file" accept="image/*" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
         </label>
         {up && (
           <div className="upload-tile-actions">
-            <Attachment path={up.file_path} label="عرض" />
-            <button className="tile-del" onClick={() => remove(up.id)} title="حذف">🗑</button>
+            <Attachment path={up.file_path} label="👁 عرض" />
+            <button className="tile-del-btn" onClick={() => remove(up.id)} title="حذف">🗑 حذف</button>
           </div>
         )}
       </div>
@@ -104,6 +111,7 @@ export default function StudentAttachments({ studentId }) {
 
   return (
     <div className="st-attach">
+      {err && <div className="attach-error">⚠ {err}</div>}
       {/* مرفقات لكل شخص: بطاقة لكل نوع، بداخلها الطالب وكل مرافق */}
       {perPersonTypes.map(t => (
         <div className="sp-card" key={t.id}>
@@ -157,45 +165,42 @@ export default function StudentAttachments({ studentId }) {
 
   function TermlyCard({ type }) {
     const records = mine.filter(m => m.type_id === type.id).sort((a, b) => (b.term_label || '').localeCompare(a.term_label || ''))
-    const [term, setTerm] = useState('')
-    const [file, setFile] = useState(null)
-    const year = new Date().getFullYear()
-    const termOptions = []
-    for (let y = year; y >= year - 5; y--) {
-      termOptions.push(`الفصل الأول ${y}`, `الفصل الثاني ${y}`, `الفصل الصيفي ${y}`)
+    const [term, setTerm] = useState('الأول')
+    const [year, setYear] = useState('')
+
+    function doUpload(file) {
+      if (!file) return
+      if (!year || !/^\d{4}$/.test(year)) { setErr('اكتب السنة بأربعة أرقام (مثل 2026).'); return }
+      uploadTermly(type.id, file, `الفصل ${term} ${year}`)
+      setYear('')
     }
     return (
       <div className="sp-card">
         <div className="sp-card-title">{type.name}{type.required && <span className="req-star">*</span>}</div>
         <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>ارفع سجلك لكل فصل دراسي، مع الاحتفاظ بسجلات الفصول السابقة.</p>
 
-        {/* السجلات السابقة */}
         {records.length > 0 ? (
           <div className="termly-list">
             {records.map(r => (
               <div key={r.id} className="termly-row">
                 <span className="termly-term">📄 {r.term_label || 'سجل'}</span>
                 <div className="attach-actions">
-                  <Attachment path={r.file_path} label="عرض" />
-                  <button className="mini-del" onClick={() => remove(r.id)}>حذف</button>
+                  <Attachment path={r.file_path} label="👁 عرض" />
+                  <button className="tile-del-btn" onClick={() => remove(r.id)}>🗑 حذف</button>
                 </div>
               </div>
             ))}
           </div>
         ) : <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>لا سجلات بعد.</p>}
 
-        {/* إضافة سجل جديد */}
         <div className="termly-add">
           <select value={term} onChange={e => setTerm(e.target.value)}>
-            <option value="">اختر الفصل…</option>
-            {termOptions.map(o => <option key={o} value={o}>{o}</option>)}
+            <option value="الأول">الفصل الأول</option>
+            <option value="الثاني">الفصل الثاني</option>
           </select>
-          <label className="file-btn">{file ? file.name.slice(0, 14) : 'اختر ملفاً'}
-            <input type="file" hidden onChange={e => setFile(e.target.files[0])} /></label>
-          <button className="mini" disabled={!term || !file || busy === 'term_' + type.id}
-            onClick={() => { uploadTermly(type.id, file, term); setTerm(''); setFile(null) }}>
-            {busy === 'term_' + type.id ? 'جارٍ…' : '+ رفع'}
-          </button>
+          <input type="number" placeholder="السنة (2026)" value={year} onChange={e => setYear(e.target.value)} style={{ width: 120, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit' }} />
+          <label className="file-btn-primary">{busy === 'term_' + type.id ? 'جارٍ…' : '＋ رفع السجل'}
+            <input type="file" accept="image/*" hidden onChange={e => doUpload(e.target.files[0])} /></label>
         </div>
       </div>
     )
@@ -211,7 +216,7 @@ export default function StudentAttachments({ studentId }) {
         {up && <Attachment path={up.file_path} label="عرض" />}
         {up && <button className="mini-del" onClick={() => remove(up.id)}>حذف</button>}
         <label className="file-btn">{busy === type.id + 'self' ? 'جارٍ…' : up ? 'استبدال' : 'رفع'}
-          <input type="file" hidden onChange={e => upload(type.id, e.target.files[0], null, type.renew_months)} /></label>
+          <input type="file" accept="image/*" hidden onChange={e => upload(type.id, e.target.files[0], null, type.renew_months)} /></label>
       </div>
     )
   }
