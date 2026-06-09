@@ -1366,3 +1366,11 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .pending-row { background: #fffdf5; border-radius: 8px; }
 :root[data-theme="dark"] .pending-tag { background: #3a3014; color: #f0c060; }
 
+
+/* عنوان فرعي في بطاقة الرفع (صلة القرابة) */
+.upload-tile-sub { font-size: 11px; color: var(--text-soft); margin-top: -2px; }
+.upload-tile.done .upload-tile-sub { color: #4a9e7a; }
+
+/* زر نشر التعديل الجوهري */
+.publish-major-btn { width: 100%; margin-top: 10px; padding: 11px 18px; background: #c0392b; color: #fff; border: none; border-radius: 10px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; transition: background .15s; }
+.publish-major-btn:hover { background: #a93226; }

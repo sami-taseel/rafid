@@ -166,9 +166,10 @@ function FormEditor({ form, onBack }) {
                     <strong>تعديل جوهري</strong>
                     <p className="muted" style={{ fontSize: 13, marginBottom: 8 }}>يغيّر الالتزامات. تُلغى موافقات الطلاب، وتنقص نسبة اكتمال حساباتهم، ويُطالبون بالموافقة من جديد.</p>
                     <textarea rows={2} value={changeNote} onChange={e => setChangeNote(e.target.value)} placeholder="ملخّص التغيير (يظهر للطالب)" style={{ width: '100%', padding: 10, border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit', boxSizing: 'border-box' }} />
-                    <button className="confirm-ok danger" style={{ marginTop: 8 }} onClick={saveMajor}>نشر التعديل الجوهري</button>
+                    <button className="publish-major-btn" onClick={saveMajor}>نشر التعديل الجوهري</button>
                   </div>
                 </div>
+                <button className="confirm-cancel" style={{ width: '100%', marginTop: 12 }} onClick={() => setShowSave(false)}>إلغاء</button>
               </>
             ) : (
               <>

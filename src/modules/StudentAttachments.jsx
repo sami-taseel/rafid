@@ -17,7 +17,7 @@ export default function StudentAttachments({ studentId }) {
     const [ty, at, comp, st] = await Promise.all([
       supabase.from('attachment_types').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('student_attachments').select('*, attachment_types(name)').eq('student_id', studentId),
-      supabase.from('companions').select('id, persons(full_name)').eq('student_id', studentId),
+      supabase.from('companions').select('id, relation, persons(full_name)').eq('student_id', studentId),
       supabase.from('students').select('housing_building_id, buildings(building_type), persons(full_name)').eq('id', studentId).maybeSingle(),
     ])
     setTypes(ty.data || []); setMine(at.data || []); setCompanions(comp.data || [])
@@ -46,6 +46,7 @@ export default function StudentAttachments({ studentId }) {
   }
 
   const firstName = (n) => (n || '').trim().split(' ')[0] || n
+  const personLabel = (c) => firstName(c.persons?.full_name) || c.relation || 'مرافق'
   if (loading) return <div className="state"><div className="spinner"></div>…</div>
 
   const visibleTypes = types.filter(t => {
@@ -63,7 +64,7 @@ export default function StudentAttachments({ studentId }) {
   const isExpired = (a) => a?.expires_at && new Date(a.expires_at) < new Date()
 
   // بطاقة أيقونة رفع لشخص محدّد (ضمن شبكة)
-  function UploadTile({ type, label, companionId }) {
+  function UploadTile({ type, label, sublabel, companionId }) {
     const up = findUpload(type.id, companionId)
     const expired = isExpired(up)
     const key = type.id + (companionId || 'self')
@@ -75,6 +76,7 @@ export default function StudentAttachments({ studentId }) {
             {loading ? '⏳' : up && !expired ? '✓' : expired ? '⚠' : '＋'}
           </div>
           <div className="upload-tile-name">{label}</div>
+          {sublabel && <div className="upload-tile-sub">{sublabel}</div>}
           <div className="upload-tile-status">{loading ? 'جارٍ…' : up && !expired ? 'مرفوع' : expired ? 'منتهٍ' : 'رفع'}</div>
           <input type="file" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
         </label>
@@ -96,9 +98,9 @@ export default function StudentAttachments({ studentId }) {
           <div className="sp-card-title">{t.name}{t.required && <span className="req-star">*</span>}</div>
           <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>ارفع نسخة لك ولكل مرافق.</p>
           <div className="upload-grid">
-            <UploadTile type={t} label={firstName(myName)} companionId={null} />
+            <UploadTile type={t} label={firstName(myName)} sublabel="أنا" companionId={null} />
             {companions.map(c => (
-              <UploadTile key={c.id} type={t} label={firstName(c.persons?.full_name)} companionId={c.id} />
+              <UploadTile key={c.id} type={t} label={personLabel(c)} sublabel={c.relation} companionId={c.id} />
             ))}
           </div>
           {companions.length === 0 && <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>أضف مرافقيك من تبويب «المرافقون» لرفع مرفقاتهم.</p>}
