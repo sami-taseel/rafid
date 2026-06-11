@@ -20,6 +20,7 @@ export default function Layout({ active, onNavigate, children }) {
   const [open, setOpen] = useState(false)
   const [dark, setDark] = useDarkMode()
   const [openTickets, setOpenTickets] = useState(0)
+  const [pendingApprovals, setPendingApprovals] = useState(0)
   useEffect(() => {
     async function countTickets() {
       // عدد البلاغات غير المغلقة (المدير يرى الكل، المشرف بلاغات نوعه)
@@ -33,6 +34,9 @@ export default function Layout({ active, onNavigate, children }) {
       const { data: tk } = await supabase.from('tickets').select('status_code, ticket_types(handler_role)').neq('status_code', 'closed')
       const visible = (tk || []).filter(t => admin || (t.ticket_types?.handler_role && roles.includes(t.ticket_types.handler_role)))
       setOpenTickets(visible.length)
+      // عدد طلبات الاعتماد المنتظرة
+      const { count } = await supabase.from('students').select('id', { count: 'exact', head: true }).eq('account_state', 'pending_approval')
+      setPendingApprovals(count || 0)
     }
     countTickets()
   }, [active])
@@ -52,6 +56,7 @@ export default function Layout({ active, onNavigate, children }) {
               onClick={() => { onNavigate(m.key); setOpen(false) }}>
               <span className="nav-icon">{m.icon}</span>{m.label}
             {m.key === 'tickets' && openTickets > 0 && <span className="nav-badge">{openTickets}</span>}
+            {m.key === 'students' && pendingApprovals > 0 && <span className="nav-badge">{pendingApprovals}</span>}
             </button>
           ))}
         </nav>
@@ -64,7 +69,8 @@ export default function Layout({ active, onNavigate, children }) {
         <header className="topbar">
           <button className="menu-toggle" onClick={() => setOpen(!open)}>☰</button>
           <span className="topbar-title">{MENU.find(m => m.key === active)?.label}
-            {active === 'tickets' && openTickets > 0 && <span className="title-badge">{openTickets}</span>}</span>
+            {active === 'tickets' && openTickets > 0 && <span className="title-badge">{openTickets}</span>}
+            {active === 'students' && pendingApprovals > 0 && <span className="title-badge">{pendingApprovals}</span>}</span>
           <div className="topbar-actions">
             <StaffBell onNavigate={onNavigate} />
             <button className="icon-act" onClick={() => onNavigate('account')} aria-label="حسابي" title="حسابي">

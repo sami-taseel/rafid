@@ -44,6 +44,7 @@ export default function StudentForms({ studentId, signaturePath }) {
     } else {
       await supabase.from('form_records').insert({ template_id: tpl.id, student_id: studentId, ...payload })
     }
+    await supabase.rpc('refresh_account_completion', { p_student: studentId }).catch(() => {})
     toast('تم التوقيع على «' + tpl.title + '»'); setActive(null); load()
   }
   async function submitRequest(tpl) {

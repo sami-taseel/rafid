@@ -36,6 +36,7 @@ import AttachmentTypes from './modules/AttachmentTypes'
 import EvalCriteria from './modules/EvalCriteria'
 import FormsAdmin from './modules/FormsAdmin'
 import FormRecords from './modules/FormRecords'
+import ApprovalRequests, { pendingApprovalCount } from './modules/ApprovalRequests'
 import { registerSW } from './push'
 
 export default function App() {
@@ -123,6 +124,23 @@ function RoleRouter({ session }) {
   return <StudentProfile session={session} />
 }
 
+function StudentsGroup() {
+  const [pending, setPending] = useState(0)
+  useEffect(() => {
+    pendingApprovalCount().then(setPending)
+    const t = setInterval(() => pendingApprovalCount().then(setPending), 60000)
+    return () => clearInterval(t)
+  }, [])
+  return <TabGroup tabs={[
+    { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
+    { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
+    { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
+    { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
+    { key: 'eval_criteria', label: 'معايير التقييم', el: <EvalCriteria /> },
+    { key: 'support', label: 'سجل الدعم', el: <Support /> },
+  ]} />
+}
+
 function StaffApp() {
   const [active, setActive] = useState('stats')
   const views = {
@@ -134,13 +152,7 @@ function StaffApp() {
       { key: 'ratings', label: 'التقييمات', el: <TicketRatings /> },
       { key: 'metrics', label: 'أداء المشرفين', el: <SupervisorMetrics /> },
     ]} />,
-    students: <TabGroup tabs={[
-      { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
-      { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
-      { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
-      { key: 'eval_criteria', label: 'معايير التقييم', el: <EvalCriteria /> },
-      { key: 'support', label: 'سجل الدعم', el: <Support /> },
-    ]} />,
+    students: <StudentsGroup />,
     activities: <TabGroup tabs={[
       { key: 'acts', label: 'الأنشطة', el: <Tracks /> },
       { key: 'att', label: 'الحضور', el: <Attendance /> },

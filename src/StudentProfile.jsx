@@ -173,7 +173,7 @@ function StudentProfileInner({ session }) {
         </div>
 
         {/* لافتة حالة الحساب */}
-        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} />
+        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} currentTab={activeTab} />
 
         {/* تبويبات */}
         <div className="sp-tabs">
@@ -240,7 +240,7 @@ function StudentProfileInner({ session }) {
   )
 }
 
-function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
+function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
   const [steps, setSteps] = useState(null)
@@ -251,7 +251,24 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
     const { data } = await supabase.rpc('onboarding_status', { p_student: studentId })
     setSteps(data?.[0] || null)
   }
-  useEffect(() => { loadSteps() }, [studentId, state])
+  // تحديث تلقائي: عند تحميل المكوّن، وكلما عاد الطالب لتبويب الرئيسية
+  useEffect(() => { loadSteps() }, [studentId, state, currentTab])
+
+  // فحص النماذج غير الموقّعة (للحالة المعتمدة)
+  const [unsignedForms, setUnsignedForms] = useState(null)
+  useEffect(() => {
+    async function checkForms() {
+      if ((state !== 'approved' && state !== 'active') || !studentId) { setUnsignedForms(null); return }
+      const [tpls, recs] = await Promise.all([
+        supabase.from('form_templates').select('id').eq('category', 'approval').eq('is_active', true),
+        supabase.from('form_records').select('template_id, status').eq('student_id', studentId),
+      ])
+      const approvedIds = new Set((recs.data || []).filter(r => r.status === 'approved').map(r => r.template_id))
+      const unsigned = (tpls.data || []).filter(t => !approvedIds.has(t.id))
+      setUnsignedForms(unsigned.length)
+    }
+    checkForms()
+  }, [studentId, state, currentTab])
 
   async function answerCompanions(has) {
     setSavingComp(true)
@@ -329,7 +346,6 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
         <button className="onboard-submit" onClick={submitForApproval} disabled={!ready || busy}>
           {busy ? 'جارٍ…' : ready ? '✓ رفع طلب الاعتماد' : '🔒 أكمل الخطوات أولاً'}
         </button>
-        <button className="mini" style={{ width: '100%', marginTop: 8 }} onClick={loadSteps}>🔄 تحديث الحالة</button>
       </div>
     )
   }
@@ -342,12 +358,12 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
       </div>
     </div>
   )
-  if (state === 'approved') return (
+  if (state === 'approved' && unsignedForms > 0) return (
     <div className="acc-banner approved" onClick={() => onGoTab('forms')}>
       <div className="acc-banner-icon">✍️</div>
       <div className="acc-banner-body">
         <strong>وافِق على النماذج المطلوبة لإكمال حسابك</strong>
-        <p>تم اعتمادك كطالب. يرجى التوقيع على النماذج المطلوبة لتفعيل كامل المنصة (الأنشطة، التقويم، الاستبانات).</p>
+        <p>لديك {unsignedForms} نموذج بحاجة للتوقيع. يرجى التوقيع عليها لتفعيل كامل المنصة.</p>
         <div className="acc-banner-actions"><button className="mini">الذهاب للنماذج</button></div>
       </div>
     </div>

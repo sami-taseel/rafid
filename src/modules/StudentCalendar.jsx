@@ -16,7 +16,7 @@ export default function StudentCalendar({ studentId }) {
     async function load() {
       // الأنشطة الظاهرة للطالب (حسب فئته)
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
-      const ids = (visIds || []).map(x => x.id || x)
+      const ids = (visIds || []).map(x => (typeof x === 'object' && x !== null) ? (x.visible_activity_ids || x.id) : x).filter(Boolean)
       let q = supabase.from('sessions').select('id, planned_date, start_time, title, status, activities(title, location, tracks(name_ar, code))')
       if (ids.length) q = q.in('activity_id', ids)
       const { data } = await q
