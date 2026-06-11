@@ -89,28 +89,37 @@ export default function StudentDetail({ studentId, onBack }) {
 
       <div className="panel">
         <h3>المرافقون ({d.comp.length})</h3>
-        {d.comp.map((c, i) => (
-          <div key={i} className="detail-comp-row">
-            <span>👤 <strong>{c.full_name || 'مرافق'}</strong> <span className="pill">{c.relation}</span></span>
-            <span className="muted" style={{ fontSize: 12 }}>
-              {c.age != null && `${c.age} سنة`}{c.residency_no && ` · إقامة ${c.residency_no}`}{c.education_level && ` · ${c.education_level}`}
-            </span>
-          </div>
-        ))}
+        <div className="detail-cards">
+          {d.comp.map((c, i) => (
+            <div key={i} className="detail-card">
+              <div className="detail-card-avatar">👤</div>
+              <div className="detail-card-name">{c.full_name || 'مرافق'}</div>
+              <div className="detail-card-tag">{c.relation}</div>
+              <div className="detail-card-meta">
+                {c.age != null && <span>{c.age} سنة</span>}
+                {c.residency_no && <span>إقامة {c.residency_no}</span>}
+                {c.education_level && <span>{c.education_level}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
         {d.comp.length === 0 && <div className="muted">لا يوجد</div>}
       </div>
 
       <div className="panel">
         <h3>المستندات ({d.docs.length})</h3>
-        {d.docs.map(doc => (
-          <div key={doc.id} className="detail-doc-row">
-            <span>📄 {doc.attachment_types?.name || 'مستند'}
-              {doc.companions && <span className="muted"> · {doc.companions.persons?.full_name || doc.companions.relation}</span>}
-              {doc.term_label && <span className="muted"> · {doc.term_label}</span>}
-            </span>
-            <Attachment path={doc.file_path} label="عرض" />
-          </div>
-        ))}
+        <div className="detail-cards">
+          {d.docs.map(doc => (
+            <div key={doc.id} className="detail-card doc">
+              <div className="detail-card-icon">📄</div>
+              <div className="detail-card-name">{doc.attachment_types?.name || 'مستند'}</div>
+              {(doc.companions || doc.term_label) && (
+                <div className="detail-card-tag">{doc.companions ? (doc.companions.persons?.full_name || doc.companions.relation) : doc.term_label}</div>
+              )}
+              <Attachment path={doc.file_path} label="عرض" />
+            </div>
+          ))}
+        </div>
         {d.docs.length === 0 && <div className="muted">لا توجد مستندات مرفوعة</div>}
       </div>
 

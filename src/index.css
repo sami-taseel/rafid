@@ -1622,3 +1622,31 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* أزرار التصدير في الأقسام */
 .export-btns { display: inline-flex; gap: 6px; margin-right: 10px; }
 @media (max-width: 768px) { .export-btns { display: flex; margin: 8px 0 0; } }
+
+/* بطاقات المستندات والمرافقين في تفاصيل الطالب */
+.detail-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 10px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.detail-card-avatar, .detail-card-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--blue-soft); display: flex; align-items: center; justify-content: center; font-size: 19px; }
+.detail-card.doc .detail-card-icon { border-radius: 10px; }
+.detail-card-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+.detail-card-tag { font-size: 11px; background: var(--blue-soft); color: var(--blue); padding: 2px 10px; border-radius: 10px; }
+.detail-card-meta { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--text-soft); }
+.detail-card .att-link { font-size: 11px !important; padding: 5px 12px !important; margin-top: 2px; }
+
+/* شاشة تجميد الحساب — متوافقة مع الجوال */
+.frozen-screen { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg); box-sizing: border-box; }
+.frozen-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 36px 24px; text-align: center; max-width: 380px; width: 100%; box-shadow: var(--shadow); }
+.frozen-icon { font-size: 54px; margin-bottom: 16px; }
+.frozen-box h2 { color: var(--navy); font-size: 20px; margin: 0 0 12px; }
+:root[data-theme="dark"] .frozen-box h2 { color: #8fb5ed; }
+.frozen-box p { color: var(--text-soft); font-size: 14px; line-height: 1.8; margin: 0 0 24px; }
+.frozen-logout { background: var(--navy); color: #fff; border: none; padding: 13px 32px; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; }
+.frozen-logout:hover { background: #16294d; }
+
+@media (max-width: 768px) {
+  .detail-cards { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+  .detail-card { padding: 12px 8px; }
+}
+@media (max-width: 380px) {
+  .detail-cards { grid-template-columns: repeat(2, 1fr); }
+}

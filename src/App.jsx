@@ -105,15 +105,17 @@ function RoleRouter({ session }) {
 
   if (checking) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
   if (role === 'student' && frozen) return (
-    <div className="state" style={{ flexDirection: 'column', gap: 16, padding: 40, textAlign: 'center', minHeight: '100vh' }}>
-      <div style={{ fontSize: 48 }}>{frozen === 'rejected' ? '🚫' : '⏸️'}</div>
-      <h2 style={{ color: '#1f3864' }}>{frozen === 'rejected' ? 'لم يتم قبول طلبك' : 'حسابك مجمّد حالياً'}</h2>
-      <p className="muted" style={{ maxWidth: 360 }}>
-        {frozen === 'rejected'
-          ? 'نعتذر، لم يتم قبول طلب التسجيل. يمكنك التواصل مع إدارة السكن لمزيد من المعلومات.'
-          : 'تم تجميد حسابك مؤقتاً. يرجى مراجعة إدارة السكن لإعادة التفعيل.'}
-      </p>
-      <button className="save-btn" style={{ width: 'auto', padding: '11px 28px' }} onClick={logout}>تسجيل الخروج</button>
+    <div className="frozen-screen">
+      <div className="frozen-box">
+        <div className="frozen-icon">{frozen === 'rejected' ? '🚫' : '⏸️'}</div>
+        <h2>{frozen === 'rejected' ? 'لم يتم قبول طلبك' : 'حسابك مجمّد حالياً'}</h2>
+        <p>
+          {frozen === 'rejected'
+            ? 'نعتذر، لم يتم قبول طلب التسجيل. يمكنك التواصل مع إدارة السكن لمزيد من المعلومات.'
+            : 'تم تجميد حسابك مؤقتاً. يرجى مراجعة إدارة السكن لإعادة التفعيل.'}
+        </p>
+        <button className="frozen-logout" onClick={logout}>تسجيل الخروج</button>
+      </div>
     </div>
   )
   if (role === 'sponsor') return <SponsorPortal session={session} />
