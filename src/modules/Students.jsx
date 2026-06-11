@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import StudentDetail from './StudentDetail'
 import { useConfirm, usePrompt } from '../Confirm'
 import { useToast } from '../Toast'
+import BulkEval from './BulkEval'
 
 export function Spinner() { return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div> }
 export function Stat({ num, label }) { return <div className="stat-card"><div className="num">{num}</div><div className="label">{label}</div></div> }
@@ -24,6 +25,9 @@ export default function Students() {
   const [fCat, setFCat] = useState('')
   const [selected, setSelected] = useState([])
   const [bulkCat, setBulkCat] = useState('')
+  const [noticeTemplates, setNoticeTemplates] = useState([])
+  const [bulkNotice, setBulkNotice] = useState('')
+  const [showBulkEval, setShowBulkEval] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -58,6 +62,10 @@ export default function Students() {
     toast(data || 'تم'); setTimeout(() => window.location.reload(), 1200)
   }
 
+  useEffect(() => {
+    supabase.from('form_templates').select('id, title').eq('category', 'notice').eq('is_active', true).then(({ data }) => setNoticeTemplates(data || []))
+  }, [])
+
   async function bulkAssign() {
     if (!bulkCat) return
     const rows = selected.map(sid => ({ category_id: bulkCat, student_id: sid }))
@@ -71,6 +79,21 @@ export default function Students() {
     await supabase.from('notifications').insert(rows)
     toast('تم إرسال الإشعار لـ ' + selected.length + ' طالب'); setSelected([])
   }
+  async function bulkIssueNotice() {
+    if (!bulkNotice) { toast('اختر نوع الإشعار', 'error'); return }
+    const detail = await promptDialog({ title: 'تفاصيل الإشعار', message: 'تفاصيل/سبب الإشعار (يصل الطلاب المحدّدين):', placeholder: 'التفاصيل…', multiline: true, confirmText: 'إصدار' })
+    if (detail === null) return
+    const tpl = noticeTemplates.find(t => t.id === bulkNotice)
+    const { data: au } = await supabase.auth.getUser()
+    let pid = null
+    if (au?.user) { const { data: p } = await supabase.from('persons').select('id').eq('auth_user_id', au.user.id).maybeSingle(); pid = p?.id }
+    const recs = selected.map(sid => ({ template_id: bulkNotice, student_id: sid, status: 'submitted', issued_by: pid, note: detail }))
+    await supabase.from('form_records').insert(recs)
+    const notifs = selected.map(sid => ({ student_id: sid, title: tpl?.title || 'إشعار إداري', body: detail || tpl?.title, kind: 'violation' }))
+    await supabase.from('notifications').insert(notifs)
+    toast('تم إصدار «' + (tpl?.title || '') + '» لـ ' + selected.length + ' طالب'); setSelected([]); setBulkNotice('')
+  }
+
   async function bulkExport() {
     const XLSX = await import('xlsx')
     const rows = students.filter(s => selected.includes(s.id)).map(s => ({
@@ -80,6 +103,19 @@ export default function Students() {
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'الطلاب المحدّدون')
     XLSX.writeFile(wb, 'طلاب_محددون.xlsx')
+  }
+
+  async function exportAll(rows, filename) {
+    const XLSX = await import('xlsx')
+    const data = rows.map(s => ({
+      'الاسم': s.persons?.full_name || '', 'الجنسية': s.persons?.nationality || '',
+      'المرحلة': s.degree_level || '', 'الإقامة': s.persons?.residency_no || '',
+      'الجوال': s.persons?.phone || '', 'حالة القبول': s.admission_status || '',
+      'الملف مكتمل': s.profile_reviewed ? 'نعم' : 'لا',
+    }))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data.length ? data : [{}]), 'الطلاب')
+    XLSX.writeFile(wb, filename)
   }
 
   if (loading) return <Spinner />
@@ -129,7 +165,13 @@ export default function Students() {
           </select>
           {(q || fNat || fDeg || fFile || fCat) && <button className="mini" onClick={() => { setQ(''); setFNat(''); setFDeg(''); setFFile(''); setFCat('') }}>مسح الفلاتر</button>}
         </div>
-        <div className="result-count">{filtered.length} نتيجة</div>
+        <div className="result-count">
+          {filtered.length} نتيجة
+          <span className="export-btns">
+            <button className="mini" onClick={() => exportAll(students, 'تصدير_شامل_الطلاب.xlsx')}>⬇ تصدير شامل</button>
+            <button className="mini" onClick={() => exportAll(filtered, 'تصدير_مخصص_الطلاب.xlsx')} disabled={filtered.length === students.length}>⬇ تصدير المفلتر</button>
+          </span>
+        </div>
       </div>
 
       <div className="cards-view">
@@ -150,6 +192,13 @@ export default function Students() {
           </div>
         ))}
       </div>
+      {showBulkEval && (
+        <BulkEval
+          studentIds={selected}
+          studentNames={students.filter(s => selected.includes(s.id)).map(s => s.persons?.full_name || 'طالب')}
+          onClose={(done) => { setShowBulkEval(false); if (done) setSelected([]) }}
+        />
+      )}
       {selected.length > 0 && (
         <div className="bulk-action-bar">
           <span className="bulk-count">{selected.length} محدّد</span>
@@ -158,7 +207,15 @@ export default function Students() {
             {allCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <button className="mini" onClick={bulkAssign} disabled={!bulkCat}>إسناد</button>
-          <button className="mini" onClick={bulkNotify}>إرسال إشعار</button>
+          <button className="mini" onClick={bulkNotify}>إشعار سريع</button>
+          {noticeTemplates.length > 0 && <>
+            <select value={bulkNotice} onChange={e => setBulkNotice(e.target.value)}>
+              <option value="">إشعار إداري…</option>
+              {noticeTemplates.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+            </select>
+            <button className="mini" onClick={bulkIssueNotice} disabled={!bulkNotice}>إصدار</button>
+          </>}
+          <button className="mini" onClick={() => setShowBulkEval(true)}>📊 تقييم جماعي</button>
           <button className="mini" onClick={bulkExport}>تصدير المحدّدين</button>
           <button className="mini" onClick={() => setSelected([])}>إلغاء التحديد</button>
         </div>

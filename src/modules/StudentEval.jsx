@@ -38,6 +38,21 @@ export default function StudentEval({ studentId, currentStatus, onStatusChange }
   async function changeStatus(newStatus) {
     setStatus(newStatus)
     await supabase.from('students').update({ admission_status: newStatus }).eq('id', studentId)
+    // إشعار الطالب بتغيير حالته
+    const msgs = {
+      frozen: 'تم تجميد حسابك مؤقتاً. يرجى مراجعة إدارة السكن.',
+      rejected: 'نعتذر، لم يتم قبول طلب تسجيلك.',
+      accepted: 'تهانينا! تم قبول طلبك في السكن.',
+      active: 'تم تفعيل حسابك. مرحباً بك.',
+      interview: 'تمت دعوتك لإجراء مقابلة. ستصلك التفاصيل قريباً.',
+      pending: 'طلبك قيد المراجعة حالياً.',
+    }
+    if (msgs[newStatus]) {
+      await supabase.from('notifications').insert({
+        student_id: studentId, title: 'تحديث حالة حسابك',
+        body: msgs[newStatus], kind: (newStatus === 'frozen' || newStatus === 'rejected') ? 'violation' : 'info',
+      })
+    }
     toast('تم تحديث حالة الطالب: ' + statusLabel(newStatus))
     onStatusChange && onStatusChange(newStatus)
   }

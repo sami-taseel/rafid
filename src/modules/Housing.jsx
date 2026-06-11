@@ -66,7 +66,11 @@ export default function Housing() {
       </div>
       <UnitInspection units={[]} students={students} />
       <div className="panel">
-        <h3>الجزاءات الآلية</h3>
+        <h3>الجزاءات الآلية <button className="mini" style={{ float: 'left' }} onClick={async () => {
+          const XLSX = await import('xlsx')
+          const rows = sanctions.map(s => ({ 'الطالب': s.students?.persons?.full_name || '', 'المستوى': s.level || '', 'الحالة': s.status || '', 'التاريخ': s.created_at?.slice(0, 10) || '' }))
+          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{}]), 'الجزاءات'); XLSX.writeFile(wb, 'سجل_الجزاءات.xlsx')
+        }}>⬇ تصدير الجزاءات</button></h3>
         {sanctions.length === 0 && <div className="muted">لا توجد جزاءات.</div>}
         {sanctions.map(sn => (
           <div key={sn.id} className="sanction-row">

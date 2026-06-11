@@ -5,6 +5,7 @@ import StudentEval, { statusLabel } from './StudentEval'
 import { Spinner } from './Students'
 import { useState as useCertState } from 'react'
 import Certificate from './Certificate'
+import Attachment from './Attachment'
 
 export default function StudentDetail({ studentId, onBack }) {
   const toast = useToast()
@@ -17,11 +18,11 @@ export default function StudentDetail({ studentId, onBack }) {
     async function load() {
       const [s, comp, att, sanc, supp, docs, vals] = await Promise.all([
         supabase.from('students').select('*, persons(*)').eq('id', studentId).single(),
-        supabase.from('companions').select('relation, persons(full_name, residency_no)').eq('student_id', studentId),
+        supabase.rpc('my_companions', { p_student: studentId }),
         supabase.from('attendance').select('status').eq('student_id', studentId),
         supabase.from('sanctions').select('*').eq('student_id', studentId),
         supabase.from('support_records').select('*').eq('student_id', studentId),
-        supabase.from('documents').select('*').eq('student_id', studentId),
+        supabase.from('student_attachments').select('*, attachment_types(name), companions(relation, persons(full_name))').eq('student_id', studentId),
         supabase.from('student_field_values').select('value, profile_fields(label)').eq('student_id', studentId),
       ])
       setD({ s: s.data, comp: comp.data || [], att: att.data || [], sanc: sanc.data || [],
@@ -88,13 +89,28 @@ export default function StudentDetail({ studentId, onBack }) {
 
       <div className="panel">
         <h3>المرافقون ({d.comp.length})</h3>
-        {d.comp.map((c, i) => <div key={i} className="list-line">👤 {c.persons?.full_name} <span className="pill">{c.relation}</span></div>)}
+        {d.comp.map((c, i) => (
+          <div key={i} className="detail-comp-row">
+            <span>👤 <strong>{c.full_name || 'مرافق'}</strong> <span className="pill">{c.relation}</span></span>
+            <span className="muted" style={{ fontSize: 12 }}>
+              {c.age != null && `${c.age} سنة`}{c.residency_no && ` · إقامة ${c.residency_no}`}{c.education_level && ` · ${c.education_level}`}
+            </span>
+          </div>
+        ))}
         {d.comp.length === 0 && <div className="muted">لا يوجد</div>}
       </div>
 
       <div className="panel">
         <h3>المستندات ({d.docs.length})</h3>
-        {d.docs.map(doc => <div key={doc.id} className="list-line">📎 {doc.doc_type}</div>)}
+        {d.docs.map(doc => (
+          <div key={doc.id} className="detail-doc-row">
+            <span>📄 {doc.attachment_types?.name || 'مستند'}
+              {doc.companions && <span className="muted"> · {doc.companions.persons?.full_name || doc.companions.relation}</span>}
+              {doc.term_label && <span className="muted"> · {doc.term_label}</span>}
+            </span>
+            <Attachment path={doc.file_path} label="عرض" />
+          </div>
+        ))}
         {d.docs.length === 0 && <div className="muted">لا توجد مستندات مرفوعة</div>}
       </div>
 

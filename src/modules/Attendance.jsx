@@ -102,7 +102,14 @@ export default function Attendance() {
 
   return (
     <div>
-      <h3 className="section-title">اختر جلسة لرصد حضورها</h3>
+      <h3 className="section-title">اختر جلسة لرصد حضورها
+        <button className="mini" style={{ float: 'left' }} onClick={async () => {
+          const XLSX = await import('xlsx')
+          const { data } = await supabase.from('attendance').select('status, students(persons(full_name)), sessions(planned_date, activities(title))')
+          const rows = (data || []).map(a => ({ 'الطالب': a.students?.persons?.full_name || '', 'النشاط': a.sessions?.activities?.title || '', 'التاريخ': a.sessions?.planned_date || '', 'الحالة': a.status === 'present' ? 'حاضر' : a.status === 'absent' ? 'غائب' : a.status }))
+          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{}]), 'الحضور'); XLSX.writeFile(wb, 'سجل_الحضور.xlsx')
+        }}>⬇ تصدير سجل الحضور</button>
+      </h3>
       {sessions.length === 0 && <div className="panel muted">لا توجد جلسات بعد. أضِفها من وحدة المسارات والأنشطة.</div>}
       <div className="session-cards">
         {sessions.map(s => (

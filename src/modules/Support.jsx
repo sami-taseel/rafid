@@ -69,7 +69,11 @@ export default function Support() {
         />
       </div>
       <div className="panel">
-        <h3>سجل الدعم</h3>
+        <h3>سجل الدعم <button className="mini" style={{ float: 'left' }} onClick={async () => {
+          const XLSX = await import('xlsx')
+          const rows = records.map(r => ({ 'الطالب': r.students?.persons?.full_name || '', 'النوع': r.kind === 'cash' ? 'نقدي' : 'عيني', 'الوصف': r.description || '', 'المصدر': r.source || '', 'التاريخ': r.received_at || r.created_at?.slice(0, 10) || '' }))
+          const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{}]), 'الدعم'); XLSX.writeFile(wb, 'سجل_الدعم.xlsx')
+        }}>⬇ تصدير الدعم</button></h3>
         {records.map(r => (
           <div key={r.id} className="list-line">
             {r.kind === 'cash' ? '💵' : '🎁'} {r.students?.persons?.full_name} — {r.description}

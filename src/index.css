@@ -1610,3 +1610,15 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .rb-report { max-width: 100%; }
   .rep-kpis { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* التقييم الجماعي */
+.bulk-eval-row { margin-bottom: 14px; }
+.bulk-eval-head { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.bulk-eval-score { font-weight: 700; color: var(--blue); }
+.bulk-eval-slider { width: 100%; }
+.bulk-eval-total { display: flex; justify-content: space-between; align-items: center; background: var(--blue-soft); border-radius: 10px; padding: 12px 14px; margin: 8px 0 14px; font-size: 15px; }
+.bulk-eval-pct { font-size: 20px; font-weight: 800; color: var(--blue); }
+
+/* أزرار التصدير في الأقسام */
+.export-btns { display: inline-flex; gap: 6px; margin-right: 10px; }
+@media (max-width: 768px) { .export-btns { display: flex; margin: 8px 0 0; } }

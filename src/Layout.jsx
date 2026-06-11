@@ -10,7 +10,7 @@ const MENU = [
   { key: 'categories', label: 'الفئات والتصنيفات', icon: '🏷️' },
   { key: 'housing',    label: 'السكن',          icon: '🏢' },
   { key: 'surveys',    label: 'الاستبانات',     icon: '📋' },
-  { key: 'support_reports', label: 'الدعم والتقارير', icon: '📤' },
+  { key: 'reports', label: 'التقارير', icon: '📊' },
   { key: 'sponsors',   label: 'الجهات الداعمة', icon: '🤝' },
   { key: 'system',     label: 'المستخدمون والنظام', icon: '⚙️' },
   { key: 'help',       label: 'مساعدة',         icon: '❓' },

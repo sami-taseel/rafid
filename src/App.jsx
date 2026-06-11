@@ -76,6 +76,7 @@ export default function App() {
 
 function RoleRouter({ session }) {
   const [role, setRole] = useState(null)
+  const [frozen, setFrozen] = useState(false)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
@@ -85,14 +86,36 @@ function RoleRouter({ session }) {
           .select('id, user_roles(roles(code))').eq('auth_user_id', session.user.id).maybeSingle()
         const codes = (data?.user_roles || []).map(ur => ur.roles?.code)
         if (codes.includes('sponsor')) setRole('sponsor')
-        else setRole(codes.some(c => c && c !== 'student') ? 'staff' : 'student')
+        else if (codes.some(c => c && c !== 'student')) setRole('staff')
+        else {
+          setRole('student')
+          // فحص حالة قبول الطالب: المجمّد/المرفوض يُمنع
+          if (data?.id) {
+            const { data: st } = await supabase.from('students').select('admission_status').eq('person_id', data.id).maybeSingle()
+            if (st && (st.admission_status === 'frozen' || st.admission_status === 'rejected')) setFrozen(st.admission_status)
+          }
+        }
       } catch { setRole('student') }
       finally { setChecking(false) }
     }
     check()
   }, [session])
 
+  async function logout() { await supabase.auth.signOut() }
+
   if (checking) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
+  if (role === 'student' && frozen) return (
+    <div className="state" style={{ flexDirection: 'column', gap: 16, padding: 40, textAlign: 'center', minHeight: '100vh' }}>
+      <div style={{ fontSize: 48 }}>{frozen === 'rejected' ? '🚫' : '⏸️'}</div>
+      <h2 style={{ color: '#1f3864' }}>{frozen === 'rejected' ? 'لم يتم قبول طلبك' : 'حسابك مجمّد حالياً'}</h2>
+      <p className="muted" style={{ maxWidth: 360 }}>
+        {frozen === 'rejected'
+          ? 'نعتذر، لم يتم قبول طلب التسجيل. يمكنك التواصل مع إدارة السكن لمزيد من المعلومات.'
+          : 'تم تجميد حسابك مؤقتاً. يرجى مراجعة إدارة السكن لإعادة التفعيل.'}
+      </p>
+      <button className="save-btn" style={{ width: 'auto', padding: '11px 28px' }} onClick={logout}>تسجيل الخروج</button>
+    </div>
+  )
   if (role === 'sponsor') return <SponsorPortal session={session} />
   if (role === 'staff') return <StaffApp />
   return <StudentProfile session={session} />
@@ -114,6 +137,7 @@ function StaffApp() {
       { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
       { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
       { key: 'eval_criteria', label: 'معايير التقييم', el: <EvalCriteria /> },
+      { key: 'support', label: 'سجل الدعم', el: <Support /> },
     ]} />,
     activities: <TabGroup tabs={[
       { key: 'acts', label: 'الأنشطة', el: <Tracks /> },
@@ -126,10 +150,7 @@ function StaffApp() {
       { key: 'forms', label: 'النماذج والموافقات', el: <FormsAdmin /> },
       { key: 'form_records', label: 'سجلات النماذج', el: <FormRecords /> },
     ]} />,
-    support_reports: <TabGroup tabs={[
-      { key: 'support', label: 'سجل الدعم', el: <Support /> },
-      { key: 'reports', label: 'التقارير والتصدير', el: <Reports /> },
-    ]} />,
+    reports: <Reports />,
     sponsors: <TabGroup tabs={[
       { key: 'dashboard', label: 'اللوحة التنفيذية', el: <Sponsor /> },
       { key: 'manage', label: 'إدارة الجهات', el: <SponsorsAdmin /> },
