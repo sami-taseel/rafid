@@ -1539,3 +1539,74 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .st-stats { gap: 8px; }
   .sp-hero-actions .sp-logout { padding: 6px 10px; }
 }
+
+/* ============ منشئ التقارير ============ */
+.rb-h { font-size: 15px; color: var(--navy); margin-bottom: 12px; }
+:root[data-theme="dark"] .rb-h { color: #8fb5ed; }
+.rb-chips, .rb-scopes { display: flex; flex-wrap: wrap; gap: 8px; }
+.rb-chip { padding: 8px 14px; border: 1.5px solid var(--border); background: var(--surface); border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text); }
+.rb-chip.on { background: var(--navy); color: #fff; border-color: var(--navy); font-weight: 600; }
+.rb-scope { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 18px; border: 1.5px solid var(--border); background: var(--surface); border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text); min-width: 96px; }
+.rb-scope.on { border-color: var(--navy); background: var(--blue-soft); font-weight: 600; }
+.rb-scope-ic { font-size: 22px; }
+
+/* الإعدادات المحفوظة */
+.rb-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.rb-preset { display: flex; border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.rb-preset.has { border-color: #e0a800; }
+.rb-preset-load { flex: 1; display: flex; align-items: center; gap: 8px; padding: 9px 11px; background: transparent; border: none; cursor: pointer; font-family: inherit; color: var(--text); }
+.rb-preset-num { width: 20px; height: 20px; border-radius: 50%; background: var(--border); color: var(--text-soft); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rb-preset.has .rb-preset-num { background: #e0a800; color: #fff; }
+.rb-preset-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rb-preset-act { width: 34px; background: var(--surface); border: none; border-right: 1px solid var(--border); cursor: pointer; font-size: 13px; }
+.rb-preset-act:hover { background: var(--blue-soft); }
+.rb-preset-act.del:hover { background: #fcecec; }
+
+/* عناصر التقرير */
+.rb-list { display: flex; flex-direction: column; gap: 6px; }
+.rb-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px; }
+.rb-item.off { opacity: .5; }
+.rb-item.off .rb-name { text-decoration: line-through; color: var(--text-soft); }
+.rb-ghost { opacity: .4; border-style: dashed; }
+.rb-drag { cursor: grab; color: var(--text-soft); font-weight: 700; letter-spacing: -2px; user-select: none; }
+.rb-num { width: 22px; height: 22px; border-radius: 50%; background: var(--border); color: var(--text-soft); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+.rb-name { font-size: 14px; }
+
+.rb-generate { width: 100%; padding: 15px; background: var(--navy); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin: 8px 0 20px; }
+.rb-generate:hover { background: #16294d; }
+
+/* شريط التصدير والتقرير */
+.rb-export-bar { display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 12px; }
+.rb-report-wrap { margin-top: 10px; }
+.rb-report { max-width: 440px; margin: 0 auto; }
+
+/* التقرير العمودي */
+.rep { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f2; }
+.rep-head { background: linear-gradient(135deg, #1f3864, #2e5496); color: #fff; padding: 28px 20px; text-align: center; }
+.rep-logo { height: 48px; margin-bottom: 12px; filter: brightness(0) invert(1); }
+.rep-title { font-size: 22px; font-weight: 800; }
+.rep-org { font-size: 13px; opacity: .9; margin-top: 4px; }
+.rep-period { font-size: 13px; margin-top: 10px; background: rgba(255,255,255,.15); display: inline-block; padding: 4px 14px; border-radius: 12px; }
+.rep-date { font-size: 12px; opacity: .8; margin-top: 6px; }
+.rep-section { padding: 18px 20px; border-bottom: 1px solid #eef1f6; }
+.rep-section-title { font-size: 15px; font-weight: 700; color: #1f3864; margin-bottom: 14px; }
+.rep-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rep-kpi { background: #f5f8fc; border-radius: 10px; padding: 14px 8px; text-align: center; }
+.rep-kpi-n { font-size: 22px; font-weight: 800; color: #1f3864; }
+.rep-kpi-l { font-size: 11px; color: #5f6b80; margin-top: 3px; }
+.rep-bars { display: flex; flex-direction: column; gap: 8px; }
+.rep-bar-row { display: flex; align-items: center; gap: 8px; }
+.rep-bar-lbl { font-size: 12px; color: #5f6b80; width: 80px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rep-bar-track { flex: 1; height: 18px; background: #eef1f6; border-radius: 5px; overflow: hidden; }
+.rep-bar-fill { height: 100%; border-radius: 5px; }
+.rep-bar-val { font-size: 12px; font-weight: 700; width: 42px; color: #1a1f2b; }
+.rep-recs { margin: 0; padding-right: 18px; }
+.rep-recs li { font-size: 14px; line-height: 1.9; color: #1a1f2b; }
+.rep-note { font-size: 13px; color: #5f6b80; }
+.rep-foot { padding: 14px; text-align: center; font-size: 11px; color: #9aa3b2; background: #f7f9fc; }
+
+@media (max-width: 768px) {
+  .rb-scope { min-width: 80px; padding: 12px; }
+  .rb-report { max-width: 100%; }
+  .rep-kpis { grid-template-columns: repeat(2, 1fr); }
+}
