@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabaseClient'
+import { useToast } from './Toast'
 import Companions from './modules/Companions'
 import StudentSurveys from './modules/StudentSurveys'
 import { PolicyAcceptance } from './modules/Policy'
