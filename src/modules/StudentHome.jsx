@@ -110,9 +110,14 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         <div className="st-stat"><div className="st-num">{data.surveysCount}</div><div className="st-lbl">استبانات متاحة</div></div>
       </div>
 
-      {/* المواعيد القادمة */}
-      <div className="st-section">
-        <h3>المواعيد القادمة {data.upcoming.length > 0 && <span className="muted" style={{fontSize:13}}>({data.upcoming.length})</span>}</h3>
+      {/* المواعيد القادمة — للحساب المكتمل فقط */}
+      {isFull && <div className="st-section">
+        <div className="st-section-head">
+          <h3>المواعيد القادمة {data.upcoming.length > 0 && <span className="muted" style={{fontSize:13}}>({data.upcoming.length})</span>}</h3>
+          {data.upcoming.length > 0 && (
+            <button className="section-link" onClick={() => onGoTab && onGoTab('calendar')}>الكل ←</button>
+          )}
+        </div>
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
         <div className="up-grid">
           {shownUpcoming.map(s => (
@@ -129,11 +134,6 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
             </div>
           ))}
         </div>
-        {data.upcoming.length > 0 && (
-          <button className="show-all-btn" onClick={() => onGoTab && onGoTab('calendar')}>
-            استعراض الكل في التقويم ←
-          </button>
-        )}
       </div>}
     </div>
   )

@@ -48,11 +48,11 @@ export default function StudentCalendar({ studentId }) {
       {/* شريط التنقّل بين الأشهر */}
       <div className="st-cal-bar">
         <button className="cal-nav" onClick={() => setCur(new Date(year, month - 1, 1))} aria-label="السابق">‹</button>
-        <div className="st-cal-title">{MON[month]} {year}<span className="st-cal-count">{monthCount} نشاط</span></div>
+        <div className="st-cal-title-wrap">
+          <div className="st-cal-title">{MON[month]} {year}<span className="st-cal-count">{monthCount} نشاط</span></div>
+          <button className="cal-today-link" onClick={() => setCur(new Date())}>↺ العودة لليوم</button>
+        </div>
         <button className="cal-nav" onClick={() => setCur(new Date(year, month + 1, 1))} aria-label="التالي">›</button>
-      </div>
-      <div className="st-cal-todaybtn-row">
-        <button className="cal-today-btn" onClick={() => setCur(new Date())}>↺ اليوم</button>
       </div>
 
       <div className="st-cal-grid">
@@ -86,9 +86,9 @@ export default function StudentCalendar({ studentId }) {
           {monthActivities.map(s => (
             <div key={s.id} className="act-card">
               <div className="act-card-date">
+                <div className="act-d-dow">{DOW[new Date(s.planned_date).getDay()]}</div>
                 <div className="act-d-num">{s.planned_date?.slice(8, 10)}</div>
-                <div className="act-d-mon">{MON[parseInt(s.planned_date?.slice(5, 7)) - 1]?.slice(0, 3)}</div>
-                <div className="act-d-dow">{DOW[new Date(s.planned_date).getDay()]?.slice(0, 3)}</div>
+                <div className="act-d-mon">{MON[parseInt(s.planned_date?.slice(5, 7)) - 1]}</div>
               </div>
               <div className="act-card-body">
                 <div className="act-card-title">{s.title || s.activities?.title || 'نشاط'}</div>
