@@ -1665,29 +1665,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .acc-banner-body p { font-size: 13px; color: var(--text-soft); margin: 0 0 10px; line-height: 1.8; }
 .acc-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* تقويم الطالب */
-.st-cal-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
-.st-cal-title { font-weight: 700; color: var(--navy); }
-:root[data-theme="dark"] .st-cal-title { color: #8fb5ed; }
-.st-cal-today { margin-bottom: 12px; }
-.st-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.st-cal-dow { text-align: center; font-size: 11px; color: var(--text-soft); padding: 6px 0; font-weight: 600; }
-.st-cal-cell { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: default; position: relative; font-family: inherit; }
-.st-cal-cell.empty { border: none; background: transparent; }
-.st-cal-cell.has { cursor: pointer; border-color: var(--blue); background: var(--blue-soft); }
-.st-cal-cell.today { box-shadow: 0 0 0 2px var(--navy) inset; }
-.st-cal-num { font-size: 13px; font-weight: 600; }
-.st-cal-dot { font-size: 10px; background: var(--blue); color: #fff; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
-.st-cal-upcoming { margin-top: 20px; }
-.st-cal-upcoming h4 { font-size: 14px; margin-bottom: 10px; }
-.st-cal-item { display: flex; gap: 12px; align-items: center; padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
-.st-cal-item-date { text-align: center; background: var(--blue-soft); border-radius: 8px; padding: 6px 10px; min-width: 48px; }
-.st-cal-item-date .d-num { font-size: 18px; font-weight: 800; color: var(--blue); line-height: 1; }
-.st-cal-item-date .d-mon { font-size: 11px; color: var(--text-soft); }
-.st-cal-item-title { font-weight: 600; font-size: 14px; }
-.st-cal-item-meta { font-size: 12px; color: var(--text-soft); margin-top: 3px; }
-.st-cal-day-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
-.st-cal-day-item:last-of-type { border-bottom: none; }
+
 
 /* شارة حالة حساب الطالب (لدى المدير) */
 .acct-state-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -1723,3 +1701,58 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* شارة التبويبات الداخلية (طلبات الاعتماد) */
 .tabgroup-btn { position: relative; }
 .tabgroup-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-right: 6px; background: #c0392b; color: #fff; border-radius: 9px; font-size: 11px; font-weight: 700; vertical-align: middle; }
+
+/* ===== تقويم الطالب المطوّر ===== */
+.st-cal-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
+.st-cal-title { font-weight: 700; color: var(--navy); font-size: 17px; display: flex; align-items: center; gap: 10px; }
+:root[data-theme="dark"] .st-cal-title { color: #8fb5ed; }
+.st-cal-count { font-size: 12px; font-weight: 500; color: var(--blue); background: var(--blue-soft); padding: 3px 10px; border-radius: 10px; }
+.cal-nav { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-size: 20px; color: var(--text); display: flex; align-items: center; justify-content: center; }
+.cal-nav:hover { background: var(--blue-soft); border-color: var(--blue); }
+.cal-nav.sm { width: 30px; height: 30px; font-size: 16px; }
+.st-cal-todaybtn-row { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+.cal-today-btn { background: var(--navy); color: #fff; border: none; border-radius: 9px; padding: 7px 16px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+.cal-today-btn:hover { background: #16294d; }
+
+.st-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.st-cal-dow { text-align: center; font-size: 12px; color: var(--text-soft); padding: 8px 0; font-weight: 600; }
+.st-cal-cell { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: default; position: relative; font-family: inherit; padding: 4px; }
+.st-cal-cell.empty { border: none; background: transparent; }
+.st-cal-cell.has { cursor: pointer; border-color: #b9cdec; background: var(--blue-soft); }
+.st-cal-cell.has:hover { border-color: var(--blue); }
+/* تمييز اليوم: إطار سميك + خلفية مميّزة + كلمة "اليوم" فوق الرقم */
+.st-cal-cell.today { border: 2px solid var(--navy); background: linear-gradient(160deg, #1f3864, #2e5496); }
+.st-cal-cell.today .st-cal-num { color: #fff; font-weight: 800; }
+.st-cal-todaylbl { font-size: 9px; font-weight: 700; color: #fff; background: rgba(255,255,255,.25); padding: 1px 7px; border-radius: 8px; line-height: 1.4; }
+.st-cal-cell.today.has { background: linear-gradient(160deg, #1f3864, #2e5496); }
+.st-cal-num { font-size: 15px; font-weight: 600; color: var(--text); }
+.st-cal-dot { font-size: 10px; background: var(--blue); color: #fff; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; font-weight: 700; }
+.st-cal-cell.today .st-cal-dot { background: #fff; color: var(--navy); }
+
+/* الأنشطة القادمة — بطاقات */
+.st-cal-upcoming { margin-top: 24px; }
+.st-cal-up-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.st-cal-up-head h4 { font-size: 16px; margin: 0; }
+.st-cal-up-nav { display: flex; align-items: center; gap: 8px; }
+.st-cal-up-month { font-size: 13px; font-weight: 600; color: var(--navy); min-width: 90px; text-align: center; }
+:root[data-theme="dark"] .st-cal-up-month { color: #8fb5ed; }
+.act-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.act-card { display: flex; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+.act-card-date { text-align: center; background: linear-gradient(160deg, #1f3864, #2e5496); color: #fff; border-radius: 12px; padding: 10px 12px; min-width: 56px; display: flex; flex-direction: column; justify-content: center; }
+.act-d-num { font-size: 22px; font-weight: 800; line-height: 1; }
+.act-d-mon { font-size: 11px; opacity: .9; margin-top: 2px; }
+.act-d-dow { font-size: 10px; opacity: .75; margin-top: 3px; }
+.act-card-body { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.act-card-title { font-weight: 700; font-size: 15px; }
+.act-card-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--text-soft); }
+.act-pill { align-self: flex-start; font-size: 11px; background: var(--blue-soft); color: var(--blue); padding: 3px 10px; border-radius: 10px; }
+.st-cal-day-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.st-cal-day-item:last-of-type { border-bottom: none; }
+
+@media (max-width: 768px) {
+  .st-cal-grid { gap: 3px; }
+  .st-cal-cell { border-radius: 8px; padding: 2px; }
+  .st-cal-num { font-size: 13px; }
+  .st-cal-dow { font-size: 10px; padding: 5px 0; }
+  .act-grid { grid-template-columns: 1fr; }
+}

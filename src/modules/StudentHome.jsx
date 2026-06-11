@@ -55,8 +55,8 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const nextDay = data.upcoming.length ? data.upcoming[0].planned_date : null
   const nextDaySessions = data.upcoming.filter(s => s.planned_date === nextDay)
   const sessName = (s) => s.title || s.activities?.title || 'جلسة'
-  const ROWS_LIMIT = 9
-  const shownUpcoming = showAll ? data.upcoming : data.upcoming.slice(0, ROWS_LIMIT)
+  const ROWS_LIMIT = 6
+  const shownUpcoming = data.upcoming.slice(0, ROWS_LIMIT)
 
   return (
     <div className="st-home">
@@ -129,9 +129,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
             </div>
           ))}
         </div>
-        {data.upcoming.length > ROWS_LIMIT && (
-          <button className="show-all-btn" onClick={() => setShowAll(!showAll)}>
-            {showAll ? 'عرض أقل' : `عرض الكل (${data.upcoming.length})`}
+        {data.upcoming.length > 0 && (
+          <button className="show-all-btn" onClick={() => onGoTab && onGoTab('calendar')}>
+            استعراض الكل في التقويم ←
           </button>
         )}
       </div>}
