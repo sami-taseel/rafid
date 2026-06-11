@@ -89,6 +89,10 @@ function StudentProfileInner({ session }) {
       await supabase.from('students').update(studentUpd).eq('id', student.id)
 
       setMsg({ type: 'ok', text: 'تم حفظ بياناتك بنجاح. شكراً لك.' })
+      // إن كان الحساب قيد الإعداد، نعيد التحميل لتحديث خطوات التفعيل
+      if ((student?.account_state || 'pending_data') === 'pending_data') {
+        setTimeout(() => window.location.reload(), 800)
+      }
     } catch (err) {
       setMsg({ type: 'error', text: 'تعذّر الحفظ: ' + (err.message || err) })
     } finally { setSaving(false) }
@@ -239,31 +243,96 @@ function StudentProfileInner({ session }) {
 function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
+  const [steps, setSteps] = useState(null)
+  const [savingComp, setSavingComp] = useState(false)
+
+  async function loadSteps() {
+    if (state !== 'pending_data' || !studentId) return
+    const { data } = await supabase.rpc('onboarding_status', { p_student: studentId })
+    setSteps(data?.[0] || null)
+  }
+  useEffect(() => { loadSteps() }, [studentId, state])
+
+  async function answerCompanions(has) {
+    setSavingComp(true)
+    await supabase.from('students').update({ has_companions: has }).eq('id', studentId)
+    setSavingComp(false)
+    await loadSteps()
+    if (!has) onGoTab('attachments')   // لا مرافقين → المرفقات مباشرة
+    else onGoTab('companions')          // نعم → المرافقون
+  }
 
   async function submitForApproval() {
-    if (profilePct < 100) { toast('أكمل جميع بياناتك أولاً', 'error'); return }
     setBusy(true)
     const { data } = await supabase.rpc('request_approval', { p_student: studentId })
     setBusy(false)
     toast(data || 'تم رفع الطلب'); window.location.reload()
   }
 
-  if (state === 'pending_data') return (
-    <div className="acc-banner pending">
-      <div className="acc-banner-icon">📝</div>
-      <div className="acc-banner-body">
-        <strong>أكمل بياناتك لتقديم طلب الاعتماد</strong>
-        <p>يرجى إكمال بياناتك ومرفقاتك (وبيانات مرافقيك إن كنت متزوجاً)، ثم ارفع طلب اعتمادك كطالب.</p>
-        <div className="acc-banner-actions">
-          <button className="mini" onClick={() => onGoTab('data')}>إكمال البيانات</button>
-          <button className="mini" onClick={() => onGoTab('attachments')}>رفع المرفقات</button>
-          <button className="save-btn" style={{ width: 'auto', padding: '9px 18px' }} onClick={submitForApproval} disabled={busy}>
-            {busy ? 'جارٍ…' : 'رفع طلب الاعتماد'}
-          </button>
+  if (state === 'pending_data') {
+    const s = steps || {}
+    const ready = s.ready
+    // الخطوات بالترتيب
+    return (
+      <div className="onboard-card">
+        <div className="onboard-title">📋 خطوات تفعيل حسابك</div>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>أكمل الخطوات التالية بالترتيب لرفع طلب اعتمادك كطالب.</p>
+
+        {/* الخطوة 1: البيانات */}
+        <div className={'onboard-step' + (s.fields_done ? ' done' : ' active')}>
+          <div className="onboard-step-ic">{s.fields_done ? '✓' : '1'}</div>
+          <div className="onboard-step-body">
+            <strong>إكمال بياناتي</strong>
+            <p>أجب على جميع الأسئلة الإلزامية في صفحة بياناتي.</p>
+            {!s.fields_done && <button className="mini" onClick={() => onGoTab('data')}>إكمال البيانات</button>}
+          </div>
         </div>
+
+        {/* الخطوة 2: سؤال المرافقين (يظهر بعد إكمال البيانات) */}
+        <div className={'onboard-step' + (!s.fields_done ? ' locked' : s.companions_answered ? ' done' : ' active')}>
+          <div className="onboard-step-ic">{s.companions_answered ? '✓' : '2'}</div>
+          <div className="onboard-step-body">
+            <strong>المرافقون</strong>
+            {!s.fields_done ? <p>تظهر بعد إكمال بياناتك.</p> : !s.companions_answered ? (
+              <>
+                <p>هل لديك مرافقون (زوجة/أبناء…)؟</p>
+                <div className="onboard-yesno">
+                  <button className="save-btn" style={{ width: 'auto', padding: '8px 22px' }} onClick={() => answerCompanions(true)} disabled={savingComp}>نعم</button>
+                  <button className="mini" onClick={() => answerCompanions(false)} disabled={savingComp}>لا</button>
+                </div>
+              </>
+            ) : s.has_companions ? (
+              <>
+                <p>{s.companions_done ? 'تمت إضافة مرافقيك.' : 'أضف مرافقاً واحداً على الأقل.'}</p>
+                {!s.companions_done && <button className="mini" onClick={() => onGoTab('companions')}>إضافة مرافق</button>}
+                {s.companions_done && <button className="mini" onClick={() => onGoTab('companions')}>تعديل المرافقين</button>}
+              </>
+            ) : <p>لا يوجد مرافقون.</p>}
+          </div>
+        </div>
+
+        {/* الخطوة 3: المرفقات */}
+        <div className={'onboard-step' + (!s.companions_answered || !s.companions_done ? ' locked' : s.attachments_done ? ' done' : ' active')}>
+          <div className="onboard-step-ic">{s.attachments_done ? '✓' : '3'}</div>
+          <div className="onboard-step-body">
+            <strong>رفع المرفقات</strong>
+            {(!s.companions_answered || !s.companions_done) ? <p>تظهر بعد إكمال الخطوات السابقة.</p> : (
+              <>
+                <p>ارفع جميع المرفقات الإلزامية{s.has_companions ? ' (لك ولمرافقيك)' : ''}.</p>
+                {!s.attachments_done && <button className="mini" onClick={() => onGoTab('attachments')}>رفع المرفقات</button>}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* رفع الطلب */}
+        <button className="onboard-submit" onClick={submitForApproval} disabled={!ready || busy}>
+          {busy ? 'جارٍ…' : ready ? '✓ رفع طلب الاعتماد' : '🔒 أكمل الخطوات أولاً'}
+        </button>
+        <button className="mini" style={{ width: '100%', marginTop: 8 }} onClick={loadSteps}>🔄 تحديث الحالة</button>
       </div>
-    </div>
-  )
+    )
+  }
   if (state === 'pending_approval') return (
     <div className="acc-banner waiting">
       <div className="acc-banner-icon">⏳</div>

@@ -1699,3 +1699,23 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 :root[data-theme="dark"] .acct-state-badge.st-pending_data { background: #2a2410; color: #f0c060; }
 :root[data-theme="dark"] .acct-state-badge.st-pending_approval { background: #16243a; color: #8fb5ed; }
 :root[data-theme="dark"] .acct-state-badge.st-approved, :root[data-theme="dark"] .acct-state-badge.st-active { background: #14271e; color: #6dd3a8; }
+
+/* خطوات الإعداد الإلزامية */
+.onboard-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.onboard-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+:root[data-theme="dark"] .onboard-title { color: #8fb5ed; }
+.onboard-step { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 12px; margin-bottom: 8px; border: 1.5px solid var(--border); }
+.onboard-step.active { border-color: var(--blue); background: var(--blue-soft); }
+.onboard-step.done { border-color: #8fd3b3; background: #f1faf6; }
+.onboard-step.locked { opacity: .55; }
+:root[data-theme="dark"] .onboard-step.done { background: #14271e; }
+.onboard-step-ic { width: 30px; height: 30px; border-radius: 50%; background: var(--border); color: var(--text-soft); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.onboard-step.active .onboard-step-ic { background: var(--blue); color: #fff; }
+.onboard-step.done .onboard-step-ic { background: #1d9e75; color: #fff; }
+.onboard-step-body { flex: 1; }
+.onboard-step-body strong { font-size: 15px; }
+.onboard-step-body p { font-size: 13px; color: var(--text-soft); margin: 3px 0 8px; line-height: 1.7; }
+.onboard-yesno { display: flex; gap: 8px; }
+.onboard-submit { width: 100%; padding: 14px; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; background: var(--navy); color: #fff; }
+.onboard-submit:disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
+.onboard-submit:not(:disabled):hover { background: #16294d; }
