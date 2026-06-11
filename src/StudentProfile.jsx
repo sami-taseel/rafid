@@ -29,6 +29,24 @@ function StudentProfileInner({ session }) {
   const [buildings, setBuildings] = useState([])
   const [msg, setMsg] = useState(null)
   const [tab, setTab] = useState('home')
+  // فحص حيّ: عدد النماذج الإلزامية الظاهرة غير الموقّعة (يحدّد اكتمال الحساب فعلياً)
+  const [unsignedVisible, setUnsignedVisible] = useState(null)
+  useEffect(() => {
+    async function checkVisibleForms() {
+      const st = student?.account_state
+      if (!student?.id || (st !== 'approved' && st !== 'active')) { setUnsignedVisible(null); return }
+      const [tpls, recs] = await Promise.all([
+        supabase.from('form_templates').select('id').eq('category', 'approval').eq('required', true).eq('is_active', true),
+        supabase.from('form_records').select('template_id, status').eq('student_id', student.id),
+      ])
+      const approvedIds = new Set((recs.data || []).filter(r => r.status === 'approved').map(r => r.template_id))
+      const unsigned = (tpls.data || []).filter(t => !approvedIds.has(t.id))
+      setUnsignedVisible(unsigned.length)
+      // نزامن حالة الحساب في الخلفية
+      supabase.rpc('refresh_account_completion', { p_student: student.id }).catch(() => {})
+    }
+    checkVisibleForms()
+  }, [student?.id, student?.account_state, tab])
 
   useEffect(() => {
     async function load() {
@@ -137,8 +155,10 @@ function StudentProfileInner({ session }) {
 
   // دورة حياة الحساب
   const state = student?.account_state || 'pending_data'
-  const isFull = state === 'active'                         // حساب مكتمل (يرى كل شيء)
   const isApproved = state === 'approved' || state === 'active'  // معتمد كطالب
+  // الحساب مكتمل = معتمد + لا نماذج ظاهرة إلزامية غير موقّعة
+  // (unsignedVisible = null يعني لم يُفحص بعد؛ نعتبره غير مكتمل احتياطاً حتى يُفحص)
+  const isFull = isApproved && unsignedVisible === 0
   // التبويبات المتاحة حسب الحالة
   let allTabs = [['home', 'الرئيسية']]
   if (isFull) allTabs.push(['calendar', 'التقويم'], ['surveys', t('surveys')])
@@ -173,7 +193,7 @@ function StudentProfileInner({ session }) {
         </div>
 
         {/* لافتة حالة الحساب */}
-        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} currentTab={activeTab} />
+        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} currentTab={activeTab} unsignedVisible={unsignedVisible} />
 
         {/* تبويبات */}
         <div className="sp-tabs">
@@ -182,7 +202,7 @@ function StudentProfileInner({ session }) {
           ))}
         </div>
 
-        {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} />}
+        {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
         {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
         {activeTab === 'attachments' && <StudentAttachments studentId={student?.id} />}
@@ -240,7 +260,7 @@ function StudentProfileInner({ session }) {
   )
 }
 
-function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab }) {
+function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab, unsignedVisible }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
   const [steps, setSteps] = useState(null)
@@ -253,22 +273,6 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab 
   }
   // تحديث تلقائي: عند تحميل المكوّن، وكلما عاد الطالب لتبويب الرئيسية
   useEffect(() => { loadSteps() }, [studentId, state, currentTab])
-
-  // فحص النماذج غير الموقّعة (للحالة المعتمدة)
-  const [unsignedForms, setUnsignedForms] = useState(null)
-  useEffect(() => {
-    async function checkForms() {
-      if ((state !== 'approved' && state !== 'active') || !studentId) { setUnsignedForms(null); return }
-      const [tpls, recs] = await Promise.all([
-        supabase.from('form_templates').select('id').eq('category', 'approval').eq('is_active', true),
-        supabase.from('form_records').select('template_id, status').eq('student_id', studentId),
-      ])
-      const approvedIds = new Set((recs.data || []).filter(r => r.status === 'approved').map(r => r.template_id))
-      const unsigned = (tpls.data || []).filter(t => !approvedIds.has(t.id))
-      setUnsignedForms(unsigned.length)
-    }
-    checkForms()
-  }, [studentId, state, currentTab])
 
   async function answerCompanions(has) {
     setSavingComp(true)
@@ -358,12 +362,13 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab 
       </div>
     </div>
   )
-  if (state === 'approved' && unsignedForms > 0) return (
+  const isApproved = state === 'approved' || state === 'active'
+  if (isApproved && unsignedVisible > 0) return (
     <div className="acc-banner approved" onClick={() => onGoTab('forms')}>
       <div className="acc-banner-icon">✍️</div>
       <div className="acc-banner-body">
         <strong>وافِق على النماذج المطلوبة لإكمال حسابك</strong>
-        <p>لديك {unsignedForms} نموذج بحاجة للتوقيع. يرجى التوقيع عليها لتفعيل كامل المنصة.</p>
+        <p>لديك {unsignedVisible} نموذج بحاجة للتوقيع. يرجى التوقيع عليها لتفعيل كامل المنصة.</p>
         <div className="acc-banner-actions"><button className="mini">الذهاب للنماذج</button></div>
       </div>
     </div>

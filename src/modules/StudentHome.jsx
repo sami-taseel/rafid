@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 
-export default function StudentHome({ studentId, onGoTab }) {
+export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [points, setPoints] = useState(0)
   const [pending, setPending] = useState([])
   const [data, setData] = useState(null)
@@ -134,7 +134,7 @@ export default function StudentHome({ studentId, onGoTab }) {
             {showAll ? 'عرض أقل' : `عرض الكل (${data.upcoming.length})`}
           </button>
         )}
-      </div>
+      </div>}
     </div>
   )
 }
