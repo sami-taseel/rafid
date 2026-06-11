@@ -7,6 +7,7 @@ import Notifications from './modules/Notifications'
 import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
 import StudentHome from './modules/StudentHome'
+import StudentCalendar from './modules/StudentCalendar'
 import StudentTickets from './modules/StudentTickets'
 import StudentAttachments from './modules/StudentAttachments'
 import StudentForms from './modules/StudentForms'
@@ -129,6 +130,19 @@ function StudentProfileInner({ session }) {
   const pct = fields.length ? Math.round(filled / fields.length * 100) : 0
   const sections = [...new Set(fields.map(f => f.section || 'بيانات'))]
 
+  // دورة حياة الحساب
+  const state = student?.account_state || 'pending_data'
+  const isFull = state === 'active'                         // حساب مكتمل (يرى كل شيء)
+  const isApproved = state === 'approved' || state === 'active'  // معتمد كطالب
+  // التبويبات المتاحة حسب الحالة
+  let allTabs = [['home', 'الرئيسية']]
+  if (isFull) allTabs.push(['calendar', 'التقويم'], ['surveys', t('surveys')])
+  allTabs.push(['tickets', t('tickets')], ['data', t('myData')], ['companions', t('companions')], ['attachments', 'المرفقات'])
+  if (isApproved) allTabs.push(['forms', 'النماذج'])
+  // إن كان التبويب الحالي غير متاح، نعود للرئيسية
+  const tabKeys = allTabs.map(x => x[0])
+  const activeTab = tabKeys.includes(tab) ? tab : 'home'
+
   return (
     <div className="sp-app" dir={isRtl ? "rtl" : "ltr"}>
       <div className="sp-container">
@@ -153,22 +167,25 @@ function StudentProfileInner({ session }) {
           </div>
         </div>
 
+        {/* لافتة حالة الحساب */}
+        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} />
+
         {/* تبويبات */}
         <div className="sp-tabs">
-          {[['home','الرئيسية'],['data',t('myData')],['companions',t('companions')],['surveys',t('surveys')],['tickets',t('tickets')],['attachments','المرفقات'],['forms','النماذج'],['signature','توقيعي']].map(([k, l]) => (
-            <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
+          {allTabs.map(([k, l]) => (
+            <button key={k} className={activeTab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
 
-        {tab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} />}
-        {tab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
-        {tab === 'attachments' && <StudentAttachments studentId={student?.id} />}
-        {tab === 'forms' && <StudentForms studentId={student?.id} />}
-        {tab === 'signature' && <div className="sp-card"><div className="sp-card-title">توقيعي الإلكتروني</div><p className="muted" style={{fontSize:13,marginBottom:14}}>سيُستخدم هذا التوقيع في النماذج التي توافق عليها.</p><SignaturePad studentId={student?.id} currentPath={student?.signature_path} onSaved={() => window.location.reload()} /></div>}
-        {tab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
-        {tab === 'surveys' && <StudentSurveys studentId={student?.id} />}
+        {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} />}
+        {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
+        {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
+        {activeTab === 'attachments' && <StudentAttachments studentId={student?.id} />}
+        {activeTab === 'forms' && <StudentForms studentId={student?.id} signaturePath={student?.signature_path} />}
+        {activeTab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
+        {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
-        {tab === 'data' && (
+        {activeTab === 'data' && (
           <form onSubmit={handleSave}>
             {sections.map(sec => (
               <div className="sp-card" key={sec}>
@@ -216,6 +233,56 @@ function StudentProfileInner({ session }) {
       </div>
     </div>
   )
+}
+
+function AccountStateBanner({ state, studentId, profilePct, onGoTab }) {
+  const toast = useToast()
+  const [busy, setBusy] = useState(false)
+
+  async function submitForApproval() {
+    if (profilePct < 100) { toast('أكمل جميع بياناتك أولاً', 'error'); return }
+    setBusy(true)
+    const { data } = await supabase.rpc('request_approval', { p_student: studentId })
+    setBusy(false)
+    toast(data || 'تم رفع الطلب'); window.location.reload()
+  }
+
+  if (state === 'pending_data') return (
+    <div className="acc-banner pending">
+      <div className="acc-banner-icon">📝</div>
+      <div className="acc-banner-body">
+        <strong>أكمل بياناتك لتقديم طلب الاعتماد</strong>
+        <p>يرجى إكمال بياناتك ومرفقاتك (وبيانات مرافقيك إن كنت متزوجاً)، ثم ارفع طلب اعتمادك كطالب.</p>
+        <div className="acc-banner-actions">
+          <button className="mini" onClick={() => onGoTab('data')}>إكمال البيانات</button>
+          <button className="mini" onClick={() => onGoTab('attachments')}>رفع المرفقات</button>
+          <button className="save-btn" style={{ width: 'auto', padding: '9px 18px' }} onClick={submitForApproval} disabled={busy}>
+            {busy ? 'جارٍ…' : 'رفع طلب الاعتماد'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+  if (state === 'pending_approval') return (
+    <div className="acc-banner waiting">
+      <div className="acc-banner-icon">⏳</div>
+      <div className="acc-banner-body">
+        <strong>طلبك قيد المراجعة</strong>
+        <p>تم استلام طلب اعتمادك. سيراجعه المشرف قريباً، وستصلك إشعار عند الاعتماد.</p>
+      </div>
+    </div>
+  )
+  if (state === 'approved') return (
+    <div className="acc-banner approved" onClick={() => onGoTab('forms')}>
+      <div className="acc-banner-icon">✍️</div>
+      <div className="acc-banner-body">
+        <strong>وافِق على النماذج المطلوبة لإكمال حسابك</strong>
+        <p>تم اعتمادك كطالب. يرجى التوقيع على النماذج المطلوبة لتفعيل كامل المنصة (الأنشطة، التقويم، الاستبانات).</p>
+        <div className="acc-banner-actions"><button className="mini">الذهاب للنماذج</button></div>
+      </div>
+    </div>
+  )
+  return null
 }
 
 function PushToggle() {

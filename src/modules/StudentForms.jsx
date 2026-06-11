@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import SignaturePad from './SignaturePad'
 
 // نماذج الطالب: الموافقات، الطلبات، والإشعارات الموجّهة له
-export default function StudentForms({ studentId }) {
+export default function StudentForms({ studentId, signaturePath }) {
   const toast = useToast()
   const [templates, setTemplates] = useState([])
   const [records, setRecords] = useState([])
@@ -35,9 +36,9 @@ export default function StudentForms({ studentId }) {
   }
 
   async function approve(tpl) {
-    if (!student?.signature_path) { toast('يرجى حفظ توقيعك أولاً من تبويب «توقيعي»', 'error'); return }
+    if (!signaturePath) { toast('يرجى حفظ توقيعك أولاً (في أعلى هذه الصفحة)', 'error'); return }
     const existing = recordFor(tpl.id)
-    const payload = { status: 'approved', signed_version: tpl.version || 1, signed_at: new Date().toISOString(), signature_path: student.signature_path }
+    const payload = { status: 'approved', signed_version: tpl.version || 1, signed_at: new Date().toISOString(), signature_path: signaturePath }
     if (existing) {
       await supabase.from('form_records').update(payload).eq('id', existing.id)
     } else {
@@ -79,7 +80,7 @@ export default function StudentForms({ studentId }) {
             </div>
           ) : (
             <>
-              {!student?.signature_path && <div className="update-note">✍ لتوقيع هذا النموذج، احفظ توقيعك أولاً من تبويب «توقيعي».</div>}
+              {!signaturePath && <div className="update-note">✍ لتوقيع هذا النموذج، احفظ توقيعك أولاً (في أعلى الصفحة).</div>}
               <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>
             </>
           )}
@@ -106,6 +107,13 @@ export default function StudentForms({ studentId }) {
 
   return (
     <div className="st-forms">
+      {/* التوقيع الإلكتروني */}
+      <div className="sp-card">
+        <div className="sp-card-title">توقيعي الإلكتروني</div>
+        <p className="muted" style={{ fontSize: 13, marginBottom: 14 }}>يُستخدم توقيعك في النماذج التي توافق عليها. احفظه أولاً.</p>
+        <SignaturePad studentId={studentId} currentPath={signaturePath} onSaved={() => window.location.reload()} />
+      </div>
+
       {/* الموافقات */}
       <div className="sp-card">
         <div className="sp-card-title">الموافقات المطلوبة</div>

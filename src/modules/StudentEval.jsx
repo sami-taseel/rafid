@@ -18,6 +18,7 @@ export default function StudentEval({ studentId, currentStatus, onStatusChange }
   const [history, setHistory] = useState([])
   const [status, setStatus] = useState(currentStatus || 'active')
   const [showForm, setShowForm] = useState(false)
+  const [acctState, setAcctState] = useState(null)
   const [noticeTemplates, setNoticeTemplates] = useState([])
   const [issuedNotices, setIssuedNotices] = useState([])
   const [noticeTpl, setNoticeTpl] = useState('')
@@ -32,8 +33,15 @@ export default function StudentEval({ studentId, currentStatus, onStatusChange }
     ])
     setCriteria(cr.data || []); setHistory(ev.data || [])
     setNoticeTemplates(nt.data || []); setIssuedNotices((nr.data || []).filter(r => r.form_templates))
+    const { data: st } = await supabase.from('students').select('account_state').eq('id', studentId).maybeSingle()
+    setAcctState(st?.account_state || null)
   }
   useEffect(() => { if (studentId) load() }, [studentId])
+
+  async function approveStudent() {
+    const { data } = await supabase.rpc('approve_student', { p_student: studentId })
+    toast(data || 'تم الاعتماد'); setAcctState('approved')
+  }
 
   async function changeStatus(newStatus) {
     setStatus(newStatus)
@@ -102,6 +110,18 @@ export default function StudentEval({ studentId, currentStatus, onStatusChange }
 
   return (
     <div>
+      {/* دورة حياة الحساب */}
+      <div className="panel">
+        <h3>حالة الحساب</h3>
+        <div className="acct-state-row">
+          <span className={'acct-state-badge st-' + (acctState || 'pending_data')}>
+            {{ pending_data: '📝 يكمل بياناته', pending_approval: '⏳ بانتظار الاعتماد', approved: '✍️ معتمد (يوقّع النماذج)', active: '✅ حساب مكتمل' }[acctState] || '—'}
+          </span>
+          {acctState === 'pending_approval' && <button className="save-btn" style={{ width: 'auto', padding: '9px 20px' }} onClick={approveStudent}>اعتماد الطالب</button>}
+        </div>
+        {acctState === 'pending_approval' && <p className="muted" style={{ fontSize: 13, marginTop: 8 }}>الطالب أكمل بياناته ورفع طلب الاعتماد. بعد الاعتماد سيُطلب منه التوقيع على النماذج.</p>}
+      </div>
+
       {/* حالة القبول */}
       <div className="panel">
         <h3>حالة الطالب</h3>
