@@ -30,6 +30,7 @@ function StudentProfileInner({ session }) {
   const [buildings, setBuildings] = useState([])
   const [msg, setMsg] = useState(null)
   const [tab, setTab] = useState('home')
+  const [profileSub, setProfileSub] = useState(null)   // لتوجيه الطالب لتبويب فرعي محدّد في «ملفي»
   // فحص حيّ: عدد النماذج الإلزامية الظاهرة غير الموقّعة (يحدّد اكتمال الحساب فعلياً)
   const [unsignedVisible, setUnsignedVisible] = useState(null)
   useEffect(() => {
@@ -164,7 +165,6 @@ function StudentProfileInner({ session }) {
   let allTabs = [['home', 'الرئيسية']]
   if (isFull) allTabs.push(['calendar', 'التقويم'], ['surveys', t('surveys')])
   allTabs.push(['tickets', t('tickets')], ['profile', 'ملفي'])
-  if (isApproved) allTabs.push(['forms', 'النماذج'])
   // إن كان التبويب الحالي غير متاح، نعود للرئيسية
   const tabKeys = allTabs.map(x => x[0])
   const activeTab = tabKeys.includes(tab) ? tab : 'home'
@@ -194,23 +194,27 @@ function StudentProfileInner({ session }) {
         </div>
 
         {/* لافتة حالة الحساب */}
-        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} currentTab={activeTab} unsignedVisible={unsignedVisible} />
+        <AccountStateBanner state={state} studentId={student?.id} profilePct={pct} onGoTab={setTab} goProfile={(s) => { setProfileSub(s); setTab('profile') }} currentTab={activeTab} unsignedVisible={unsignedVisible} />
 
         {/* تبويبات */}
         <div className="sp-tabs">
           {allTabs.map(([k, l]) => (
-            <button key={k} className={activeTab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
+            <button key={k} className={activeTab === k ? 'active' : ''} onClick={() => setTab(k)}>
+              {l}
+              {k === 'profile' && unsignedVisible > 0 && <span className="sp-tab-badge">{unsignedVisible}</span>}
+            </button>
           ))}
         </div>
 
         {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
         {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
-        {activeTab === 'forms' && <StudentForms studentId={student?.id} signaturePath={student?.signature_path} />}
         {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
         {activeTab === 'profile' && (
-          <ProfileTab studentId={student?.id} personId={student?.person_id} dataForm={
+          <ProfileTab studentId={student?.id} personId={student?.person_id}
+            isApproved={isApproved} signaturePath={student?.signature_path} unsignedVisible={unsignedVisible}
+            initialSub={profileSub} dataForm={
           <form onSubmit={handleSave}>
             {sections.map(sec => (
               <div className="sp-card" key={sec}>
@@ -261,7 +265,7 @@ function StudentProfileInner({ session }) {
   )
 }
 
-function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab, unsignedVisible }) {
+function AccountStateBanner({ state, studentId, profilePct, onGoTab, goProfile, currentTab, unsignedVisible }) {
   const toast = useToast()
   const [busy, setBusy] = useState(false)
   const [steps, setSteps] = useState(null)
@@ -280,8 +284,8 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
     await supabase.from('students').update({ has_companions: has }).eq('id', studentId)
     setSavingComp(false)
     await loadSteps()
-    if (!has) onGoTab('profile')   // لا مرافقين → المرفقات مباشرة
-    else onGoTab('profile')          // نعم → المرافقون
+    if (!has) goProfile('attachments')   // لا مرافقين → المرفقات مباشرة
+    else goProfile('companions')          // نعم → المرافقون
   }
 
   async function submitForApproval() {
@@ -306,7 +310,7 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
           <div className="onboard-step-body">
             <strong>إكمال بياناتي</strong>
             <p>أجب على جميع الأسئلة الإلزامية في صفحة بياناتي.</p>
-            {!s.fields_done && <button className="mini" onClick={() => onGoTab('profile')}>إكمال البيانات</button>}
+            {!s.fields_done && <button className="mini" onClick={() => goProfile('data')}>إكمال البيانات</button>}
           </div>
         </div>
 
@@ -326,8 +330,8 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
             ) : s.has_companions ? (
               <>
                 <p>{s.companions_done ? 'تمت إضافة مرافقيك.' : 'أضف مرافقاً واحداً على الأقل.'}</p>
-                {!s.companions_done && <button className="mini" onClick={() => onGoTab('profile')}>إضافة مرافق</button>}
-                {s.companions_done && <button className="mini" onClick={() => onGoTab('profile')}>تعديل المرافقين</button>}
+                {!s.companions_done && <button className="mini" onClick={() => goProfile('companions')}>إضافة مرافق</button>}
+                {s.companions_done && <button className="mini" onClick={() => goProfile('companions')}>تعديل المرافقين</button>}
               </>
             ) : <p>لا يوجد مرافقون.</p>}
           </div>
@@ -341,7 +345,7 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
             {(!s.companions_answered || !s.companions_done) ? <p>تظهر بعد إكمال الخطوات السابقة.</p> : (
               <>
                 <p>ارفع جميع المرفقات الإلزامية{s.has_companions ? ' (لك ولمرافقيك)' : ''}.</p>
-                {!s.attachments_done && <button className="mini" onClick={() => onGoTab('profile')}>رفع المرفقات</button>}
+                {!s.attachments_done && <button className="mini" onClick={() => goProfile('attachments')}>رفع المرفقات</button>}
               </>
             )}
           </div>
@@ -365,7 +369,7 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
   )
   const isApproved = state === 'approved' || state === 'active'
   if (isApproved && unsignedVisible > 0) return (
-    <div className="acc-banner approved" onClick={() => onGoTab('forms')}>
+    <div className="acc-banner approved" onClick={() => goProfile('forms')}>
       <div className="acc-banner-icon">✍️</div>
       <div className="acc-banner-body">
         <strong>وافِق على النماذج المطلوبة لإكمال حسابك</strong>
