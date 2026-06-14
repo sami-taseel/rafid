@@ -9,6 +9,7 @@ import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
 import StudentHome from './modules/StudentHome'
 import StudentCalendar from './modules/StudentCalendar'
+import ProfileTab from './modules/ProfileTab'
 import StudentTickets from './modules/StudentTickets'
 import StudentAttachments from './modules/StudentAttachments'
 import StudentForms from './modules/StudentForms'
@@ -162,7 +163,7 @@ function StudentProfileInner({ session }) {
   // التبويبات المتاحة حسب الحالة
   let allTabs = [['home', 'الرئيسية']]
   if (isFull) allTabs.push(['calendar', 'التقويم'], ['surveys', t('surveys')])
-  allTabs.push(['tickets', t('tickets')], ['data', t('myData')], ['companions', t('companions')], ['attachments', 'المرفقات'])
+  allTabs.push(['tickets', t('tickets')], ['profile', 'ملفي'])
   if (isApproved) allTabs.push(['forms', 'النماذج'])
   // إن كان التبويب الحالي غير متاح، نعود للرئيسية
   const tabKeys = allTabs.map(x => x[0])
@@ -205,12 +206,11 @@ function StudentProfileInner({ session }) {
         {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
         {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
-        {activeTab === 'attachments' && <StudentAttachments studentId={student?.id} />}
         {activeTab === 'forms' && <StudentForms studentId={student?.id} signaturePath={student?.signature_path} />}
-        {activeTab === 'companions' && <Companions studentId={student?.id} personId={student?.person_id} />}
         {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
-        {activeTab === 'data' && (
+        {activeTab === 'profile' && (
+          <ProfileTab studentId={student?.id} personId={student?.person_id} dataForm={
           <form onSubmit={handleSave}>
             {sections.map(sec => (
               <div className="sp-card" key={sec}>
@@ -254,6 +254,7 @@ function StudentProfileInner({ session }) {
             </button>
             <button type="button" className="download-data-btn" onClick={downloadMyData}>⬇ تنزيل نسخة من بياناتي</button>
           </form>
+          } />
         )}
       </div>
     </div>
@@ -279,8 +280,8 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
     await supabase.from('students').update({ has_companions: has }).eq('id', studentId)
     setSavingComp(false)
     await loadSteps()
-    if (!has) onGoTab('attachments')   // لا مرافقين → المرفقات مباشرة
-    else onGoTab('companions')          // نعم → المرافقون
+    if (!has) onGoTab('profile')   // لا مرافقين → المرفقات مباشرة
+    else onGoTab('profile')          // نعم → المرافقون
   }
 
   async function submitForApproval() {
@@ -305,7 +306,7 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
           <div className="onboard-step-body">
             <strong>إكمال بياناتي</strong>
             <p>أجب على جميع الأسئلة الإلزامية في صفحة بياناتي.</p>
-            {!s.fields_done && <button className="mini" onClick={() => onGoTab('data')}>إكمال البيانات</button>}
+            {!s.fields_done && <button className="mini" onClick={() => onGoTab('profile')}>إكمال البيانات</button>}
           </div>
         </div>
 
@@ -325,8 +326,8 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
             ) : s.has_companions ? (
               <>
                 <p>{s.companions_done ? 'تمت إضافة مرافقيك.' : 'أضف مرافقاً واحداً على الأقل.'}</p>
-                {!s.companions_done && <button className="mini" onClick={() => onGoTab('companions')}>إضافة مرافق</button>}
-                {s.companions_done && <button className="mini" onClick={() => onGoTab('companions')}>تعديل المرافقين</button>}
+                {!s.companions_done && <button className="mini" onClick={() => onGoTab('profile')}>إضافة مرافق</button>}
+                {s.companions_done && <button className="mini" onClick={() => onGoTab('profile')}>تعديل المرافقين</button>}
               </>
             ) : <p>لا يوجد مرافقون.</p>}
           </div>
@@ -340,7 +341,7 @@ function AccountStateBanner({ state, studentId, profilePct, onGoTab, currentTab,
             {(!s.companions_answered || !s.companions_done) ? <p>تظهر بعد إكمال الخطوات السابقة.</p> : (
               <>
                 <p>ارفع جميع المرفقات الإلزامية{s.has_companions ? ' (لك ولمرافقيك)' : ''}.</p>
-                {!s.attachments_done && <button className="mini" onClick={() => onGoTab('attachments')}>رفع المرفقات</button>}
+                {!s.attachments_done && <button className="mini" onClick={() => onGoTab('profile')}>رفع المرفقات</button>}
               </>
             )}
           </div>

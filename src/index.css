@@ -1762,3 +1762,20 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .st-section-head h3 { margin: 0; }
 .section-link { background: none; border: none; color: var(--blue); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
 .section-link:hover { background: var(--blue-soft); }
+
+/* ===== الصفحة المدمجة (ملفي) — تبويبات فرعية أفقية ===== */
+.profile-merged { }
+.psub-tabs { display: flex; gap: 8px; margin-bottom: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 6px; }
+.psub-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 8px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-family: inherit; color: var(--text-soft); position: relative; transition: all .15s; }
+.psub-tab.on { background: var(--navy); color: #fff; }
+.psub-tab:not(.on):hover { background: var(--blue-soft); }
+.psub-ic { display: flex; }
+.psub-lbl { font-size: 13px; font-weight: 600; }
+.psub-done { position: absolute; top: 6px; left: 6px; width: 16px; height: 16px; border-radius: 50%; background: #1d9e75; color: #fff; display: flex; align-items: center; justify-content: center; }
+.psub-tab.on .psub-done { background: #fff; color: var(--navy); }
+.psub-body { }
+
+@media (max-width: 480px) {
+  .psub-tab { padding: 10px 4px; }
+  .psub-lbl { font-size: 12px; }
+}
