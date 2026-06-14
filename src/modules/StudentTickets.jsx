@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useLang } from '../i18n/LangContext'
 import { uploadTicketFile } from '../ticketUtils'
 import Attachment from './Attachment'
+import Icon from '../Icon'
 
 export default function StudentTickets({ studentId }) {
   const { t } = useLang()
@@ -110,7 +111,7 @@ function NewTicket({ studentId, types, onBack }) {
             <option value="critical">طارئ</option>
           </select></div>
         <div className="field"><label>مرفق (اختياري)</label>
-          <label className="file-btn">📎 {file ? file.name : 'اختر ملفاً'}
+          <label className="file-btn"><Icon name="paperclip" size={15} /> {file ? file.name : 'اختر ملفاً'}
             <input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label></div>
         {msg && <div className="login-error">{msg}</div>}
         <button className="sp-save" onClick={submit} disabled={busy}>{busy ? 'جارٍ الإرسال…' : 'إرسال البلاغ'}</button>
@@ -201,7 +202,7 @@ function TicketDetail({ ticket, statuses, onBack }) {
           <div className="reply-box">
             <textarea rows={3} value={reply} onChange={e => setReply(e.target.value)} placeholder="اكتب رداً…" />
             <div className="reply-actions">
-              <label className="file-btn">📎 {file ? 'ملف مرفق' : 'إرفاق ملف'}
+              <label className="file-btn"><Icon name="paperclip" size={15} /> {file ? 'ملف مرفق' : 'إرفاق ملف'}
                 <input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label>
               {file && <span className="muted" style={{ fontSize: 12 }}>{file.name}</span>}
               <button className="save-btn" style={{ width: 'auto', padding: '10px 22px' }} onClick={sendReply}>إرسال</button>

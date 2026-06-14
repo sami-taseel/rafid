@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { uploadTicketFile } from '../ticketUtils'
 import Attachment from './Attachment'
+import Icon from '../Icon'
 
 // مرفقات الطالب: المطلوب منه ومن مرافقيه، مع دعم "مرفق لكل شخص"
 export default function StudentAttachments({ studentId }) {
@@ -92,7 +93,7 @@ export default function StudentAttachments({ studentId }) {
       <div className={'upload-tile' + (up && !expired ? ' done' : '') + (expired ? ' expired' : '')}>
         <label className="upload-tile-main">
           <div className="upload-tile-icon">
-            {loading ? '⏳' : up && !expired ? '✓' : expired ? '⚠' : '＋'}
+            {loading ? <Icon name="clock" size={18} /> : up && !expired ? <Icon name="check" size={18} /> : expired ? <Icon name="alert" size={18} /> : <Icon name="plus" size={18} />}
           </div>
           <div className="upload-tile-name">{label}</div>
           {sublabel && <div className="upload-tile-sub">{sublabel}</div>}
@@ -102,7 +103,7 @@ export default function StudentAttachments({ studentId }) {
         {up && (
           <div className="upload-tile-actions">
             <Attachment path={up.file_path} label="عرض" />
-            <button className="tile-del-btn" onClick={() => remove(up.id)} title="حذف">🗑 حذف</button>
+            <button className="tile-del-btn" onClick={() => remove(up.id)} title="حذف"><Icon name="trash" size={13} /> حذف</button>
           </div>
         )}
       </div>
@@ -186,7 +187,7 @@ export default function StudentAttachments({ studentId }) {
                 <span className="termly-term">📄 {r.term_label || 'سجل'}</span>
                 <div className="attach-actions">
                   <Attachment path={r.file_path} label="عرض" />
-                  <button className="tile-del-btn" onClick={() => remove(r.id)}>🗑 حذف</button>
+                  <button className="tile-del-btn" onClick={() => remove(r.id)}><Icon name="trash" size={13} /> حذف</button>
                 </div>
               </div>
             ))}
@@ -199,7 +200,7 @@ export default function StudentAttachments({ studentId }) {
             <option value="الثاني">الفصل الثاني</option>
           </select>
           <input type="number" placeholder="السنة (2026)" value={year} onChange={e => setYear(e.target.value)} style={{ width: 120, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit' }} />
-          <label className="file-btn-primary">{busy === 'term_' + type.id ? 'جارٍ…' : '＋ رفع السجل'}
+          <label className="file-btn-primary">{busy === 'term_' + type.id ? 'جارٍ…' : <><Icon name="upload" size={15} /> رفع السجل</>}
             <input type="file" accept="image/*" hidden onChange={e => doUpload(e.target.files[0])} /></label>
         </div>
       </div>
@@ -211,8 +212,8 @@ export default function StudentAttachments({ studentId }) {
     const expired = isExpired(up)
     return (
       <div className="attach-actions">
-        {up && !expired && <span className="attach-ok">✓ مرفوع</span>}
-        {expired && <span className="attach-expired">⚠ منتهٍ — حدّثه</span>}
+        {up && !expired && <span className="attach-ok"><Icon name="check" size={13} /> مرفوع</span>}
+        {expired && <span className="attach-expired"><Icon name="alert" size={13} /> منتهٍ — حدّثه</span>}
         {up && <Attachment path={up.file_path} label="عرض" />}
         {up && <button className="mini-del" onClick={() => remove(up.id)}>حذف</button>}
         <label className="file-btn">{busy === type.id + 'self' ? 'جارٍ…' : up ? 'استبدال' : 'رفع'}

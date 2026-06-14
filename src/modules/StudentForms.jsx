@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
 import SignaturePad from './SignaturePad'
+import Icon from '../Icon'
 
 // نماذج الطالب: الموافقات، الطلبات، والإشعارات الموجّهة له
 export default function StudentForms({ studentId, signaturePath }) {
@@ -81,7 +82,7 @@ export default function StudentForms({ studentId, signaturePath }) {
             </div>
           ) : (
             <>
-              {!signaturePath && <div className="update-note">✍ لتوقيع هذا النموذج، احفظ توقيعك أولاً (في أعلى الصفحة).</div>}
+              {!signaturePath && <div className="update-note"><Icon name="signature" size={14} /> لتوقيع هذا النموذج، احفظ توقيعك أولاً (في أعلى الصفحة).</div>}
               <button className="sp-save" onClick={() => approve(tpl)}>{isPending(tpl.id) ? 'أوافق على التحديث' : 'أوافق وأوقّع'}</button>
             </>
           )}

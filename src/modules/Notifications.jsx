@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { supabase } from '../supabaseClient'
+import Icon from '../Icon'
 
 // جرس إشعارات الطالب
 export default function Notifications({ studentId, onOpenTicket }) {
@@ -32,7 +33,7 @@ export default function Notifications({ studentId, onOpenTicket }) {
   return (
     <div className="notif-wrap" ref={ref}>
       <button className="notif-bell" onClick={() => { setOpen(!open); if (!open && unread) markAll() }}>
-        🔔{unread > 0 && <span className="notif-badge">{unread}</span>}
+        <Icon name="bell" />{unread > 0 && <span className="notif-badge">{unread}</span>}
       </button>
       {open && (
         <div className="notif-panel">

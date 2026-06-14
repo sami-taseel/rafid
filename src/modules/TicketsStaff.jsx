@@ -4,6 +4,7 @@ import { Spinner } from './Students'
 import { useToast } from '../Toast'
 import { uploadTicketFile } from '../ticketUtils'
 import Attachment from './Attachment'
+import Icon from '../Icon'
 
 // صفحة معالجة البلاغات للمشرف/المدير
 // المدير (system_admin) يرى كل البلاغات. المشرف يرى بلاغات نوعه فقط.
@@ -198,7 +199,7 @@ function TicketThread({ ticket, statuses, types, onBack }) {
             <select value={status} onChange={e => setStatus(e.target.value)}>
               {statuses.filter(s => s.code !== 'closed').map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
             </select>
-            <label className="file-btn">📎 {file ? 'ملف مرفق' : 'إرفاق ملف'}<input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label>
+            <label className="file-btn"><Icon name="paperclip" size={15} /> {file ? 'ملف مرفق' : 'إرفاق ملف'}<input type="file" accept="image/*" hidden onChange={e => setFile(e.target.files[0])} /></label>
             {file && <span className="muted" style={{ fontSize: 12 }}>{file.name}</span>}
             <button className="save-btn" style={{ width: 'auto', padding: '10px 20px' }} disabled={busy} onClick={send}>{busy ? 'جارٍ…' : 'إرسال'}</button>
           </div>

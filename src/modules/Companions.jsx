@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
 import { useConfirm } from '../Confirm'
+import Icon from '../Icon'
 
 const EDU_LEVELS = ['ما قبل المدرسة', 'الروضة', 'الابتدائية', 'المتوسطة', 'الثانوية', 'الجامعية', 'دراسات عليا', 'غير ملتحق']
 const RELATIONS = ['زوجة', 'زوج', 'ابن', 'ابنة', 'والد', 'والدة', 'أخ', 'أخت']
@@ -85,7 +86,7 @@ export default function Companions({ studentId, personId }) {
             </div>
           </div>
           <div className="comp-actions">
-            <button className="comp-edit-btn" onClick={() => startEdit(c)}>✎ تعديل</button>
+            <button className="comp-edit-btn" onClick={() => startEdit(c)}><Icon name="edit" size={14} /> تعديل</button>
             <button className="mini-del" onClick={() => delCompanion(c.id)}>حذف</button>
           </div>
         </div>

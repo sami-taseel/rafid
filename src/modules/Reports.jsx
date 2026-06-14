@@ -5,6 +5,7 @@ import { usePrompt, useConfirm } from '../Confirm'
 import Sortable from 'sortablejs'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import Icon from '../Icon'
 
 // الفترات الزمنية
 const PERIODS = [
@@ -225,8 +226,8 @@ export default function Reports() {
                   <span className="rb-preset-num">{slot}</span>
                   <span className="rb-preset-name">{p ? p.name : 'فارغ'}</span>
                 </button>
-                <button className="rb-preset-act" onClick={() => savePreset(slot)} title="حفظ/تحديث">💾</button>
-                {p && <button className="rb-preset-act del" onClick={() => deletePreset(slot)} title="حذف">🗑</button>}
+                <button className="rb-preset-act" onClick={() => savePreset(slot)} title="حفظ/تحديث"><Icon name="download" size={14} style={{transform:'rotate(180deg)'}} /></button>
+                {p && <button className="rb-preset-act del" onClick={() => deletePreset(slot)} title="حذف"><Icon name="trash" size={14} /></button>}
               </div>
             )
           })}
@@ -250,15 +251,15 @@ export default function Reports() {
       </div>
 
       <button className="rb-generate" onClick={generate} disabled={generating}>
-        {generating ? 'جارٍ التوليد…' : '📄 إنشاء التقرير'}
+        {generating ? 'جارٍ التوليد…' : <><Icon name="file" size={17} /> إنشاء التقرير</>}
       </button>
 
       {/* التقرير المولّد */}
       {report && (
         <div className="rb-report-wrap">
           <div className="rb-export-bar">
-            <button className="mini" onClick={exportPNG} disabled={exporting}>{exporting ? 'جارٍ…' : '🖼 تنزيل صورة'}</button>
-            <button className="mini" onClick={exportPDF} disabled={exporting}>{exporting ? 'جارٍ…' : '📄 تنزيل PDF'}</button>
+            <button className="mini" onClick={exportPNG} disabled={exporting}>{exporting ? 'جارٍ…' : <><Icon name="image" size={15} /> تنزيل صورة</>}</button>
+            <button className="mini" onClick={exportPDF} disabled={exporting}>{exporting ? 'جارٍ…' : <><Icon name="download" size={15} /> تنزيل PDF</>}</button>
           </div>
           <div className="rb-report" ref={reportRef}>
             <ReportView report={report} sectionLabel={sectionLabel} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
+import Icon from '../Icon'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [points, setPoints] = useState(0)
@@ -83,7 +84,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       {/* أقرب موعد قادم */}
       {nextDaySessions.length > 0 ? (
         <div className="next-wrap">
-          <div className="next-head">📌 أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
+          <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="next-grid">
             {nextDaySessions.map(s => (
               <div className="next-card" key={s.id}>

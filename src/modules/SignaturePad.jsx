@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import Icon from '../Icon'
 
 // لوحة رسم التوقيع: تدعم اللمس والفأرة، تزيل الخلفية، وتحفظ صورة شفافة
 export default function SignaturePad({ studentId, currentPath, onSaved }) {
@@ -88,7 +89,7 @@ export default function SignaturePad({ studentId, currentPath, onSaved }) {
         <div className="sig-view">
           <div className="sig-view-label">توقيعك المحفوظ:</div>
           <img src={viewUrl} alt="التوقيع" className="sig-img" />
-          <button className="mini" onClick={() => { setEditing(true); setHasDrawn(false) }}>✎ إعادة رسم التوقيع</button>
+          <button className="mini" onClick={() => { setEditing(true); setHasDrawn(false) }}><Icon name="edit" size={14} /> إعادة رسم التوقيع</button>
         </div>
       ) : (
         <>
