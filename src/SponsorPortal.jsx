@@ -14,12 +14,23 @@ export default function SponsorPortal({ session }) {
   const [sessSum, setSessSum] = useState(null)
   const [upcoming, setUpcoming] = useState([])
   const [comps, setComps] = useState([])
+  const [byYear, setByYear] = useState([])
+  const [byGender, setByGender] = useState([])
+  const [byAdm, setByAdm] = useState([])
+  const [byAcct, setByAcct] = useState([])
+  const [housing, setHousing] = useState([])
+  const [topPoints, setTopPoints] = useState([])
+  const [topAtt, setTopAtt] = useState([])
+  const [evalBuckets, setEvalBuckets] = useState([])
+  const [formsSum, setFormsSum] = useState(null)
+  const [extraKpis, setExtraKpis] = useState(null)
   const [sponsorName, setSponsorName] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
-      const [a, det, tr, me, na, dg, ac, ss, up, co] = await Promise.all([
+      const [a, det, tr, me, na, dg, ac, ss, up, co,
+             yr, gn, adm, acct, hs, tp, ta, eb, fs, ek] = await Promise.all([
         supabase.rpc('sponsor_analytics'),
         supabase.rpc('sponsor_student_full'),
         supabase.rpc('sponsor_attendance_trend'),
@@ -30,11 +41,25 @@ export default function SponsorPortal({ session }) {
         supabase.rpc('sponsor_sessions_summary'),
         supabase.rpc('sponsor_upcoming_sessions'),
         supabase.rpc('sponsor_companions'),
+        supabase.rpc('sponsor_by_year'),
+        supabase.rpc('sponsor_by_gender'),
+        supabase.rpc('sponsor_by_admission'),
+        supabase.rpc('sponsor_by_account_state'),
+        supabase.rpc('sponsor_housing'),
+        supabase.rpc('sponsor_top_points'),
+        supabase.rpc('sponsor_top_attendance'),
+        supabase.rpc('sponsor_eval_buckets'),
+        supabase.rpc('sponsor_forms_summary'),
+        supabase.rpc('sponsor_extra_kpis'),
       ])
       setAn(a.data?.[0] || null); setStudents(det.data || []); setTrend(tr.data || [])
       setSponsorName(me.data?.sponsors?.name || me.data?.full_name || 'الجهة الداعمة')
       setNats(na.data || []); setDegs(dg.data || []); setActs(ac.data || [])
       setSessSum(ss.data?.[0] || null); setUpcoming(up.data || []); setComps(co.data || [])
+      setByYear(yr.data || []); setByGender(gn.data || []); setByAdm(adm.data || [])
+      setByAcct(acct.data || []); setHousing(hs.data || []); setTopPoints(tp.data || [])
+      setTopAtt(ta.data || []); setEvalBuckets(eb.data || []); setFormsSum(fs.data?.[0] || null)
+      setExtraKpis(ek.data?.[0] || null)
       setLoading(false)
     }
     load()
@@ -56,7 +81,7 @@ export default function SponsorPortal({ session }) {
   return (
     <div className="sponsor-portal">
       <header className="sp-portal-head">
-        <div className="sp-portal-brand"><img src="/logo.png" alt="رافد" className="sp-portal-logo" /><span className="sp-portal-title">بوابة الجهة الداعمة</span></div>
+        <div className="sp-portal-brand"><img src="/logo-white.png" alt="رافد" className="sp-portal-logo" /><span className="sp-portal-title">بوابة الجهة الداعمة</span></div>
         <button className="sp-logout" onClick={logout}><Icon name="logout" size={16} /> خروج</button>
       </header>
 
@@ -64,7 +89,7 @@ export default function SponsorPortal({ session }) {
         <div className="sp-hero-card">
           <div className="sp-hero-av">{sponsorName.charAt(0)}</div>
           <div>
-            <h2 className="sp-greeting">{sponsorName}</h2>
+            <h2 className="sp-greeting" style={{ color: '#fff' }}>{sponsorName}</h2>
             <p className="muted">متابعة الطلاب المكفولين في منصة رافد</p>
           </div>
         </div>
@@ -88,6 +113,14 @@ export default function SponsorPortal({ session }) {
               <SpKpi icon="trophy" n={an.total_points} l="مجموع النقاط" />
               <SpKpi icon="home_door" n={an.housed} l="مسكّنون" />
               <SpKpi icon="handshake" n={an.total_support} l="مساعدات" />
+              {extraKpis && <>
+                <SpKpi icon="users" n={extraKpis.total_companions} l="إجمالي المرافقين" />
+                <SpKpi icon="paperclip" n={extraKpis.total_attachments} l="المرفقات المرفوعة" />
+                <SpKpi icon="check" n={extraKpis.completed_profiles} l="ملفات مكتملة" />
+                <SpKpi icon="book" n={extraKpis.total_activities} l="الأنشطة المتاحة" />
+                <SpKpi icon="user" n={extraKpis.avg_age || '—'} l="متوسط العمر" />
+                <SpKpi icon="alert" n={extraKpis.open_tickets} l="بلاغات مفتوحة" />
+              </>}
             </div>
 
             {/* مؤشر صحة الكفالة */}
@@ -109,20 +142,83 @@ export default function SponsorPortal({ session }) {
                   <SpDonut segments={nats.map((n, i) => ({ label: n.nationality, value: Number(n.cnt), color: PALETTE[i % 8] }))} unit="طالب" />
                 </div>
               )}
+              {byYear.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">السنة الدراسية (سنة الالتحاق)</h3>
+                  <SpBars data={byYear.map(y => ({ label: y.year, value: Number(y.cnt) }))} color="#157080" />
+                </div>
+              )}
+              {comps.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">المرافقون حسب صلة القرابة ({totalComps})</h3>
+                  <SpDonut segments={comps.map((c, i) => ({ label: c.relation, value: Number(c.cnt), color: PALETTE[i % 8] }))} unit="مرافق" />
+                </div>
+              )}
+              {byGender.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">توزيع الجنس</h3>
+                  <SpDonut segments={byGender.map((g) => ({ label: g.gender, value: Number(g.cnt), color: g.gender === 'إناث' ? '#c264a0' : '#2e5496' }))} unit="طالب" />
+                </div>
+              )}
               {degs.length > 0 && (
                 <div className="sp-chart-card">
                   <h3 className="dash-sec">المراحل الدراسية</h3>
                   <SpBars data={degs.map(d => ({ label: d.degree, value: Number(d.cnt) }))} color="#6b3fc0" />
                 </div>
               )}
+              {byAdm.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">حالات القبول</h3>
+                  <SpDonut segments={byAdm.map((a2, i) => ({ label: statusLabels[a2.status] || a2.status, value: Number(a2.cnt), color: PALETTE[i % 8] }))} unit="طالب" />
+                </div>
+              )}
+              {byAcct.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">اكتمال الحسابات</h3>
+                  <SpBars data={byAcct.map(a2 => ({ label: { pending_data: 'يكمل بياناته', pending_approval: 'بانتظار الاعتماد', approved: 'معتمد', active: 'مكتمل' }[a2.state] || a2.state, value: Number(a2.cnt) }))} color="#1d9e75" />
+                </div>
+              )}
+              {housing.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">توزيع السكن</h3>
+                  <SpDonut segments={housing.map((h, i) => ({ label: h.kind, value: Number(h.cnt), color: PALETTE[i % 8] }))} unit="طالب" />
+                </div>
+              )}
+              {evalBuckets.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">شرائح التقييم</h3>
+                  <SpBars data={evalBuckets.map(e => ({ label: e.bucket, value: Number(e.cnt) }))} color="#e0a800" />
+                </div>
+              )}
+              {formsSum && (Number(formsSum.signed) + Number(formsSum.pending)) > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">النماذج والموافقات</h3>
+                  <SpBars data={[
+                    { label: 'موقّعة', value: Number(formsSum.signed) },
+                    { label: 'بانتظار التوقيع', value: Number(formsSum.pending) },
+                  ]} color="#2e5496" />
+                </div>
+              )}
               {sessSum && (
                 <div className="sp-chart-card">
-                  <h3 className="dash-sec">الجلسات: المقررة مقابل المحضورة</h3>
+                  <h3 className="dash-sec">الجلسات: المقررة مقابل ما تم حضوره</h3>
                   <SpBars data={[
                     { label: 'مقررة', value: Number(sessSum.planned) },
-                    { label: 'محضورة', value: Number(sessSum.attended) },
+                    { label: 'تم حضورها', value: Number(sessSum.attended) },
                     { label: 'غياب', value: Number(sessSum.missed) },
                   ]} color="#2e5496" />
+                </div>
+              )}
+              {topPoints.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">أعلى الطلاب نقاطاً</h3>
+                  <SpBars data={topPoints.map(t => ({ label: t.name, value: Number(t.points) }))} color="#e0a800" />
+                </div>
+              )}
+              {topAtt.length > 0 && (
+                <div className="sp-chart-card">
+                  <h3 className="dash-sec">أعلى الطلاب حضوراً</h3>
+                  <SpBars data={topAtt.map(t => ({ label: t.name, value: Number(t.rate) }))} suffix="%" max={100} color="#1d9e75" />
                 </div>
               )}
             </div>
@@ -146,7 +242,7 @@ export default function SponsorPortal({ session }) {
             {sessSum && (
               <div className="sp-kpis">
                 <SpKpi icon="calendar" n={sessSum.planned} l="جلسات مقررة" />
-                <SpKpi icon="check" n={sessSum.attended} l="جلسات محضورة" />
+                <SpKpi icon="check" n={sessSum.attended} l="جلسات تم حضورها" />
                 <SpKpi icon="x" n={sessSum.missed} l="جلسات فائتة" />
               </div>
             )}
@@ -174,12 +270,6 @@ export default function SponsorPortal({ session }) {
                 ))}
               </div>
             </div>
-            {comps.length > 0 && (
-              <div className="sp-chart-card">
-                <h3 className="dash-sec">المرافقون ({totalComps})</h3>
-                <SpBars data={comps.map(c => ({ label: c.relation, value: Number(c.cnt) }))} color="#e0a800" />
-              </div>
-            )}
           </>
         )}
       </div>

@@ -320,7 +320,7 @@ function ReportView({ report, sectionLabel }) {
     <div className="rep">
       {/* الترويسة والمعلومات الرئيسية */}
       <div className="rep-head">
-        <img src="/logo.png" alt="رافد" className="rep-logo" />
+        <img src="/logo-white.png" alt="رافد" className="rep-logo" />
         <div className="rep-title">تقرير {SCOPES[scope].label}</div>
         <div className="rep-org">جمعية تأصيل التعليمية — منصة رافد</div>
         <div className="rep-period">الفترة: {periodText}</div>

@@ -1583,7 +1583,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* التقرير العمودي */
 .rep { background: #fff; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f2; }
 .rep-head { background: linear-gradient(135deg, #1f3864, #2e5496); color: #fff; padding: 28px 20px; text-align: center; }
-.rep-logo { height: 48px; margin-bottom: 12px; filter: brightness(0) invert(1); }
+.rep-logo { height: 48px; margin-bottom: 12px; }
 .rep-title { font-size: 22px; font-weight: 800; }
 .rep-org { font-size: 13px; opacity: .9; margin-top: 4px; }
 .rep-period { font-size: 13px; margin-top: 10px; background: rgba(255,255,255,.15); display: inline-block; padding: 4px 14px; border-radius: 12px; }
