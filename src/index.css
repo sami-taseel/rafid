@@ -1785,3 +1785,79 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .psub-tab.on .psub-badge { background: #fff; color: #c0392b; }
 .sp-tabs button { position: relative; }
 .sp-tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; margin-right: 5px; background: #c0392b; color: #fff; border-radius: 9px; font-size: 11px; font-weight: 700; vertical-align: middle; }
+
+/* ===== بوابة الداعم المُعاد تصميمها ===== */
+.sp-portal-brand { display: flex; align-items: center; gap: 10px; }
+.sp-hero-card { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #1f3864, #2e5496); color: #fff; border-radius: 16px; padding: 20px; margin-bottom: 18px; }
+.sp-hero-av { width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; flex-shrink: 0; }
+.sp-greeting { margin: 0; font-size: 19px; }
+.sp-hero-card .muted { color: rgba(255,255,255,.85); }
+
+.spx-tabs { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 6px; margin-bottom: 20px; }
+.spx-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 8px; border: none; background: transparent; border-radius: 10px; cursor: pointer; font-family: inherit; color: var(--text-soft); font-size: 13px; font-weight: 600; }
+.spx-tab.on { background: var(--navy); color: #fff; }
+.spx-tab:not(.on):hover { background: var(--blue-soft); }
+
+.sp-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.sp-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 10px; text-align: center; box-shadow: var(--shadow); }
+.sp-kpi-ic { color: var(--blue); display: flex; justify-content: center; margin-bottom: 6px; }
+.sp-kpi-num { font-size: 24px; font-weight: 800; color: var(--navy); }
+:root[data-theme="dark"] .sp-kpi-num { color: #8fb5ed; }
+.sp-kpi-lbl { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
+
+/* مؤشر الصحة */
+.health-gauge { display: flex; align-items: center; gap: 18px; }
+.health-circle { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.health-inner { width: 82px; height: 82px; background: var(--surface); border-radius: 50%; display: flex; align-items: baseline; justify-content: center; gap: 1px; }
+.health-num { font-size: 30px; font-weight: 800; color: var(--navy); }
+:root[data-theme="dark"] .health-num { color: #cfe0f7; }
+.health-pct { font-size: 14px; color: var(--text-soft); }
+.health-label { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+
+/* الرسم الخطّي */
+.sp-line-wrap { }
+.sp-line-svg { width: 100%; height: 80px; }
+.sp-line-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-soft); text-align: center; margin-top: 4px; }
+.sp-line-labels strong { color: var(--navy); font-size: 12px; }
+:root[data-theme="dark"] .sp-line-labels strong { color: #8fb5ed; }
+
+/* بطاقات الطلاب الموسّعة */
+.sp-students-full { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.sp-student-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.sp-student-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; }
+.sp-student-id { display: flex; align-items: center; gap: 10px; }
+.sp-student-av { width: 40px; height: 40px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.sp-student-name { font-weight: 700; font-size: 15px; }
+.sp-student-meta { font-size: 12px; color: var(--text-soft); }
+.sp-student-bar { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; }
+.sp-bar-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.sp-bar-fill { height: 100%; background: linear-gradient(to left, #2e5496, #5b8fd4); border-radius: 4px; }
+.sp-bar-val { font-size: 12px; font-weight: 600; color: var(--blue); white-space: nowrap; }
+.sp-student-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sp-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 4px 10px; border-radius: 12px; background: var(--blue-soft); color: var(--text-soft); }
+.sp-chip.gold { background: #fef3da; color: #92660a; }
+.sp-chip.blue { background: #e8f0fc; color: #2e5496; }
+:root[data-theme="dark"] .sp-chip.gold { background: #3a2e14; color: #f0c060; }
+.sp-student-detail { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sp-detail-row { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.sp-student-toggle { width: 100%; margin-top: 10px; background: none; border: none; color: var(--blue); font-family: inherit; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+/* الأنشطة القادمة في بوابة الداعم */
+.sp-upcoming-list { display: flex; flex-direction: column; gap: 8px; }
+.sp-up-item { display: flex; gap: 12px; align-items: center; padding: 10px; background: var(--bg); border-radius: 10px; }
+.sp-up-date { text-align: center; background: linear-gradient(160deg, #1f3864, #2e5496); color: #fff; border-radius: 8px; padding: 6px 10px; min-width: 44px; }
+.sp-up-date .d-num { font-size: 17px; font-weight: 800; line-height: 1; }
+.sp-up-date .d-mon { font-size: 10px; opacity: .85; }
+.sp-up-title { font-weight: 600; font-size: 14px; }
+.sp-up-meta { font-size: 12px; color: var(--text-soft); margin-top: 3px; }
+
+.adm-badge { font-size: 12px; padding: 4px 12px; border-radius: 12px; font-weight: 600; }
+.adm-active, .adm-accepted { background: #e7f6ef; color: #1d7a52; }
+.adm-pending, .adm-interview { background: #fff8e8; color: #92660a; }
+.adm-rejected, .adm-frozen { background: #fcecec; color: #c0392b; }
+
+@media (max-width: 768px) {
+  .sp-kpis { grid-template-columns: repeat(2, 1fr); }
+  .sp-students-full { grid-template-columns: 1fr; }
+  .health-gauge { flex-direction: column; text-align: center; }
+}
