@@ -12,6 +12,16 @@ export default function StudentAttachments({ studentId }) {
   const [building, setBuilding] = useState(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(null)
+  // فحص نوع الملف: صور أو PDF (مع التحقق بالامتداد احتياطاً لو كان MIME فارغاً)
+  function isAllowedFile(file) {
+    if (!file) return false
+    const t = (file.type || '').toLowerCase()
+    const n = (file.name || '').toLowerCase()
+    if (t.startsWith('image/') || t === 'application/pdf') return true
+    if (/\.(jpg|jpeg|png|webp|gif|heic|pdf)$/.test(n)) return true   // احتياط: بعض الأجهزة لا ترسل النوع
+    return false
+  }
+
   const [myName, setMyName] = useState('')
   const [err, setErr] = useState('')
 
@@ -98,7 +108,7 @@ export default function StudentAttachments({ studentId }) {
           <div className="upload-tile-name">{label}</div>
           {sublabel && <div className="upload-tile-sub">{sublabel}</div>}
           <div className="upload-tile-status">{loading ? 'جارٍ…' : up && !expired ? 'مرفوع' : expired ? 'منتهٍ' : 'رفع'}</div>
-          <input type="file" accept="image/*" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
+          <input type="file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png" hidden onChange={e => upload(type.id, e.target.files[0], companionId, type.renew_months)} />
         </label>
         {up && (
           <div className="upload-tile-actions">
@@ -201,7 +211,7 @@ export default function StudentAttachments({ studentId }) {
           </select>
           <input type="number" placeholder="السنة (2026)" value={year} onChange={e => setYear(e.target.value)} style={{ width: 120, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit' }} />
           <label className="file-btn-primary">{busy === 'term_' + type.id ? 'جارٍ…' : <><Icon name="upload" size={15} /> رفع السجل</>}
-            <input type="file" accept="image/*" hidden onChange={e => doUpload(e.target.files[0])} /></label>
+            <input type="file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png" hidden onChange={e => doUpload(e.target.files[0])} /></label>
         </div>
       </div>
     )
@@ -217,7 +227,7 @@ export default function StudentAttachments({ studentId }) {
         {up && <Attachment path={up.file_path} label="عرض" />}
         {up && <button className="mini-del" onClick={() => remove(up.id)}>حذف</button>}
         <label className="file-btn">{busy === type.id + 'self' ? 'جارٍ…' : up ? 'استبدال' : 'رفع'}
-          <input type="file" accept="image/*" hidden onChange={e => upload(type.id, e.target.files[0], null, type.renew_months)} /></label>
+          <input type="file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png" hidden onChange={e => upload(type.id, e.target.files[0], null, type.renew_months)} /></label>
       </div>
     )
   }

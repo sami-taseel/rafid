@@ -37,6 +37,7 @@ import EvalCriteria from './modules/EvalCriteria'
 import FormsAdmin from './modules/FormsAdmin'
 import FormRecords from './modules/FormRecords'
 import ApprovalRequests, { pendingApprovalCount } from './modules/ApprovalRequests'
+import StudentDiagnostics from './modules/StudentDiagnostics'
 import { registerSW } from './push'
 
 export default function App() {
@@ -134,6 +135,7 @@ function StudentsGroup() {
   return <TabGroup tabs={[
     { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
     { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
+    { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
     { key: 'eval_criteria', label: 'معايير التقييم', el: <EvalCriteria /> },

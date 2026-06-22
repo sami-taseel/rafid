@@ -114,7 +114,16 @@ function StudentProfileInner({ session }) {
         setTimeout(() => window.location.reload(), 800)
       }
     } catch (err) {
-      setMsg({ type: 'error', text: 'تعذّر الحفظ: ' + (err.message || err) })
+      const m = (err.message || '').toLowerCase()
+      let friendly = 'تعذّر حفظ بياناتك. يرجى المحاولة مرة أخرى.'
+      if (m.includes('row-level security') || m.includes('policy')) {
+        friendly = 'حدث خطأ في الصلاحيات أثناء الحفظ. يرجى تحديث الصفحة وإعادة المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+      } else if (m.includes('network') || m.includes('fetch')) {
+        friendly = 'تعذّر الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
+      } else if (m.includes('duplicate') || m.includes('unique')) {
+        friendly = 'هذه البيانات مسجّلة مسبقاً.'
+      }
+      setMsg({ type: 'error', text: friendly })
     } finally { setSaving(false) }
   }
   useEffect(() => { supabase.rpc('active_buildings').then(({ data }) => setBuildings(data || [])) }, [])
