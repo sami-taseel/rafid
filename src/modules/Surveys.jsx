@@ -95,22 +95,27 @@ export default function Surveys() {
         </div>
       ) : (
         <div className="panel create-survey">
-          <h3>استبانة جديدة</h3>
-          <div className="field"><label>عنوان الاستبانة</label>
-            <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: قياس الرضا عن رحلة العمرة" /></div>
-          <div className="field"><label>وصف مختصر (اختياري)</label>
-            <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="field"><label>الفئة المستهدفة</label>
+          <div className="create-head">
+            <div className="create-head-ic"><Icon name="clipboard" size={22} /></div>
+            <div><h3 style={{ margin: 0 }}>استبانة جديدة</h3><p className="muted" style={{ margin: '2px 0 0', fontSize: 13 }}>ابدأ بالأساسيات، ثم أضف الأسئلة في الخطوة التالية</p></div>
+          </div>
+          <div className="field"><label><Icon name="edit" size={14} /> عنوان الاستبانة</label>
+            <input value={form.title} maxLength={80} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="مثال: قياس الرضا عن السكن الطلابي" />
+            <div className="char-counter">{(form.title || '').length}/80</div></div>
+          <div className="field"><label><Icon name="file" size={14} /> وصف مختصر (اختياري)</label>
+            <input value={form.description} maxLength={160} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="جملة تشرح هدف الاستبانة للطالب" />
+            <p className="field-hint">يظهر للطالب أعلى الاستبانة ويشجّعه على المشاركة.</p></div>
+          <div className="field"><label><Icon name="users" size={14} /> الفئة المستهدفة</label>
             <select value={form.target_category_id || ''} onChange={e => setForm({ ...form, target_category_id: e.target.value || null })}>
               <option value="">كل الطلاب</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>عند تحديد فئة، لا تظهر الاستبانة ولا يصل إشعارها إلا لطلاب تلك الفئة.</p></div>
-          <div className="field"><label>سمة الألوان</label>
+            <p className="field-hint">عند تحديد فئة، لا تظهر الاستبانة ولا يصل إشعارها إلا لطلاب تلك الفئة.</p></div>
+          <div className="field"><label><Icon name="star" size={14} /> سمة الألوان</label>
             <ThemePicker value={form.theme} onChange={th => setForm({ ...form, theme: th })} /></div>
           {msg && <div className="login-error">{msg}</div>}
-          <div className="form-row">
-            <button onClick={create}>إنشاء ومتابعة</button>
+          <div className="create-actions">
+            <button className="create-btn" onClick={create}><Icon name="plus" size={16} /> إنشاء ومتابعة للأسئلة</button>
             <button className="mini" onClick={() => setCreating(false)}>إلغاء</button>
           </div>
         </div>
@@ -397,7 +402,37 @@ const QTYPES = [
 function qtypeNeedsOptions(t) { return t === 'single' || t === 'multiple' || t === 'dropdown' }
 function qtypeLabel(t) { return (QTYPES.find(x => x.v === t) || {}).l || t }
 
+// لون مميّز لكل نوع (مستوحى من مِرصاد)
+const QTYPE_COLORS = {
+  short_text: '#6366f1', long_text: '#8b5cf6', single: '#ec4899', multiple: '#f59e0b',
+  dropdown: '#10b981', rating: '#eab308', number: '#06b6d4', date: '#f43f5e',
+  scale: '#14b8a6', likert: '#0ea5e9',
+}
+function qtypeColor(t) { return QTYPE_COLORS[t] || '#6366f1' }
+function qtypeIcon(t) { return (QTYPES.find(x => x.v === t) || {}).icon || 'file' }
+
+// شبكة بطاقات اختيار نوع السؤال (بدل القائمة المنسدلة)
+function QTypeGrid({ value, onChange }) {
+  return (
+    <div className="qtype-grid">
+      {QTYPES.map(t => {
+        const on = value === t.v
+        const c = qtypeColor(t.v)
+        return (
+          <button key={t.v} type="button" className={'qtype-card' + (on ? ' on' : '')}
+            style={on ? { borderColor: c, background: c + '14' } : {}}
+            onClick={() => onChange(t.v)}>
+            <span className="qtype-card-ic" style={{ background: c + '22', color: c }}><Icon name={t.icon} size={16} /></span>
+            <span className="qtype-card-lbl">{t.l}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function SurveyEditor({ survey, onBack }) {
+  const toast = useToast()
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [saved, setSaved] = useState(false)
@@ -440,6 +475,40 @@ function SurveyEditor({ survey, onBack }) {
   }
   async function delQ(id) { await supabase.from('survey_questions').delete().eq('id', id); load() }
 
+  // تحريك سؤال لأعلى/أسفل (يبدّل sort_order مع جاره)
+  async function moveQ(i, dir) {
+    const j = i + dir
+    if (j < 0 || j >= questions.length) return
+    const a = questions[i], b = questions[j]
+    // نبدّل الترتيب محلياً
+    const next = [...questions]
+    next[i] = b; next[j] = a
+    // نعيد ترقيم sort_order بالتسلسل لضمان الثبات
+    const reordered = next.map((q, idx) => ({ ...q, sort_order: idx + 1, page: q.page }))
+    setQuestions(reordered)
+    // نحفظ الترتيب الجديد في القاعدة
+    await Promise.all([
+      supabase.from('survey_questions').update({ sort_order: reordered[i].sort_order }).eq('id', reordered[i].id),
+      supabase.from('survey_questions').update({ sort_order: reordered[j].sort_order }).eq('id', reordered[j].id),
+    ])
+  }
+
+  // تكرار سؤال
+  async function dupQ(q) {
+    const max = questions.reduce((m, x) => Math.max(m, x.sort_order), 0)
+    const { data } = await supabase.from('survey_questions').insert({
+      survey_id: survey.id, q_text: q.q_text, q_type: q.q_type,
+      options: q.options, required: q.required, help_text: q.help_text,
+      logic: null, page: q.page || 1, allow_other: q.allow_other, sort_order: max + 1,
+    }).select().single()
+    // نُدرج النسخة مباشرة بعد الأصل
+    const idx = questions.findIndex(x => x.id === q.id)
+    const next = [...questions]
+    next.splice(idx + 1, 0, data)
+    setQuestions(next)
+    toast('تم تكرار السؤال')
+  }
+
   // بنك الأسئلة
   const [bankOpen, setBankOpen] = useState(false)
   async function saveToBank(q) {
@@ -466,9 +535,22 @@ function SurveyEditor({ survey, onBack }) {
       <button className="mini" onClick={onBack}>→ رجوع للقائمة</button>
       <div className="survey-edit-head">
         <h3>{survey.title}</h3>
-        <span className="pill">{survey.target_audience}</span>
+      </div>
+      <div className="editor-summary">
+        <span className="es-chip"><Icon name="file" size={13} /> {questions.length} سؤال</span>
+        <span className="es-chip"><Icon name="clipboard" size={13} /> {Math.max(1, ...questions.map(q => q.page || 1))} صفحة</span>
+        <span className="es-chip"><Icon name="check" size={13} /> {questions.filter(q => q.required).length} إجباري</span>
+        {questions.some(q => q.logic) && <span className="es-chip purple"><Icon name="settings" size={13} /> منطق شرطي</span>}
       </div>
       {saved && <div className="save-ok">تم حفظ الأسئلة</div>}
+
+      {questions.length === 0 && (
+        <div className="editor-empty">
+          <div className="editor-empty-ic"><Icon name="clipboard" size={34} /></div>
+          <h4>لا أسئلة بعد</h4>
+          <p className="muted">ابدأ بإضافة سؤال جديد، أو استورد سؤالاً جاهزاً من البنك.</p>
+        </div>
+      )}
 
       {questions.map((q, i) => (
         <div key={q.id}>
@@ -476,21 +558,26 @@ function SurveyEditor({ survey, onBack }) {
             <div className="page-divider"><span>صفحة {q.page || 1}</span></div>
           )}
           <div className="question-card">
-          <div className="q-num">سؤال {i + 1}{q.required && <span className="q-req-mark"> *</span>}</div>
+          <div className="q-card-head">
+            <div className="q-num-badge">{i + 1}</div>
+            <span className="q-type-chip" style={{ background: qtypeColor(q.q_type) + '22', color: qtypeColor(q.q_type) }}>
+              <Icon name={qtypeIcon(q.q_type)} size={13} /> {qtypeLabel(q.q_type)}
+            </span>
+            <div className="q-card-tools">
+              <button className="q-tool" onClick={() => moveQ(i, -1)} disabled={i === 0} title="تحريك لأعلى"><Icon name="chevronLeft" size={15} style={{ transform: 'rotate(90deg)' }} /></button>
+              <button className="q-tool" onClick={() => moveQ(i, 1)} disabled={i === questions.length - 1} title="تحريك لأسفل"><Icon name="chevronLeft" size={15} style={{ transform: 'rotate(-90deg)' }} /></button>
+              <button className="q-tool" onClick={() => dupQ(q)} title="تكرار السؤال"><Icon name="plus" size={15} /></button>
+              <button className="q-tool" onClick={() => saveToBank(q)} title="حفظ في بنك الأسئلة"><Icon name="star" size={15} /></button>
+              <button className="q-tool danger" onClick={() => delQ(q.id)} title="حذف"><Icon name="trash" size={15} /></button>
+            </div>
+          </div>
           <input className="q-text" placeholder="اكتب نص السؤال هنا…" value={q.q_text}
             onChange={e => patch(q.id, { q_text: e.target.value })} />
           <input className="q-help" placeholder="نص توضيحي (اختياري)…" value={q.help_text || ''}
             onChange={e => patch(q.id, { help_text: e.target.value })} />
-          <div className="q-controls">
-            <select value={q.q_type} onChange={e => patch(q.id, { q_type: e.target.value })}>
-              {QTYPES.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
-            </select>
-            <label className="q-req-toggle">
-              <input type="checkbox" checked={!!q.required} onChange={e => patch(q.id, { required: e.target.checked })} /> إجباري
-            </label>
-            <button className="fr-del" onClick={() => delQ(q.id)}>حذف</button>
-            <button className="q-bank-save" onClick={() => saveToBank(q)} title="حفظ في بنك الأسئلة"><Icon name="download" size={13} style={{ transform: 'rotate(180deg)' }} /> للبنك</button>
-          </div>
+
+          <QTypeGrid value={q.q_type} onChange={tp => patch(q.id, { q_type: tp })} />
+
           {qtypeNeedsOptions(q.q_type) && (
             <OptionsEditor
               value={Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])}
@@ -504,6 +591,10 @@ function SurveyEditor({ survey, onBack }) {
           )}
           <QTypePreview type={q.q_type} />
           <LogicEditor q={q} priorQuestions={questions.slice(0, i)} onChange={(lg) => patch(q.id, { logic: lg })} />
+          <label className="q-req-foot">
+            <input type="checkbox" checked={!!q.required} onChange={e => patch(q.id, { required: e.target.checked })} />
+            <span>سؤال إجباري</span>
+          </label>
           </div>
         </div>
       ))}

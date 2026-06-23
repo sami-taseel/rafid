@@ -2060,3 +2060,75 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* ===== خيار «أخرى» ===== */
 .q-other-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-soft); cursor: pointer; margin-top: 8px; }
 .srv-other-input { margin-top: 4px; animation: srvFade .25s ease; }
+
+/* ============================================================
+   تحسين الهوية البصرية لصفحات الاستبانات (المنشئ + الأسئلة)
+   ============================================================ */
+
+/* القوائم المنسدلة الاحترافية (داخل الاستبانات) */
+.create-survey select, .question-card select, .logic-row select, .logic-match select,
+.modal-card select, .srv-publish-opts select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left 12px center; padding-left: 34px !important;
+  transition: border-color .15s, box-shadow .15s;
+}
+.create-survey select:focus, .question-card select:focus, .logic-row select:focus {
+  outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+}
+.create-survey input:focus, .create-survey textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.15); }
+
+/* نموذج إنشاء الاستبانة */
+.create-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.create-head-ic { width: 48px; height: 48px; border-radius: 13px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.create-survey .field label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.field-hint { font-size: 12px; color: var(--text-soft); margin: 5px 0 0; line-height: 1.6; }
+.char-counter { font-size: 11px; color: var(--text-soft); text-align: left; margin-top: 3px; }
+.create-actions { display: flex; gap: 10px; align-items: center; margin-top: 18px; }
+.create-btn { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 11px; padding: 13px 24px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,.3); }
+.create-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+
+/* شريط ملخّص المحرّر */
+.editor-summary { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 18px; }
+.es-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; color: var(--text-soft); font-weight: 600; }
+.es-chip.purple { background: #f3eefc; color: #6b3fc0; border-color: #e0d4f7; }
+:root[data-theme="dark"] .es-chip.purple { background: #1e1730; color: #b9a5e8; border-color: #4a3a7a; }
+
+/* حالة المحرّر الفارغة */
+.editor-empty { text-align: center; padding: 40px 20px; background: var(--surface); border: 2px dashed var(--border); border-radius: 16px; margin-bottom: 16px; }
+.editor-empty-ic { width: 70px; height: 70px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.editor-empty h4 { margin: 0 0 6px; font-size: 17px; }
+
+/* بطاقة السؤال — الترويسة والأدوات */
+.question-card { position: relative; transition: box-shadow .2s, border-color .2s; }
+.question-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.07); }
+.q-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.q-num-badge { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+.q-type-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; }
+.q-card-tools { display: flex; gap: 4px; margin-inline-start: auto; }
+.q-tool { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-soft); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .12s; }
+.q-tool:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; background: #6366f114; }
+.q-tool.danger:hover:not(:disabled) { border-color: #c0392b; color: #c0392b; background: #c0392b14; }
+.q-tool:disabled { opacity: .35; cursor: default; }
+
+/* شبكة بطاقات نوع السؤال */
+.qtype-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; margin: 12px 0; }
+.qtype-card { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 13px 8px; border: 2px solid var(--border); border-radius: 12px; background: var(--surface); cursor: pointer; transition: all .15s; font-family: inherit; }
+.qtype-card:hover { border-color: var(--text-soft); transform: translateY(-2px); }
+.qtype-card.on { font-weight: 600; }
+.qtype-card-ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.qtype-card-lbl { font-size: 12px; color: var(--text); text-align: center; line-height: 1.3; }
+
+/* تذييل الإجباري */
+.q-req-foot { display: flex; align-items: center; gap: 7px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-soft); cursor: pointer; }
+.q-req-foot input { width: 16px; height: 16px; }
+
+/* أزرار الإضافة السفلية — تحسين */
+.survey-add-row .add-field-btn { flex: 1; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; font-weight: 600; }
+.survey-add-row .add-field-btn:hover { filter: brightness(1.07); }
+
+@media (max-width: 768px) {
+  .qtype-grid { grid-template-columns: repeat(3, 1fr); }
+  .q-card-tools { gap: 2px; }
+  .q-tool { width: 30px; height: 30px; }
+}
