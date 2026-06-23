@@ -32,9 +32,20 @@ export default function StudentSurveys({ studentId }) {
 
   function setAns(qid, val) { setAnswers({ ...answers, [qid]: val }); setErrors({ ...errors, [qid]: false }) }
 
+  // المنطق الشرطي: هل يظهر السؤال؟ (يعتمد على إجابة سؤال سابق)
+  function isVisible(q) {
+    if (!q.logic || !q.logic.questionId) return true   // لا منطق = ظاهر دائماً
+    const dep = answers[q.logic.questionId]
+    if (dep == null || dep === '') return false         // السؤال المعتمَد عليه لم يُجَب = مخفي
+    if (q.logic.operator === 'not_equals') return String(dep) !== String(q.logic.value)
+    return String(dep) === String(q.logic.value)        // equals (افتراضي)
+  }
+  const visibleQuestions = questions.filter(isVisible)
+
   function validate() {
     const errs = {}
-    questions.forEach(q => {
+    // نتحقق من الإجبارية للأسئلة الظاهرة فقط (المخفية لا تُحاسب)
+    visibleQuestions.forEach(q => {
       if (q.required) {
         const v = answers[q.id]
         const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0)
@@ -51,7 +62,8 @@ export default function StudentSurveys({ studentId }) {
     try {
       const { data: resp } = await supabase.from('survey_responses')
         .insert({ survey_id: active.id, student_id: studentId }).select().single()
-      const rows = questions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
+      // نحفظ إجابات الأسئلة الظاهرة فقط (المخفية لا تُرسل)
+      const rows = visibleQuestions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
       await supabase.from('survey_answers').insert(rows)
       const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
       await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).catch(() => {})
@@ -82,7 +94,7 @@ export default function StudentSurveys({ studentId }) {
           <h3>{active.title}</h3>
           {active.description && <p className="srv-desc">{active.description}</p>}
         </div>
-        {questions.map((q, i) => (
+        {visibleQuestions.map((q, i) => (
           <div className={'srv-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
             <div className="srv-q-title">{i + 1}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
             {q.help_text && <div className="srv-q-help">{q.help_text}</div>}

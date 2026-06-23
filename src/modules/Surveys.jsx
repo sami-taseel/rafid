@@ -160,6 +160,47 @@ export default function Surveys() {
   )
 }
 
+// محرّر المنطق الشرطي: يظهر السؤال فقط إذا تحقّق شرط على سؤال سابق
+function LogicEditor({ q, priorQuestions, onChange }) {
+  const [open, setOpen] = useState(!!q.logic)
+  // الأسئلة المؤهّلة للربط: السابقة من نوع اختيار واحد أو قائمة منسدلة (لها قيمة واحدة واضحة)
+  const eligible = priorQuestions.filter(p => p.q_type === 'single' || p.q_type === 'dropdown')
+  const lg = q.logic || {}
+  const depQ = eligible.find(p => p.id === lg.questionId)
+  const depOptions = depQ && Array.isArray(depQ.options) ? depQ.options : []
+
+  if (eligible.length === 0) return null  // لا أسئلة سابقة صالحة للربط
+
+  return (
+    <div className="logic-box">
+      <label className="logic-toggle">
+        <input type="checkbox" checked={open} onChange={e => {
+          setOpen(e.target.checked)
+          if (!e.target.checked) onChange(null)
+        }} />
+        إظهار هذا السؤال بشرط (منطق شرطي)
+      </label>
+      {open && (
+        <div className="logic-row">
+          <span className="logic-lbl">يظهر إذا كانت إجابة</span>
+          <select value={lg.questionId || ''} onChange={e => onChange({ questionId: e.target.value, operator: lg.operator || 'equals', value: '' })}>
+            <option value="">اختر سؤالاً…</option>
+            {eligible.map((p, idx) => <option key={p.id} value={p.id}>{(priorQuestions.indexOf(p) + 1)}. {p.q_text || 'سؤال'}</option>)}
+          </select>
+          <select value={lg.operator || 'equals'} onChange={e => onChange({ ...lg, operator: e.target.value })} disabled={!lg.questionId}>
+            <option value="equals">تساوي</option>
+            <option value="not_equals">لا تساوي</option>
+          </select>
+          <select value={lg.value || ''} onChange={e => onChange({ ...lg, value: e.target.value })} disabled={!lg.questionId}>
+            <option value="">اختر القيمة…</option>
+            {depOptions.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // معاينة شكل كل نوع سؤال في المنشئ
 function QTypePreview({ type }) {
   const box = { fontSize: 13, color: 'var(--text-soft)', background: 'var(--bg)', padding: '8px 12px', borderRadius: 8, marginTop: 8 }
@@ -213,6 +254,7 @@ function SurveyEditor({ survey, onBack }) {
       await supabase.from('survey_questions').update({
         q_text: q.q_text, q_type: q.q_type, required: !!q.required,
         help_text: q.help_text || null,
+        logic: q.logic || null,
         options: qtypeNeedsOptions(q.q_type)
           ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
       }).eq('id', q.id)
@@ -253,6 +295,7 @@ function SurveyEditor({ survey, onBack }) {
               onChange={(arr) => patch(q.id, { options: arr })} />
           )}
           <QTypePreview type={q.q_type} />
+          <LogicEditor q={q} priorQuestions={questions.slice(0, i)} onChange={(lg) => patch(q.id, { logic: lg })} />
         </div>
       ))}
       <button className="add-field-btn" onClick={addQ}>+ إضافة سؤال</button>

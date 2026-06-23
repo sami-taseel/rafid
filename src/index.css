@@ -1943,3 +1943,13 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .q-req-toggle { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-soft); cursor: pointer; }
 .q-req-mark { color: #c0392b; }
 .srv-avg { font-size: 14px; background: var(--blue-soft); color: var(--blue); padding: 8px 12px; border-radius: 8px; display: inline-block; }
+
+/* ===== محرّر المنطق الشرطي (المنشئ) ===== */
+.logic-box { margin-top: 10px; padding: 12px; background: #f3eefc; border-radius: 10px; border: 1px dashed #b9a5e8; }
+:root[data-theme="dark"] .logic-box { background: #1e1730; border-color: #4a3a7a; }
+.logic-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b3fc0; cursor: pointer; font-weight: 600; }
+:root[data-theme="dark"] .logic-toggle { color: #b9a5e8; }
+.logic-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.logic-lbl { font-size: 13px; color: var(--text-soft); }
+.logic-row select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text); }
+.logic-row select:disabled { opacity: .5; }
