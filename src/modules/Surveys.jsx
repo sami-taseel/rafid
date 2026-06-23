@@ -160,13 +160,35 @@ export default function Surveys() {
   )
 }
 
+// معاينة شكل كل نوع سؤال في المنشئ
+function QTypePreview({ type }) {
+  const box = { fontSize: 13, color: 'var(--text-soft)', background: 'var(--bg)', padding: '8px 12px', borderRadius: 8, marginTop: 8 }
+  if (type === 'short_text') return <div style={box}>معاينة: __________</div>
+  if (type === 'long_text') return <div style={box}>معاينة: مربع نص متعدد الأسطر</div>
+  if (type === 'rating') return <div style={box}>معاينة: ★ ★ ★ ★ ★</div>
+  if (type === 'number') return <div style={box}>معاينة: حقل رقمي</div>
+  if (type === 'date') return <div style={box}>معاينة: منتقي تاريخ</div>
+  if (type === 'scale') return <div style={box}>معاينة: ١ · ٢ · ٣ … ١٠</div>
+  if (type === 'likert') return <div style={box}>معاينة: راضٍ جداً · راضٍ · محايد · غير راضٍ · غير راضٍ إطلاقاً</div>
+  if (type === 'dropdown') return <div style={box}>معاينة: قائمة منسدلة بالخيارات أعلاه</div>
+  return null
+}
+
+// الأنواع التسعة (مدموجة من منصة مِرصاد)
 const QTYPES = [
-  { v: 'likert', l: 'مقياس رضا (راضٍ جداً … غير راضٍ)' },
-  { v: 'stars', l: 'تقييم بالنجوم' },
-  { v: 'text', l: 'إجابة نصية' },
-  { v: 'single', l: 'اختيار واحد' },
-  { v: 'multi', l: 'اختيار متعدد' },
+  { v: 'short_text', l: 'نص قصير', icon: 'edit', needsOptions: false },
+  { v: 'long_text', l: 'نص طويل', icon: 'file', needsOptions: false },
+  { v: 'single', l: 'اختيار واحد', icon: 'check', needsOptions: true },
+  { v: 'multiple', l: 'اختيار متعدد', icon: 'check', needsOptions: true },
+  { v: 'dropdown', l: 'قائمة منسدلة', icon: 'chevronLeft', needsOptions: true },
+  { v: 'rating', l: 'تقييم بالنجوم', icon: 'star', needsOptions: false },
+  { v: 'number', l: 'رقم', icon: 'tag', needsOptions: false },
+  { v: 'date', l: 'تاريخ', icon: 'calendar', needsOptions: false },
+  { v: 'scale', l: 'مقياس ١٠-١', icon: 'chart', needsOptions: false },
+  { v: 'likert', l: 'مقياس رضا', icon: 'chart', needsOptions: false },
 ]
+function qtypeNeedsOptions(t) { return t === 'single' || t === 'multiple' || t === 'dropdown' }
+function qtypeLabel(t) { return (QTYPES.find(x => x.v === t) || {}).l || t }
 
 function SurveyEditor({ survey, onBack }) {
   const [questions, setQuestions] = useState([])
@@ -182,15 +204,16 @@ function SurveyEditor({ survey, onBack }) {
   async function addQ() {
     const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
     const { data } = await supabase.from('survey_questions')
-      .insert({ survey_id: survey.id, q_text: '', q_type: 'likert', sort_order: max + 1 }).select().single()
+      .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false }).select().single()
     setQuestions([...questions, data])
   }
   function patch(id, p) { setQuestions(questions.map(q => q.id === id ? { ...q, ...p } : q)) }
   async function saveAll() {
     for (const q of questions) {
       await supabase.from('survey_questions').update({
-        q_text: q.q_text, q_type: q.q_type,
-        options: (q.q_type === 'single' || q.q_type === 'multi')
+        q_text: q.q_text, q_type: q.q_type, required: !!q.required,
+        help_text: q.help_text || null,
+        options: qtypeNeedsOptions(q.q_type)
           ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
       }).eq('id', q.id)
     }
@@ -210,22 +233,26 @@ function SurveyEditor({ survey, onBack }) {
 
       {questions.map((q, i) => (
         <div className="question-card" key={q.id}>
-          <div className="q-num">سؤال {i + 1}</div>
+          <div className="q-num">سؤال {i + 1}{q.required && <span className="q-req-mark"> *</span>}</div>
           <input className="q-text" placeholder="اكتب نص السؤال هنا…" value={q.q_text}
             onChange={e => patch(q.id, { q_text: e.target.value })} />
+          <input className="q-help" placeholder="نص توضيحي (اختياري)…" value={q.help_text || ''}
+            onChange={e => patch(q.id, { help_text: e.target.value })} />
           <div className="q-controls">
             <select value={q.q_type} onChange={e => patch(q.id, { q_type: e.target.value })}>
               {QTYPES.map(t => <option key={t.v} value={t.v}>{t.l}</option>)}
             </select>
+            <label className="q-req-toggle">
+              <input type="checkbox" checked={!!q.required} onChange={e => patch(q.id, { required: e.target.checked })} /> إجباري
+            </label>
             <button className="fr-del" onClick={() => delQ(q.id)}>حذف</button>
           </div>
-          {(q.q_type === 'single' || q.q_type === 'multi') && (
+          {qtypeNeedsOptions(q.q_type) && (
             <OptionsEditor
               value={Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])}
               onChange={(arr) => patch(q.id, { options: arr })} />
           )}
-          {q.q_type === 'likert' && <div className="q-preview">معاينة: راضٍ جداً · راضٍ · محايد · غير راضٍ · غير راضٍ إطلاقاً</div>}
-          {q.q_type === 'stars' && <div className="q-preview">معاينة: ★ ★ ★ ★ ★</div>}
+          <QTypePreview type={q.q_type} />
         </div>
       ))}
       <button className="add-field-btn" onClick={addQ}>+ إضافة سؤال</button>
@@ -257,28 +284,40 @@ function SurveyResults({ survey, onBack }) {
       <div className="survey-edit-head"><h3>نتائج: {survey.title}</h3><span className="pill">{data.count} رد</span></div>
       {data.count === 0 && <div className="panel muted">لا توجد ردود بعد.</div>}
       {data.qs.map((q, i) => {
-        const qa = data.answers.filter(a => a.question_id === q.id).map(a => a.answer?.value)
+        const raw = data.answers.filter(a => a.question_id === q.id).map(a => a.answer?.value)
+        const isText = ['text', 'short_text', 'long_text'].includes(q.q_type)
+        const isNum = ['rating', 'scale', 'number'].includes(q.q_type)
+        // الاختيار المتعدد: نفرد المصفوفات
+        const flat = []
+        raw.forEach(v => { if (Array.isArray(v)) v.forEach(x => flat.push(x)); else if (v != null && v !== '') flat.push(v) })
         const counts = {}
-        qa.forEach(v => { const k = String(v); counts[k] = (counts[k]||0)+1 })
+        flat.forEach(v => { const k = String(v); counts[k] = (counts[k] || 0) + 1 })
         const max = Math.max(1, ...Object.values(counts))
+        // متوسط للأرقام
+        const nums = flat.map(Number).filter(n => !isNaN(n))
+        const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : null
         return (
           <div className="panel" key={q.id}>
-            <strong>{i+1}. {q.q_text}</strong>
-            {q.q_type === 'text' ? (
+            <strong>{i + 1}. {q.q_text}</strong>
+            {isText ? (
               <div className="text-answers">
-                {qa.filter(Boolean).map((t, j) => <div key={j} className="list-line">"{t}"</div>)}
-                {qa.filter(Boolean).length === 0 && <div className="muted">لا إجابات</div>}
+                {flat.filter(Boolean).slice(0, 50).map((t, j) => <div key={j} className="list-line">"{t}"</div>)}
+                {flat.filter(Boolean).length === 0 && <div className="muted">لا إجابات</div>}
               </div>
             ) : (
-              <div className="bar-list" style={{ marginTop: 10 }}>
-                {Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k, v]) => (
-                  <div className="bar-item" key={k}>
-                    <span className="bar-label">{k}</span>
-                    <div className="bar-track"><div className="bar-fill" style={{ width: (v/max*100)+'%' }}></div></div>
-                    <span className="bar-val">{v}</span>
-                  </div>
-                ))}
-              </div>
+              <>
+                {isNum && avg != null && <div className="srv-avg">المتوسط: <strong>{avg}</strong>{q.q_type === 'rating' ? ' / ٥' : q.q_type === 'scale' ? ' / ١٠' : ''} <span className="muted">({nums.length} إجابة)</span></div>}
+                <div className="bar-list" style={{ marginTop: 10 }}>
+                  {Object.entries(counts).sort((a, b) => isNum ? Number(a[0]) - Number(b[0]) : b[1] - a[1]).map(([k, v]) => (
+                    <div className="bar-item" key={k}>
+                      <span className="bar-label">{k}</span>
+                      <div className="bar-track"><div className="bar-fill" style={{ width: (v / max * 100) + '%' }}></div></div>
+                      <span className="bar-val">{v}</span>
+                    </div>
+                  ))}
+                  {Object.keys(counts).length === 0 && <div className="muted">لا إجابات</div>}
+                </div>
+              </>
             )}
           </div>
         )

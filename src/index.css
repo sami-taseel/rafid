@@ -1897,3 +1897,49 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .diag-action strong { color: var(--navy); font-size: 14px; }
 :root[data-theme="dark"] .diag-action strong { color: #8fb5ed; }
 .diag-action p { font-size: 13px; margin: 6px 0 0; line-height: 1.8; color: var(--text); }
+
+/* ===== الاستبانات المطوّرة — وضع التعبئة بهوية مستقلة ===== */
+.srv-fill { --srv-primary: #534AB7; --srv-accent: #D4537E; max-width: 640px; margin: 0 auto; }
+.srv-fill-head { background: linear-gradient(135deg, var(--srv-primary), var(--srv-accent)); color: #fff; border-radius: 16px; padding: 22px; margin-bottom: 18px; }
+.srv-fill-head h3 { margin: 8px 0 0; font-size: 21px; }
+.srv-desc { color: rgba(255,255,255,.9); font-size: 14px; margin: 8px 0 0; }
+.srv-back { background: rgba(255,255,255,.2); color: #fff; border: none; border-radius: 8px; padding: 6px 14px; font-family: inherit; font-size: 13px; cursor: pointer; }
+.srv-q { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+.srv-q.err { border-color: #c0392b; }
+.srv-q-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.srv-req { color: #c0392b; }
+.srv-q-help { font-size: 13px; color: var(--text-soft); margin-bottom: 12px; }
+.srv-q-err { color: #c0392b; font-size: 13px; margin-top: 8px; }
+.srv-input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 15px; background: var(--bg); color: var(--text); margin-top: 10px; }
+.srv-input:focus { outline: none; border-color: var(--srv-primary); }
+
+.srv-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.srv-opt { text-align: right; padding: 13px 16px; border: 2px solid var(--border); border-radius: 11px; background: var(--surface); font-family: inherit; font-size: 15px; color: var(--text); cursor: pointer; transition: all .15s; }
+.srv-opt:hover { border-color: var(--srv-primary); }
+.srv-opt.on { border-color: var(--srv-primary); background: var(--srv-primary); color: #fff; }
+.srv-check { margin-left: 6px; }
+
+.srv-stars { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
+.srv-star { font-size: 38px; color: var(--border); cursor: pointer; transition: color .12s; }
+.srv-star.on { color: #f5b301; }
+
+.srv-scale { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.srv-scale-btn { width: 42px; height: 42px; border: 2px solid var(--border); border-radius: 10px; background: var(--surface); font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text); cursor: pointer; }
+.srv-scale-btn.on { border-color: var(--srv-primary); background: var(--srv-primary); color: #fff; }
+
+.srv-btn-primary { width: 100%; padding: 15px; background: var(--srv-primary, #534AB7); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.srv-btn-primary:hover { filter: brightness(1.08); }
+.srv-btn-primary:disabled { opacity: .6; }
+
+.srv-thanks { text-align: center; padding: 50px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+.srv-thanks-ic { width: 70px; height: 70px; border-radius: 50%; background: var(--srv-primary); color: #fff; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.srv-thanks h3 { font-size: 22px; margin: 0 0 6px; }
+
+.srv-list-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-inline-start: 4px solid #534AB7; border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.srv-fill-btn { color: #fff; border: none; border-radius: 9px; padding: 9px 22px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+
+/* محرّر الأسئلة — إضافات */
+.q-help { width: 100%; padding: 8px 12px; border: 1px dashed var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; background: var(--bg); color: var(--text-soft); margin-bottom: 8px; }
+.q-req-toggle { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-soft); cursor: pointer; }
+.q-req-mark { color: #c0392b; }
+.srv-avg { font-size: 14px; background: var(--blue-soft); color: var(--blue); padding: 8px 12px; border-radius: 8px; display: inline-block; }

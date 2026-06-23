@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useToast } from '../Toast'
 
-// الاستبانات المتاحة للطالب لتعبئتها
+// الاستبانات المتاحة للطالب لتعبئتها — تدعم الأنواع التسعة
 export default function StudentSurveys({ studentId }) {
+  const toast = useToast()
   const [surveys, setSurveys] = useState([])
   const [active, setActive] = useState(null)
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
-  const [msg, setMsg] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [done, setDone] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     async function load() {
-      // الاستبانات المرئية للطالب حسب فئته
       const { data: visIds } = await supabase.rpc('visible_survey_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_survey_ids : x)
       if (!visible.length) { setSurveys([]); return }
@@ -22,74 +25,161 @@ export default function StudentSurveys({ studentId }) {
   }, [])
 
   async function open(s) {
-    setActive(s); setMsg(null); setAnswers({})
+    setActive(s); setDone(false); setAnswers({}); setErrors({})
     const { data } = await supabase.from('survey_questions').select('*').eq('survey_id', s.id).order('sort_order')
     setQuestions(data || [])
   }
-  async function submit() {
-    const { data: resp } = await supabase.from('survey_responses')
-      .insert({ survey_id: active.id, student_id: studentId }).select().single()
-    const rows = questions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
-    await supabase.from('survey_answers').insert(rows)
-    // منح نقاط تعبئة الاستبانة
-    const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
-    await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' })
-    setMsg('شكراً، تم إرسال إجابتك.'); setActive(null)
+
+  function setAns(qid, val) { setAnswers({ ...answers, [qid]: val }); setErrors({ ...errors, [qid]: false }) }
+
+  function validate() {
+    const errs = {}
+    questions.forEach(q => {
+      if (q.required) {
+        const v = answers[q.id]
+        const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0)
+        if (empty) errs[q.id] = true
+      }
+    })
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
+  async function submit() {
+    if (!validate()) { toast('يرجى الإجابة على الأسئلة الإجبارية', 'error'); return }
+    setSubmitting(true)
+    try {
+      const { data: resp } = await supabase.from('survey_responses')
+        .insert({ survey_id: active.id, student_id: studentId }).select().single()
+      const rows = questions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
+      await supabase.from('survey_answers').insert(rows)
+      const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
+      await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).catch(() => {})
+      setDone(true)
+    } catch (e) { toast('تعذّر الإرسال، حاول مجدداً', 'error') }
+    setSubmitting(false)
+  }
+
+  // ===== وضع التعبئة =====
   if (active) {
+    const theme = active.theme || { primary: '#534AB7', accent: '#D4537E' }
+    if (done) {
+      return (
+        <div className="srv-fill" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
+          <div className="srv-thanks">
+            <div className="srv-thanks-ic">✓</div>
+            <h3>{active.thank_you_message || 'شكراً لك!'}</h3>
+            <p className="muted">تم إرسال إجابتك بنجاح.</p>
+            <button className="srv-btn-primary" onClick={() => setActive(null)}>العودة للاستبانات</button>
+          </div>
+        </div>
+      )
+    }
     return (
-      <div className="panel">
-        <button className="mini" onClick={() => setActive(null)}>→ رجوع</button>
-        <h3 style={{ margin: '12px 0' }}>{active.title}</h3>
+      <div className="srv-fill" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
+        <div className="srv-fill-head">
+          <button className="srv-back" onClick={() => setActive(null)}>→ رجوع</button>
+          <h3>{active.title}</h3>
+          {active.description && <p className="srv-desc">{active.description}</p>}
+        </div>
         {questions.map((q, i) => (
-          <div className="field" key={q.id}>
-            <label>{i + 1}. {q.q_text}</label>
-            {q.q_type === 'text' ? (
-              <input value={answers[q.id] || ''} onChange={e => setAnswers({ ...answers, [q.id]: e.target.value })} />
-            ) : q.q_type === 'likert' ? (
-              <div className="likert">
-                {['راضٍ جداً','راضٍ','محايد','غير راضٍ','غير راضٍ إطلاقاً'].map(o => (
-                  <button key={o} type="button" className={answers[q.id] === o ? 'lk sel' : 'lk'}
-                    onClick={() => setAnswers({ ...answers, [q.id]: o })}>{o}</button>
-                ))}
-              </div>
-            ) : q.q_type === 'stars' ? (
-              <div className="stars">
-                {[1,2,3,4,5].map(n => (
-                  <span key={n} className={(answers[q.id] || 0) >= n ? 'star on' : 'star'}
-                    onClick={() => setAnswers({ ...answers, [q.id]: n })}>★</span>
-                ))}
-              </div>
-            ) : (
-              <div className="likert">
-                {(Array.isArray(q.options) ? q.options : []).map(o => (
-                  <button key={o} type="button" className={answers[q.id] === o ? 'lk sel' : 'lk'}
-                    onClick={() => setAnswers({ ...answers, [q.id]: o })}>{o}</button>
-                ))}
-              </div>
-            )}
+          <div className={'srv-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
+            <div className="srv-q-title">{i + 1}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
+            {q.help_text && <div className="srv-q-help">{q.help_text}</div>}
+            <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
+            {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
           </div>
         ))}
-        <button className="save-btn" onClick={submit}>إرسال الإجابة</button>
+        <button className="srv-btn-primary" onClick={submit} disabled={submitting}>
+          {submitting ? 'جارٍ الإرسال…' : 'إرسال الإجابة'}
+        </button>
       </div>
     )
   }
 
+  // ===== قائمة الاستبانات =====
   return (
     <div>
       <h2 className="section-title">الاستبانات المتاحة</h2>
       {surveys.length === 0 && <div className="muted">لا توجد استبانات حالياً.</div>}
-      {surveys.map(s => (
-        <div key={s.id} className="survey-card">
-          <div className="survey-info">
-            <div className="survey-title">{s.title}</div>
-            {s.description && <div className="muted">{s.description}</div>}
+      {surveys.map(s => {
+        const theme = s.theme || { primary: '#534AB7', accent: '#D4537E' }
+        return (
+          <div key={s.id} className="srv-list-card" style={{ borderInlineStartColor: theme.primary }}>
+            <div className="survey-info">
+              <div className="survey-title">{s.title}</div>
+              {s.description && <div className="muted">{s.description}</div>}
+            </div>
+            <button className="srv-fill-btn" style={{ background: theme.primary }} onClick={() => open(s)}>تعبئة</button>
           </div>
-          <button className="mini" onClick={() => open(s)}>تعبئة</button>
-        </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// حقل الإدخال حسب نوع السؤال (التسعة)
+function QuestionInput({ q, value, onChange }) {
+  const t = q.q_type
+  const opts = Array.isArray(q.options) ? q.options : []
+
+  if (t === 'short_text') return <input className="srv-input" value={value || ''} onChange={e => onChange(e.target.value)} />
+  if (t === 'long_text') return <textarea className="srv-input" rows={4} value={value || ''} onChange={e => onChange(e.target.value)} />
+  if (t === 'number') return <input className="srv-input" type="number" dir="ltr" value={value || ''} onChange={e => onChange(e.target.value)} />
+  if (t === 'date') return <input className="srv-input" type="date" value={value || ''} onChange={e => onChange(e.target.value)} />
+
+  if (t === 'rating') return (
+    <div className="srv-stars">
+      {[1, 2, 3, 4, 5].map(n => (
+        <span key={n} className={(value || 0) >= n ? 'srv-star on' : 'srv-star'} onClick={() => onChange(n)}>★</span>
       ))}
-      {msg && <div className="save-ok">{msg}</div>}
+    </div>
+  )
+
+  if (t === 'scale') return (
+    <div className="srv-scale">
+      {Array.from({ length: 10 }).map((_, idx) => {
+        const n = idx + 1
+        return <button key={n} type="button" className={value === n ? 'srv-scale-btn on' : 'srv-scale-btn'} onClick={() => onChange(n)}>{n}</button>
+      })}
+    </div>
+  )
+
+  if (t === 'likert') return (
+    <div className="srv-options">
+      {['راضٍ جداً', 'راضٍ', 'محايد', 'غير راضٍ', 'غير راضٍ إطلاقاً'].map(o => (
+        <button key={o} type="button" className={value === o ? 'srv-opt on' : 'srv-opt'} onClick={() => onChange(o)}>{o}</button>
+      ))}
+    </div>
+  )
+
+  if (t === 'dropdown') return (
+    <select className="srv-input" value={value || ''} onChange={e => onChange(e.target.value)}>
+      <option value="">اختر…</option>
+      {opts.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+  )
+
+  if (t === 'multiple') {
+    const arr = Array.isArray(value) ? value : []
+    const toggle = o => onChange(arr.includes(o) ? arr.filter(x => x !== o) : [...arr, o])
+    return (
+      <div className="srv-options">
+        {opts.map(o => (
+          <button key={o} type="button" className={arr.includes(o) ? 'srv-opt on' : 'srv-opt'} onClick={() => toggle(o)}>
+            <span className="srv-check">{arr.includes(o) ? '☑' : '☐'}</span> {o}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  // single (افتراضي)
+  return (
+    <div className="srv-options">
+      {opts.map(o => (
+        <button key={o} type="button" className={value === o ? 'srv-opt on' : 'srv-opt'} onClick={() => onChange(o)}>{o}</button>
+      ))}
     </div>
   )
 }
