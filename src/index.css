@@ -1988,3 +1988,27 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .srv-nav-next:hover { filter: brightness(1.08); }
 .srv-nav-next:disabled { opacity: .6; }
 .srv-head-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+
+/* ===== لوحة تحليل الاستبانة ===== */
+.srv-stat-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+.srv-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 10px; text-align: center; box-shadow: var(--shadow); }
+.srv-stat-n { font-size: 28px; font-weight: 800; color: var(--navy); }
+:root[data-theme="dark"] .srv-stat-n { color: #8fb5ed; }
+.srv-stat-l { font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+.srv-csv-btn { display: inline-flex; align-items: center; gap: 6px; background: #1d7a52; color: #fff; border: none; border-radius: 9px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.srv-csv-btn:hover { filter: brightness(1.08); }
+
+/* خيارات النشر (المنشئ) */
+.srv-publish-opts { background: var(--bg); border-radius: 12px; padding: 14px; margin: 14px 0; }
+.srv-pub-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+.srv-pub-row { display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; margin-bottom: 12px; }
+.srv-pub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* شارة الإغلاق */
+.srv-closed-badge { font-size: 11px; background: #fcecec; color: #c0392b; padding: 3px 10px; border-radius: 10px; margin-right: 8px; font-weight: 600; }
+:root[data-theme="dark"] .srv-closed-badge { background: #2a1414; }
+
+@media (max-width: 768px) {
+  .srv-stat-cards { grid-template-columns: repeat(2, 1fr); }
+  .srv-pub-grid { grid-template-columns: 1fr; }
+}

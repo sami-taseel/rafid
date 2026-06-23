@@ -5,6 +5,7 @@ import { useConfirm } from '../Confirm'
 import { useToast } from '../Toast'
 import { usePrompt } from '../Confirm'
 import OptionsEditor from './OptionsEditor'
+import Icon from '../Icon'
 
 const TARGETS = ['الجميع', 'الدراسات العليا فقط', 'البكالوريوس فقط', 'المرافقون']
 
@@ -153,8 +154,26 @@ export default function Surveys() {
               </select></div>
             <div className="field"><label>سمة الألوان</label>
               <ThemePicker value={editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }} onChange={th => setEditMeta({ ...editMeta, theme: th })} /></div>
+            <div className="srv-publish-opts">
+              <div className="srv-pub-title">خيارات النشر</div>
+              <label className="srv-pub-row">
+                <input type="checkbox" checked={!!editMeta.is_anonymous} onChange={e => setEditMeta({ ...editMeta, is_anonymous: e.target.checked })} />
+                <span>استبانة مجهولة (لا تُربط الإجابة بالطالب)</span>
+              </label>
+              <div className="srv-pub-grid">
+                <div className="field"><label>حد أقصى للردود (اختياري)</label>
+                  <input type="number" min="1" value={editMeta.max_responses || ''} placeholder="بلا حد"
+                    onChange={e => setEditMeta({ ...editMeta, max_responses: e.target.value ? Number(e.target.value) : null })} /></div>
+                <div className="field"><label>تاريخ الإغلاق (اختياري)</label>
+                  <input type="date" value={editMeta.expires_at || ''}
+                    onChange={e => setEditMeta({ ...editMeta, expires_at: e.target.value || null })} /></div>
+              </div>
+              <div className="field"><label>رسالة الشكر بعد الإرسال (اختياري)</label>
+                <input value={editMeta.thank_you_message || ''} placeholder="شكراً لك!"
+                  onChange={e => setEditMeta({ ...editMeta, thank_you_message: e.target.value })} /></div>
+            </div>
             <button className="save-btn" onClick={async () => {
-              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' } }).eq('id', editMeta.id)
+              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }, is_anonymous: !!editMeta.is_anonymous, max_responses: editMeta.max_responses || null, expires_at: editMeta.expires_at || null, thank_you_message: editMeta.thank_you_message || null }).eq('id', editMeta.id)
               setEditMeta(null); toast('تم حفظ التعديل'); loadAll()
             }}>حفظ التعديل</button>
           </div>
@@ -348,22 +367,60 @@ function SurveyResults({ survey, onBack }) {
   useEffect(() => {
     async function load() {
       const { data: qs } = await supabase.from('survey_questions').select('*').eq('survey_id', survey.id).order('sort_order')
-      const { data: resp } = await supabase.from('survey_responses').select('id').eq('survey_id', survey.id)
+      const { data: resp } = await supabase.from('survey_responses').select('id, created_at, student_id').eq('survey_id', survey.id)
       const ids = (resp || []).map(r => r.id)
       let answers = []
       if (ids.length) {
-        const { data: a } = await supabase.from('survey_answers').select('question_id, answer').in('response_id', ids)
+        const { data: a } = await supabase.from('survey_answers').select('response_id, question_id, answer').in('response_id', ids)
         answers = a || []
       }
-      setData({ qs: qs || [], count: ids.length, answers })
+      setData({ qs: qs || [], count: ids.length, answers, responses: resp || [] })
     }
     load()
   }, [survey])
   if (!data) return <Spinner />
+
+  // تصدير CSV (مع BOM للعربية) — مدموج من منصة مِرصاد
+  function exportCSV() {
+    const headers = ['رقم الرد', 'التاريخ', ...data.qs.map(q => `"${(q.q_text || 'سؤال').replace(/"/g, '""')}"`)]
+    const rows = data.responses.map((r, idx) => {
+      const cells = [idx + 1, new Date(r.created_at).toLocaleDateString('ar')]
+      data.qs.forEach(q => {
+        const a = data.answers.find(x => x.response_id === r.id && x.question_id === q.id)
+        let v = a?.answer?.value
+        if (Array.isArray(v)) v = v.join(' / ')
+        cells.push(`"${String(v ?? '').replace(/"/g, '""')}"`)
+      })
+      return cells.join(',')
+    })
+    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${survey.title}-نتائج.csv`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // إحصاءات عامة
+  const requiredCount = data.qs.filter(q => q.required).length
+  const logicCount = data.qs.filter(q => q.logic && q.logic.questionId).length
+
   return (
     <div>
       <button className="mini" onClick={onBack}>→ رجوع</button>
-      <div className="survey-edit-head"><h3>نتائج: {survey.title}</h3><span className="pill">{data.count} رد</span></div>
+      <div className="survey-edit-head">
+        <h3>نتائج: {survey.title}</h3>
+        {data.count > 0 && <button className="srv-csv-btn" onClick={exportCSV}><Icon name="download" size={15} /> تصدير CSV</button>}
+      </div>
+
+      {/* بطاقات إحصائية */}
+      <div className="srv-stat-cards">
+        <div className="srv-stat"><div className="srv-stat-n">{data.count}</div><div className="srv-stat-l">إجمالي الردود</div></div>
+        <div className="srv-stat"><div className="srv-stat-n">{data.qs.length}</div><div className="srv-stat-l">عدد الأسئلة</div></div>
+        <div className="srv-stat"><div className="srv-stat-n">{requiredCount}</div><div className="srv-stat-l">أسئلة إجبارية</div></div>
+        <div className="srv-stat"><div className="srv-stat-n">{logicCount}</div><div className="srv-stat-l">أسئلة شرطية</div></div>
+      </div>
+
       {data.count === 0 && <div className="panel muted">لا توجد ردود بعد.</div>}
       {data.qs.map((q, i) => {
         const raw = data.answers.filter(a => a.question_id === q.id).map(a => a.answer?.value)

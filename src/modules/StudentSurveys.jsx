@@ -21,10 +21,22 @@ export default function StudentSurveys({ studentId }) {
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_survey_ids : x)
       if (!visible.length) { setSurveys([]); return }
       const { data } = await supabase.from('surveys').select('*').in('id', visible)
-      setSurveys(data || [])
+      // عدد الردود لكل استبانة (لفحص الحد الأقصى)
+      const withCounts = await Promise.all((data || []).map(async s => {
+        const { count } = await supabase.from('survey_responses').select('id', { count: 'exact', head: true }).eq('survey_id', s.id)
+        return { ...s, _responseCount: count || 0 }
+      }))
+      setSurveys(withCounts)
     }
     load()
   }, [])
+
+  // هل الاستبانة مغلقة؟ (انتهت أو بلغت الحد)
+  function surveyClosed(s) {
+    if (s.expires_at && new Date(s.expires_at) < new Date(new Date().toDateString())) return 'انتهت'
+    if (s.max_responses && s._responseCount >= s.max_responses) return 'اكتمل العدد'
+    return null
+  }
 
   async function open(s) {
     setActive(s); setDone(false); setAnswers({}); setErrors({}); setStep(0); setMode('step')
@@ -63,7 +75,7 @@ export default function StudentSurveys({ studentId }) {
     setSubmitting(true)
     try {
       const { data: resp } = await supabase.from('survey_responses')
-        .insert({ survey_id: active.id, student_id: studentId }).select().single()
+        .insert({ survey_id: active.id, student_id: active.is_anonymous ? null : studentId }).select().single()
       // نحفظ إجابات الأسئلة الظاهرة فقط (المخفية لا تُرسل)
       const rows = visibleQuestions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
       await supabase.from('survey_answers').insert(rows)
@@ -176,13 +188,16 @@ export default function StudentSurveys({ studentId }) {
       {surveys.length === 0 && <div className="muted">لا توجد استبانات حالياً.</div>}
       {surveys.map(s => {
         const theme = s.theme || { primary: '#534AB7', accent: '#D4537E' }
+        const closed = surveyClosed(s)
         return (
           <div key={s.id} className="srv-list-card" style={{ borderInlineStartColor: theme.primary }}>
             <div className="survey-info">
-              <div className="survey-title">{s.title}</div>
+              <div className="survey-title">{s.title}{closed && <span className="srv-closed-badge">{closed}</span>}</div>
               {s.description && <div className="muted">{s.description}</div>}
             </div>
-            <button className="srv-fill-btn" style={{ background: theme.primary }} onClick={() => open(s)}>تعبئة</button>
+            {closed
+              ? <button className="srv-fill-btn" style={{ background: '#9aa3b2', cursor: 'default' }} disabled>مغلقة</button>
+              : <button className="srv-fill-btn" style={{ background: theme.primary }} onClick={() => open(s)}>تعبئة</button>}
           </div>
         )
       })}
