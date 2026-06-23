@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { uploadTicketFile } from '../ticketUtils'
+import { useToast } from '../Toast'
 import Attachment from './Attachment'
 import Icon from '../Icon'
 
@@ -11,6 +12,7 @@ export default function StudentAttachments({ studentId }) {
   const [companions, setCompanions] = useState([])
   const [building, setBuilding] = useState(null)
   const [loading, setLoading] = useState(true)
+  const toast = useToast()
   const [busy, setBusy] = useState(null)
   // فحص نوع الملف: صور أو PDF (مع التحقق بالامتداد احتياطاً لو كان MIME فارغاً)
   function isAllowedFile(file) {
@@ -39,23 +41,38 @@ export default function StudentAttachments({ studentId }) {
   }
   useEffect(() => { if (studentId) load() }, [studentId])
 
+
+  // ترجمة أخطاء الرفع لرسائل واضحة
+  function friendlyUploadError(e) {
+    const m = (e?.message || '').toLowerCase()
+    if (m.includes('row-level security') || m.includes('policy') || m.includes('403') || m.includes('unauthorized'))
+      return 'تعذّر الرفع بسبب الصلاحيات. يرجى تحديث الصفحة وإعادة المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+    if (m.includes('413') || m.includes('large') || m.includes('كبير'))
+      return 'حجم الملف كبير. الحد الأقصى ١٠ ميجابايت. جرّب صورة أصغر.'
+    if (m.includes('network') || m.includes('fetch') || m.includes('load failed'))
+      return 'تعذّر الاتصال. تأكد من الإنترنت وأعد المحاولة.'
+    if (m.includes('mime') || m.includes('type'))
+      return 'نوع الملف غير مدعوم. ارفع صورة (JPG/PNG) أو PDF.'
+    return 'تعذّر رفع الملف. تأكد أنه صورة أو PDF وحجمه أقل من ١٠ ميجابايت، ثم أعد المحاولة.'
+  }
+
   async function uploadTermly(typeId, file, termLabel) {
     if (!file || !termLabel) return
     setErr('')
-    if (!/^image\//.test(file.type)) { setErr('يُقبل رفع الصور فقط.'); return }
+    if (!isAllowedFile(file)) { const msg = 'يُقبل رفع الصور أو ملفات PDF فقط.'; setErr(msg); toast(msg, 'error'); return }
     setBusy('term_' + typeId)
     try {
       const path = await uploadTicketFile('attach_' + studentId, file)
       const { error } = await supabase.from('student_attachments').insert({ student_id: studentId, type_id: typeId, file_path: path, term_label: termLabel })
       if (error) throw new Error(error.message)
       await load()
-    } catch (e) { setErr('تعذّر رفع السجل: ' + (e.message || 'حاول مجدداً')) }
+    } catch (e) { console.error('upload termly error:', e); const msg = friendlyUploadError(e); setErr(msg); toast(msg, 'error') }
     setBusy(null)
   }
   async function upload(typeId, file, companionId, renewMonths) {
     if (!file) return
     setErr('')
-    if (!/^image\//.test(file.type)) { setErr('يُقبل رفع الصور فقط (JPG أو PNG).'); return }
+    if (!isAllowedFile(file)) { const msg = 'يُقبل رفع الصور أو ملفات PDF فقط.'; setErr(msg); toast(msg, 'error'); return }
     setBusy(typeId + (companionId || 'self'))
     try {
       const path = await uploadTicketFile('attach_' + studentId, file)
@@ -66,7 +83,7 @@ export default function StudentAttachments({ studentId }) {
       })
       if (error) throw new Error(error.message)
       await load()
-    } catch (e) { setErr('تعذّر رفع الملف: ' + (e.message || 'حاول مجدداً')) }
+    } catch (e) { console.error('upload error:', e); const msg = friendlyUploadError(e); setErr(msg); toast(msg, 'error') }
     setBusy(null)
   }
   async function remove(id) {
