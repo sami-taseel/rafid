@@ -46,13 +46,26 @@ export default function StudentSurveys({ studentId }) {
 
   function setAns(qid, val) { setAnswers({ ...answers, [qid]: val }); setErrors({ ...errors, [qid]: false }) }
 
-  // المنطق الشرطي: هل يظهر السؤال؟ (يعتمد على إجابة سؤال سابق)
+  // المنطق الشرطي: هل يظهر السؤال؟ (يدعم شروطاً متعددة AND/OR)
+  function evalCond(c) {
+    const dep = answers[c.questionId]
+    if (dep == null || dep === '') return false
+    if (c.operator === 'not_equals') return String(dep) !== String(c.value)
+    return String(dep) === String(c.value)
+  }
   function isVisible(q) {
-    if (!q.logic || !q.logic.questionId) return true   // لا منطق = ظاهر دائماً
-    const dep = answers[q.logic.questionId]
-    if (dep == null || dep === '') return false         // السؤال المعتمَد عليه لم يُجَب = مخفي
-    if (q.logic.operator === 'not_equals') return String(dep) !== String(q.logic.value)
-    return String(dep) === String(q.logic.value)        // equals (افتراضي)
+    const lg = q.logic
+    if (!lg) return true
+    // صيغة متعددة الشروط
+    if (lg.conditions) {
+      if (!lg.conditions.length) return true
+      const results = lg.conditions.filter(c => c.questionId).map(evalCond)
+      if (!results.length) return true
+      return lg.match === 'any' ? results.some(Boolean) : results.every(Boolean)
+    }
+    // صيغة قديمة (شرط واحد)
+    if (!lg.questionId) return true
+    return evalCond(lg)
   }
   const visibleQuestions = questions.filter(isVisible)
 
@@ -101,20 +114,27 @@ export default function StudentSurveys({ studentId }) {
         </div>
       )
     }
-    // التحقق من السؤال الحالي قبل الانتقال
-    function validateStep(q) {
-      if (!q) return true
-      if (q.required) {
-        const v = answers[q.id]
-        const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0)
-        if (empty) { setErrors({ ...errors, [q.id]: true }); toast('هذا السؤال إجباري', 'error'); return false }
-      }
+    // الصفحات الظاهرة: نجمّع الأسئلة الظاهرة حسب رقم الصفحة
+    const pageNums = [...new Set(visibleQuestions.map(q => q.page || 1))].sort((a, b) => a - b)
+    const totalPages = pageNums.length
+    const curPageNum = pageNums[Math.min(step, totalPages - 1)]
+    const curPageQs = visibleQuestions.filter(q => (q.page || 1) === curPageNum)
+    const isLast = step >= totalPages - 1
+    const progress = totalPages ? Math.round(((step + 1) / totalPages) * 100) : 0
+
+    // التحقق من أسئلة الصفحة الحالية قبل الانتقال
+    function validatePage(qs) {
+      const errs = {}
+      qs.forEach(q => {
+        if (q.required) {
+          const v = answers[q.id]
+          const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0)
+          if (empty) errs[q.id] = true
+        }
+      })
+      if (Object.keys(errs).length) { setErrors({ ...errors, ...errs }); toast('يرجى الإجابة على الأسئلة الإجبارية', 'error'); return false }
       return true
     }
-    const total = visibleQuestions.length
-    const curQ = visibleQuestions[Math.min(step, total - 1)]
-    const isLast = step >= total - 1
-    const progress = total ? Math.round(((step + 1) / total) * 100) : 0
 
     // ===== نمط عرض كل الأسئلة (قائمة) =====
     if (mode === 'all') {
@@ -123,7 +143,7 @@ export default function StudentSurveys({ studentId }) {
           <div className="srv-fill-head">
             <div className="srv-head-top">
               <button className="srv-back" onClick={() => setActive(null)}>→ رجوع</button>
-              <button className="srv-mode-btn" onClick={() => { setMode('step'); setStep(0) }}>عرض سؤال بسؤال</button>
+              {totalPages > 1 && <button className="srv-mode-btn" onClick={() => { setMode('step'); setStep(0) }}>عرض صفحة بصفحة</button>}
             </div>
             <h3>{active.title}</h3>
             {active.description && <p className="srv-desc">{active.description}</p>}
@@ -143,36 +163,42 @@ export default function StudentSurveys({ studentId }) {
       )
     }
 
-    // ===== نمط Typeform: سؤال واحد بارز =====
+    // ===== نمط الصفحات: صفحة واحدة بأسئلتها + شريط تقدّم =====
     return (
       <div className="srv-stage" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
-        {/* شريط التقدّم */}
         <div className="srv-progress-wrap">
           <button className="srv-stage-back" onClick={() => setActive(null)} aria-label="رجوع">→</button>
           <div className="srv-progress"><div className="srv-progress-fill" style={{ width: progress + '%' }}></div></div>
           <button className="srv-mode-btn ghost" onClick={() => setMode('all')}>عرض الكل</button>
         </div>
 
-        {total === 0 ? (
+        {totalPages === 0 ? (
           <div className="srv-stage-card"><p className="muted">لا أسئلة في هذه الاستبانة.</p></div>
         ) : (
-          <div className="srv-stage-card" key={curQ.id}>
-            <div className="srv-stage-count">السؤال {step + 1} من {total}</div>
-            <div className="srv-stage-q">{curQ.q_text}{curQ.required && <span className="srv-req"> *</span>}</div>
-            {curQ.help_text && <div className="srv-stage-help">{curQ.help_text}</div>}
-            <div className="srv-stage-input">
-              <QuestionInput q={curQ} value={answers[curQ.id]} onChange={v => setAns(curQ.id, v)} />
-            </div>
-            {errors[curQ.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
+          <div className="srv-stage-card" key={curPageNum}>
+            <div className="srv-stage-count">{totalPages > 1 ? `الصفحة ${step + 1} من ${totalPages}` : 'الأسئلة'}</div>
+            {curPageQs.map(q => {
+              const num = visibleQuestions.indexOf(q) + 1
+              return (
+                <div className={'srv-page-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
+                  <div className="srv-stage-q">{num}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
+                  {q.help_text && <div className="srv-stage-help">{q.help_text}</div>}
+                  <div className="srv-stage-input">
+                    <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
+                  </div>
+                  {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
+                </div>
+              )
+            })}
 
             <div className="srv-stage-nav">
               <button className="srv-nav-prev" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>السابق</button>
               {isLast ? (
-                <button className="srv-nav-next" onClick={() => { if (validateStep(curQ)) submit() }} disabled={submitting}>
+                <button className="srv-nav-next" onClick={() => { if (validatePage(curPageQs)) submit() }} disabled={submitting}>
                   {submitting ? 'جارٍ الإرسال…' : 'إرسال ✓'}
                 </button>
               ) : (
-                <button className="srv-nav-next" onClick={() => { if (validateStep(curQ)) setStep(step + 1) }}>التالي</button>
+                <button className="srv-nav-next" onClick={() => { if (validatePage(curPageQs)) setStep(step + 1) }}>التالي</button>
               )}
             </div>
           </div>

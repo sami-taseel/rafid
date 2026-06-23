@@ -2012,3 +2012,47 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .srv-stat-cards { grid-template-columns: repeat(2, 1fr); }
   .srv-pub-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== الصفحات المتعددة ===== */
+.page-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 10px; }
+.page-divider::before, .page-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.page-divider span { font-size: 13px; font-weight: 700; color: var(--blue); background: var(--blue-soft); padding: 4px 14px; border-radius: 12px; }
+.survey-add-row { display: flex; gap: 10px; margin-top: 8px; }
+.add-page-btn { flex: 0 0 auto; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; padding: 11px 18px; font-family: inherit; font-size: 14px; color: var(--text-soft); cursor: pointer; }
+.add-page-btn:hover { border-color: var(--blue); color: var(--blue); }
+.srv-page-q { padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+.srv-page-q:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.srv-page-q .srv-stage-q { font-size: 18px; }
+
+/* ===== المنطق متعدّد الشروط ===== */
+.logic-multi { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.logic-match { display: flex; align-items: center; gap: 8px; }
+.logic-match select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 13px; background: var(--surface); color: var(--text); }
+.logic-conj { font-size: 12px; font-weight: 700; color: #6b3fc0; background: #f3eefc; padding: 4px 10px; border-radius: 8px; min-width: 28px; text-align: center; }
+:root[data-theme="dark"] .logic-conj { background: #1e1730; color: #b9a5e8; }
+.logic-del { background: #fcecec; color: #c0392b; border: none; border-radius: 7px; width: 28px; height: 28px; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+.logic-add { align-self: flex-start; background: none; border: 1px dashed #b9a5e8; color: #6b3fc0; border-radius: 8px; padding: 6px 14px; font-family: inherit; font-size: 13px; cursor: pointer; margin-top: 2px; }
+:root[data-theme="dark"] .logic-add { border-color: #4a3a7a; color: #b9a5e8; }
+
+/* ===== بنك الأسئلة ===== */
+.add-bank-btn { flex: 0 0 auto; background: var(--surface); border: 1px dashed var(--border); border-radius: 10px; padding: 11px 18px; font-family: inherit; font-size: 14px; color: var(--text-soft); cursor: pointer; }
+.add-bank-btn:hover { border-color: #6b3fc0; color: #6b3fc0; }
+.q-bank-save { background: #f3eefc; color: #6b3fc0; border: none; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+:root[data-theme="dark"] .q-bank-save { background: #1e1730; color: #b9a5e8; }
+.bank-cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.bank-cat { background: var(--bg); border: 1px solid var(--border); border-radius: 14px; padding: 5px 14px; font-family: inherit; font-size: 13px; color: var(--text-soft); cursor: pointer; }
+.bank-cat.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.bank-list { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
+.bank-item { padding: 12px 14px; border: 1px solid var(--border); border-radius: 11px; cursor: pointer; transition: all .12s; }
+.bank-item:hover { border-color: #6b3fc0; background: #f3eefc; }
+:root[data-theme="dark"] .bank-item:hover { background: #1e1730; }
+.bank-item-text { font-weight: 600; font-size: 14px; margin-bottom: 6px; }
+.bank-item-meta { display: flex; gap: 6px; }
+.bank-type { font-size: 11px; background: var(--blue-soft); color: var(--blue); padding: 3px 10px; border-radius: 8px; }
+.bank-cat-tag { font-size: 11px; background: #f3eefc; color: #6b3fc0; padding: 3px 10px; border-radius: 8px; }
+:root[data-theme="dark"] .bank-cat-tag { background: #1e1730; color: #b9a5e8; }
+
+/* ===== نافذة المشاركة (QR) ===== */
+.share-qr { background: #fff; padding: 16px; border-radius: 14px; display: inline-block; margin: 14px auto; border: 1px solid var(--border); }
+.share-link { font-size: 12px; background: var(--bg); padding: 10px 12px; border-radius: 8px; word-break: break-all; color: var(--text-soft); margin-bottom: 12px; }
+.share-actions { display: flex; gap: 10px; align-items: center; }

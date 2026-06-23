@@ -18,6 +18,7 @@ export default function Surveys() {
   const [editing, setEditing] = useState(null)
   const [results, setResults] = useState(null)
   const [editMeta, setEditMeta] = useState(null)
+  const [shareSurvey, setShareSurvey] = useState(null)
   const [categories, setCategories] = useState([])
   const [templates, setTemplates] = useState([])
   const [creating, setCreating] = useState(false)
@@ -133,12 +134,14 @@ export default function Surveys() {
             <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
             <button className="mini" onClick={() => notifyStudents(s)}>إشعار الطلاب</button>
             <button className="mini" onClick={() => duplicate(s)}>نسخ</button>
+            <button className="mini" onClick={() => setShareSurvey(s)}>مشاركة (QR)</button>
             <button className="mini" onClick={() => saveAsTemplate(s)}>حفظ كقالب</button>
             <button className="fr-del" onClick={() => del(s.id)}>حذف</button>
           </div>
         </div>
       ))}
 
+      {shareSurvey && <ShareModal survey={shareSurvey} onClose={() => setShareSurvey(null)} />}
       {editMeta && (
         <div className="modal-overlay" onClick={() => setEditMeta(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
@@ -183,6 +186,74 @@ export default function Surveys() {
   )
 }
 
+// نافذة المشاركة: رابط الاستبانة + رمز QR
+function ShareModal({ survey, onClose }) {
+  const toast = useToast()
+  const link = `${window.location.origin}/?survey=${survey.id}`
+  // رمز QR عبر خدمة توليد صور (بلا تبعية برمجية)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(link)}`
+  function copy() { navigator.clipboard?.writeText(link).then(() => toast('نُسخ الرابط')) }
+  function downloadQR() {
+    const a = document.createElement('a'); a.href = qrUrl + '&download=1'; a.download = `qr-${survey.title}.png`; a.target = '_blank'; a.click()
+  }
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: 380, textAlign: 'center' }}>
+        <div className="modal-head"><h2>مشاركة الاستبانة</h2><button className="icon-btn" onClick={onClose}>✕</button></div>
+        <p className="muted" style={{ fontSize: 13 }}>{survey.title}</p>
+        <div className="share-qr"><img src={qrUrl} alt="رمز QR" width={220} height={220} /></div>
+        <div className="share-link" dir="ltr">{link}</div>
+        <div className="share-actions">
+          <button className="save-btn" style={{ flex: 1 }} onClick={copy}>نسخ الرابط</button>
+          <button className="mini" onClick={downloadQR}>تنزيل الرمز</button>
+        </div>
+        <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>ملاحظة: الاستبانة تظهر للطلاب المستهدفين عند دخولهم المنصة. الرابط والرمز للمشاركة المباشرة.</p>
+      </div>
+    </div>
+  )
+}
+
+// نافذة بنك الأسئلة — اختيار سؤال جاهز لإضافته
+function QuestionBankModal({ onPick, onClose }) {
+  const [items, setItems] = useState(null)
+  const [filter, setFilter] = useState('')
+  useEffect(() => {
+    supabase.from('question_bank').select('*').order('created_at', { ascending: false }).then(({ data }) => setItems(data || []))
+  }, [])
+  const cats = items ? [...new Set(items.map(i => i.category).filter(Boolean))] : []
+  const shown = (items || []).filter(i => !filter || i.category === filter)
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: 520 }}>
+        <div className="modal-head"><h2>بنك الأسئلة</h2><button className="icon-btn" onClick={onClose}>✕</button></div>
+        {items === null ? <Spinner /> : items.length === 0 ? (
+          <p className="muted">البنك فارغ. احفظ أسئلة من المحرّر لتظهر هنا.</p>
+        ) : (
+          <>
+            {cats.length > 0 && (
+              <div className="bank-cats">
+                <button className={'bank-cat' + (filter === '' ? ' on' : '')} onClick={() => setFilter('')}>الكل</button>
+                {cats.map(c => <button key={c} className={'bank-cat' + (filter === c ? ' on' : '')} onClick={() => setFilter(c)}>{c}</button>)}
+              </div>
+            )}
+            <div className="bank-list">
+              {shown.map(bq => (
+                <div key={bq.id} className="bank-item" onClick={() => { onPick(bq); onClose() }}>
+                  <div className="bank-item-text">{bq.q_text}</div>
+                  <div className="bank-item-meta">
+                    <span className="bank-type">{qtypeLabel(bq.q_type)}</span>
+                    {bq.category && <span className="bank-cat-tag">{bq.category}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // منتقي سمة الألوان — لوحات جاهزة
 const THEME_PRESETS = [
   { name: 'بنفسجي وردي', primary: '#534AB7', accent: '#D4537E' },
@@ -220,14 +291,22 @@ function ThemePicker({ value, onChange }) {
 
 // محرّر المنطق الشرطي: يظهر السؤال فقط إذا تحقّق شرط على سؤال سابق
 function LogicEditor({ q, priorQuestions, onChange }) {
-  const [open, setOpen] = useState(!!q.logic)
-  // الأسئلة المؤهّلة للربط: السابقة من نوع اختيار واحد أو قائمة منسدلة (لها قيمة واحدة واضحة)
+  // الأسئلة المؤهّلة للربط: السابقة من نوع اختيار واحد أو قائمة منسدلة
   const eligible = priorQuestions.filter(p => p.q_type === 'single' || p.q_type === 'dropdown')
-  const lg = q.logic || {}
-  const depQ = eligible.find(p => p.id === lg.questionId)
-  const depOptions = depQ && Array.isArray(depQ.options) ? depQ.options : []
+  // نطبّع المنطق لصيغة موحّدة: { match, conditions[] }
+  const norm = normalizeLogic(q.logic)
+  const [open, setOpen] = useState(!!q.logic)
 
-  if (eligible.length === 0) return null  // لا أسئلة سابقة صالحة للربط
+  if (eligible.length === 0) return null
+
+  function update(next) {
+    // إن لم تبقَ شروط، نلغي المنطق
+    if (!next.conditions.length) { onChange(null); return }
+    onChange(next)
+  }
+  function addCond() { update({ ...norm, conditions: [...norm.conditions, { questionId: '', operator: 'equals', value: '' }] }) }
+  function setCond(i, c) { update({ ...norm, conditions: norm.conditions.map((x, idx) => idx === i ? c : x) }) }
+  function delCond(i) { update({ ...norm, conditions: norm.conditions.filter((_, idx) => idx !== i) }) }
 
   return (
     <div className="logic-box">
@@ -235,28 +314,57 @@ function LogicEditor({ q, priorQuestions, onChange }) {
         <input type="checkbox" checked={open} onChange={e => {
           setOpen(e.target.checked)
           if (!e.target.checked) onChange(null)
+          else if (!norm.conditions.length) onChange({ match: 'all', conditions: [{ questionId: '', operator: 'equals', value: '' }] })
         }} />
         إظهار هذا السؤال بشرط (منطق شرطي)
       </label>
       {open && (
-        <div className="logic-row">
-          <span className="logic-lbl">يظهر إذا كانت إجابة</span>
-          <select value={lg.questionId || ''} onChange={e => onChange({ questionId: e.target.value, operator: lg.operator || 'equals', value: '' })}>
-            <option value="">اختر سؤالاً…</option>
-            {eligible.map((p, idx) => <option key={p.id} value={p.id}>{(priorQuestions.indexOf(p) + 1)}. {p.q_text || 'سؤال'}</option>)}
-          </select>
-          <select value={lg.operator || 'equals'} onChange={e => onChange({ ...lg, operator: e.target.value })} disabled={!lg.questionId}>
-            <option value="equals">تساوي</option>
-            <option value="not_equals">لا تساوي</option>
-          </select>
-          <select value={lg.value || ''} onChange={e => onChange({ ...lg, value: e.target.value })} disabled={!lg.questionId}>
-            <option value="">اختر القيمة…</option>
-            {depOptions.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
+        <div className="logic-multi">
+          {norm.conditions.length > 1 && (
+            <div className="logic-match">
+              <span className="logic-lbl">يظهر إذا تحقّق</span>
+              <select value={norm.match} onChange={e => update({ ...norm, match: e.target.value })}>
+                <option value="all">كل الشروط (و)</option>
+                <option value="any">أيّ شرط (أو)</option>
+              </select>
+            </div>
+          )}
+          {norm.conditions.map((c, i) => {
+            const depQ = eligible.find(p => p.id === c.questionId)
+            const depOptions = depQ && Array.isArray(depQ.options) ? depQ.options : []
+            return (
+              <div className="logic-row" key={i}>
+                {i === 0 ? <span className="logic-lbl">إجابة</span> : <span className="logic-conj">{norm.match === 'all' ? 'و' : 'أو'}</span>}
+                <select value={c.questionId || ''} onChange={e => setCond(i, { ...c, questionId: e.target.value, value: '' })}>
+                  <option value="">اختر سؤالاً…</option>
+                  {eligible.map(p => <option key={p.id} value={p.id}>{(priorQuestions.indexOf(p) + 1)}. {p.q_text || 'سؤال'}</option>)}
+                </select>
+                <select value={c.operator || 'equals'} onChange={e => setCond(i, { ...c, operator: e.target.value })} disabled={!c.questionId}>
+                  <option value="equals">تساوي</option>
+                  <option value="not_equals">لا تساوي</option>
+                </select>
+                <select value={c.value || ''} onChange={e => setCond(i, { ...c, value: e.target.value })} disabled={!c.questionId}>
+                  <option value="">اختر القيمة…</option>
+                  {depOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+                {norm.conditions.length > 1 && <button type="button" className="logic-del" onClick={() => delCond(i)}>×</button>}
+              </div>
+            )
+          })}
+          <button type="button" className="logic-add" onClick={addCond}>+ إضافة شرط</button>
         </div>
       )}
     </div>
   )
+}
+
+// تطبيع المنطق لصيغة موحّدة (متوافق مع الصيغة القديمة ذات الشرط الواحد)
+function normalizeLogic(lg) {
+  if (!lg) return { match: 'all', conditions: [] }
+  if (lg.conditions) return { match: lg.match || 'all', conditions: lg.conditions }
+  // صيغة قديمة: { questionId, operator, value }
+  if (lg.questionId) return { match: 'all', conditions: [{ questionId: lg.questionId, operator: lg.operator || 'equals', value: lg.value }] }
+  return { match: 'all', conditions: [] }
 }
 
 // معاينة شكل كل نوع سؤال في المنشئ
@@ -302,8 +410,17 @@ function SurveyEditor({ survey, onBack }) {
 
   async function addQ() {
     const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
+    const lastPage = questions.length ? (questions[questions.length - 1].page || 1) : 1
     const { data } = await supabase.from('survey_questions')
-      .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false }).select().single()
+      .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false, page: lastPage }).select().single()
+    setQuestions([...questions, data])
+  }
+  // إضافة فاصل صفحة: السؤال التالي يبدأ صفحة جديدة
+  async function addPageBreak() {
+    const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
+    const maxPage = questions.reduce((m, q) => Math.max(m, q.page || 1), 1)
+    const { data } = await supabase.from('survey_questions')
+      .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false, page: maxPage + 1 }).select().single()
     setQuestions([...questions, data])
   }
   function patch(id, p) { setQuestions(questions.map(q => q.id === id ? { ...q, ...p } : q)) }
@@ -313,6 +430,7 @@ function SurveyEditor({ survey, onBack }) {
         q_text: q.q_text, q_type: q.q_type, required: !!q.required,
         help_text: q.help_text || null,
         logic: q.logic || null,
+        page: q.page || 1,
         options: qtypeNeedsOptions(q.q_type)
           ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
       }).eq('id', q.id)
@@ -320,6 +438,26 @@ function SurveyEditor({ survey, onBack }) {
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
   async function delQ(id) { await supabase.from('survey_questions').delete().eq('id', id); load() }
+
+  // بنك الأسئلة
+  const [bankOpen, setBankOpen] = useState(false)
+  async function saveToBank(q) {
+    if (!q.q_text?.trim()) { toast('اكتب نص السؤال أولاً', 'error'); return }
+    await supabase.from('question_bank').insert({
+      q_text: q.q_text, q_type: q.q_type,
+      options: qtypeNeedsOptions(q.q_type) ? (Array.isArray(q.options) ? q.options : []) : null,
+    })
+    toast('حُفظ السؤال في البنك')
+  }
+  async function importFromBank(bq) {
+    const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
+    const lastPage = questions.length ? (questions[questions.length - 1].page || 1) : 1
+    const { data } = await supabase.from('survey_questions').insert({
+      survey_id: survey.id, q_text: bq.q_text, q_type: bq.q_type, options: bq.options,
+      sort_order: max + 1, required: false, page: lastPage,
+    }).select().single()
+    setQuestions(prev => [...prev, data]); toast('أُضيف السؤال')
+  }
 
   if (loading) return <Spinner />
   return (
@@ -332,7 +470,11 @@ function SurveyEditor({ survey, onBack }) {
       {saved && <div className="save-ok">تم حفظ الأسئلة</div>}
 
       {questions.map((q, i) => (
-        <div className="question-card" key={q.id}>
+        <div key={q.id}>
+          {(i === 0 || (questions[i - 1].page || 1) !== (q.page || 1)) && (
+            <div className="page-divider"><span>صفحة {q.page || 1}</span></div>
+          )}
+          <div className="question-card">
           <div className="q-num">سؤال {i + 1}{q.required && <span className="q-req-mark"> *</span>}</div>
           <input className="q-text" placeholder="اكتب نص السؤال هنا…" value={q.q_text}
             onChange={e => patch(q.id, { q_text: e.target.value })} />
@@ -346,6 +488,7 @@ function SurveyEditor({ survey, onBack }) {
               <input type="checkbox" checked={!!q.required} onChange={e => patch(q.id, { required: e.target.checked })} /> إجباري
             </label>
             <button className="fr-del" onClick={() => delQ(q.id)}>حذف</button>
+            <button className="q-bank-save" onClick={() => saveToBank(q)} title="حفظ في بنك الأسئلة"><Icon name="download" size={13} style={{ transform: 'rotate(180deg)' }} /> للبنك</button>
           </div>
           {qtypeNeedsOptions(q.q_type) && (
             <OptionsEditor
@@ -354,10 +497,16 @@ function SurveyEditor({ survey, onBack }) {
           )}
           <QTypePreview type={q.q_type} />
           <LogicEditor q={q} priorQuestions={questions.slice(0, i)} onChange={(lg) => patch(q.id, { logic: lg })} />
+          </div>
         </div>
       ))}
-      <button className="add-field-btn" onClick={addQ}>+ إضافة سؤال</button>
+      <div className="survey-add-row">
+        <button className="add-field-btn" onClick={addQ}>+ إضافة سؤال</button>
+        <button className="add-page-btn" onClick={addPageBreak}>⎘ صفحة جديدة</button>
+        <button className="add-bank-btn" onClick={() => setBankOpen(true)}>⊞ من البنك</button>
+      </div>
       <button className="save-btn" style={{ marginTop: 12 }} onClick={saveAll}>حفظ كل الأسئلة</button>
+      {bankOpen && <QuestionBankModal onPick={importFromBank} onClose={() => setBankOpen(false)} />}
     </div>
   )
 }
