@@ -20,7 +20,7 @@ export default function Surveys() {
   const [categories, setCategories] = useState([])
   const [templates, setTemplates] = useState([])
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', description: '', target_category_id: null })
+  const [form, setForm] = useState({ title: '', description: '', target_category_id: null, theme: { primary: '#534AB7', accent: '#D4537E' } })
   const [msg, setMsg] = useState(null)
 
   async function loadAll() {
@@ -52,7 +52,7 @@ export default function Surveys() {
   async function create() {
     if (!form.title.trim()) { setMsg('اكتب عنوان الاستبانة'); return }
     const { data } = await supabase.from('surveys').insert(form).select().single()
-    setCreating(false); setForm({ title: '', description: '', target_category_id: null })
+    setCreating(false); setForm({ title: '', description: '', target_category_id: null, theme: { primary: '#534AB7', accent: '#D4537E' } })
     setEditing(data); loadAll()
   }
   async function duplicate(s) {
@@ -104,6 +104,8 @@ export default function Surveys() {
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <p className="muted" style={{ fontSize: 12, marginTop: 4 }}>عند تحديد فئة، لا تظهر الاستبانة ولا يصل إشعارها إلا لطلاب تلك الفئة.</p></div>
+          <div className="field"><label>سمة الألوان</label>
+            <ThemePicker value={form.theme} onChange={th => setForm({ ...form, theme: th })} /></div>
           {msg && <div className="login-error">{msg}</div>}
           <div className="form-row">
             <button onClick={create}>إنشاء ومتابعة</button>
@@ -149,13 +151,50 @@ export default function Surveys() {
                 <option value="">كل الطلاب</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select></div>
+            <div className="field"><label>سمة الألوان</label>
+              <ThemePicker value={editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }} onChange={th => setEditMeta({ ...editMeta, theme: th })} /></div>
             <button className="save-btn" onClick={async () => {
-              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id }).eq('id', editMeta.id)
+              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' } }).eq('id', editMeta.id)
               setEditMeta(null); toast('تم حفظ التعديل'); loadAll()
             }}>حفظ التعديل</button>
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// منتقي سمة الألوان — لوحات جاهزة
+const THEME_PRESETS = [
+  { name: 'بنفسجي وردي', primary: '#534AB7', accent: '#D4537E' },
+  { name: 'أزرق سماوي', primary: '#185FA5', accent: '#1D9E75' },
+  { name: 'أخضر زمردي', primary: '#0F6E56', accent: '#639922' },
+  { name: 'برتقالي دافئ', primary: '#D85A30', accent: '#BA7517' },
+  { name: 'وردي توتي', primary: '#993556', accent: '#D4537E' },
+  { name: 'كحلي رافد', primary: '#1f3864', accent: '#2e5496' },
+]
+function ThemePicker({ value, onChange }) {
+  const v = value || THEME_PRESETS[0]
+  return (
+    <div className="theme-picker">
+      <div className="theme-presets">
+        {THEME_PRESETS.map(p => {
+          const active = v.primary === p.primary && v.accent === p.accent
+          return (
+            <button key={p.name} type="button" title={p.name}
+              className={'theme-swatch' + (active ? ' on' : '')}
+              style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.accent})` }}
+              onClick={() => onChange({ primary: p.primary, accent: p.accent })}>
+              {active && <span className="theme-check">✓</span>}
+            </button>
+          )
+        })}
+      </div>
+      <div className="theme-custom">
+        <label>أساسي <input type="color" value={v.primary} onChange={e => onChange({ ...v, primary: e.target.value })} /></label>
+        <label>تمييز <input type="color" value={v.accent} onChange={e => onChange({ ...v, accent: e.target.value })} /></label>
+        <div className="theme-preview" style={{ background: `linear-gradient(135deg, ${v.primary}, ${v.accent})` }}>معاينة</div>
+      </div>
     </div>
   )
 }

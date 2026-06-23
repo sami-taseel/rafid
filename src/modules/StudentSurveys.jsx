@@ -12,6 +12,8 @@ export default function StudentSurveys({ studentId }) {
   const [errors, setErrors] = useState({})
   const [done, setDone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [step, setStep] = useState(0)        // الخطوة الحالية في نمط Typeform
+  const [mode, setMode] = useState('step')   // step = سؤال واحد، all = كل الأسئلة
 
   useEffect(() => {
     async function load() {
@@ -25,7 +27,7 @@ export default function StudentSurveys({ studentId }) {
   }, [])
 
   async function open(s) {
-    setActive(s); setDone(false); setAnswers({}); setErrors({})
+    setActive(s); setDone(false); setAnswers({}); setErrors({}); setStep(0); setMode('step')
     const { data } = await supabase.from('survey_questions').select('*').eq('survey_id', s.id).order('sort_order')
     setQuestions(data || [])
   }
@@ -87,24 +89,82 @@ export default function StudentSurveys({ studentId }) {
         </div>
       )
     }
-    return (
-      <div className="srv-fill" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
-        <div className="srv-fill-head">
-          <button className="srv-back" onClick={() => setActive(null)}>→ رجوع</button>
-          <h3>{active.title}</h3>
-          {active.description && <p className="srv-desc">{active.description}</p>}
-        </div>
-        {visibleQuestions.map((q, i) => (
-          <div className={'srv-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
-            <div className="srv-q-title">{i + 1}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
-            {q.help_text && <div className="srv-q-help">{q.help_text}</div>}
-            <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
-            {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
+    // التحقق من السؤال الحالي قبل الانتقال
+    function validateStep(q) {
+      if (!q) return true
+      if (q.required) {
+        const v = answers[q.id]
+        const empty = v == null || v === '' || (Array.isArray(v) && v.length === 0)
+        if (empty) { setErrors({ ...errors, [q.id]: true }); toast('هذا السؤال إجباري', 'error'); return false }
+      }
+      return true
+    }
+    const total = visibleQuestions.length
+    const curQ = visibleQuestions[Math.min(step, total - 1)]
+    const isLast = step >= total - 1
+    const progress = total ? Math.round(((step + 1) / total) * 100) : 0
+
+    // ===== نمط عرض كل الأسئلة (قائمة) =====
+    if (mode === 'all') {
+      return (
+        <div className="srv-fill" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
+          <div className="srv-fill-head">
+            <div className="srv-head-top">
+              <button className="srv-back" onClick={() => setActive(null)}>→ رجوع</button>
+              <button className="srv-mode-btn" onClick={() => { setMode('step'); setStep(0) }}>عرض سؤال بسؤال</button>
+            </div>
+            <h3>{active.title}</h3>
+            {active.description && <p className="srv-desc">{active.description}</p>}
           </div>
-        ))}
-        <button className="srv-btn-primary" onClick={submit} disabled={submitting}>
-          {submitting ? 'جارٍ الإرسال…' : 'إرسال الإجابة'}
-        </button>
+          {visibleQuestions.map((q, i) => (
+            <div className={'srv-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
+              <div className="srv-q-title">{i + 1}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
+              {q.help_text && <div className="srv-q-help">{q.help_text}</div>}
+              <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
+              {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
+            </div>
+          ))}
+          <button className="srv-btn-primary" onClick={submit} disabled={submitting}>
+            {submitting ? 'جارٍ الإرسال…' : 'إرسال الإجابة'}
+          </button>
+        </div>
+      )
+    }
+
+    // ===== نمط Typeform: سؤال واحد بارز =====
+    return (
+      <div className="srv-stage" style={{ '--srv-primary': theme.primary, '--srv-accent': theme.accent }}>
+        {/* شريط التقدّم */}
+        <div className="srv-progress-wrap">
+          <button className="srv-stage-back" onClick={() => setActive(null)} aria-label="رجوع">→</button>
+          <div className="srv-progress"><div className="srv-progress-fill" style={{ width: progress + '%' }}></div></div>
+          <button className="srv-mode-btn ghost" onClick={() => setMode('all')}>عرض الكل</button>
+        </div>
+
+        {total === 0 ? (
+          <div className="srv-stage-card"><p className="muted">لا أسئلة في هذه الاستبانة.</p></div>
+        ) : (
+          <div className="srv-stage-card" key={curQ.id}>
+            <div className="srv-stage-count">السؤال {step + 1} من {total}</div>
+            <div className="srv-stage-q">{curQ.q_text}{curQ.required && <span className="srv-req"> *</span>}</div>
+            {curQ.help_text && <div className="srv-stage-help">{curQ.help_text}</div>}
+            <div className="srv-stage-input">
+              <QuestionInput q={curQ} value={answers[curQ.id]} onChange={v => setAns(curQ.id, v)} />
+            </div>
+            {errors[curQ.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
+
+            <div className="srv-stage-nav">
+              <button className="srv-nav-prev" onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>السابق</button>
+              {isLast ? (
+                <button className="srv-nav-next" onClick={() => { if (validateStep(curQ)) submit() }} disabled={submitting}>
+                  {submitting ? 'جارٍ الإرسال…' : 'إرسال ✓'}
+                </button>
+              ) : (
+                <button className="srv-nav-next" onClick={() => { if (validateStep(curQ)) setStep(step + 1) }}>التالي</button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
