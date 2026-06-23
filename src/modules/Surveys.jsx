@@ -431,6 +431,7 @@ function SurveyEditor({ survey, onBack }) {
         help_text: q.help_text || null,
         logic: q.logic || null,
         page: q.page || 1,
+        allow_other: !!q.allow_other,
         options: qtypeNeedsOptions(q.q_type)
           ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
       }).eq('id', q.id)
@@ -494,6 +495,12 @@ function SurveyEditor({ survey, onBack }) {
             <OptionsEditor
               value={Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])}
               onChange={(arr) => patch(q.id, { options: arr })} />
+          )}
+          {q.q_type === 'single' && (
+            <label className="q-other-toggle">
+              <input type="checkbox" checked={!!q.allow_other} onChange={e => patch(q.id, { allow_other: e.target.checked })} />
+              إضافة خيار «أخرى» (يكتب الطالب إجابته)
+            </label>
           )}
           <QTypePreview type={q.q_type} />
           <LogicEditor q={q} priorQuestions={questions.slice(0, i)} onChange={(lg) => patch(q.id, { logic: lg })} />

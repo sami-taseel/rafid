@@ -287,12 +287,32 @@ function QuestionInput({ q, value, onChange }) {
     )
   }
 
-  // single (افتراضي)
+  // single (افتراضي) — مع دعم خيار «أخرى»
+  return <SingleInput q={q} value={value} onChange={onChange} opts={opts} />
+}
+
+// إدخال الاختيار الواحد مع خيار «أخرى» الذي يكشف حقل نص
+function SingleInput({ q, value, onChange, opts }) {
+  // وضع «أخرى» نشط إذا كانت القيمة غير فارغة وغير موجودة ضمن الخيارات
+  const valueIsOther = value != null && value !== '' && !opts.includes(value)
+  const [otherMode, setOtherMode] = useState(valueIsOther)
+
   return (
     <div className="srv-options">
       {opts.map(o => (
-        <button key={o} type="button" className={value === o ? 'srv-opt on' : 'srv-opt'} onClick={() => onChange(o)}>{o}</button>
+        <button key={o} type="button" className={(!otherMode && value === o) ? 'srv-opt on' : 'srv-opt'}
+          onClick={() => { setOtherMode(false); onChange(o) }}>{o}</button>
       ))}
+      {q.allow_other && (
+        <>
+          <button type="button" className={otherMode ? 'srv-opt on' : 'srv-opt'}
+            onClick={() => { setOtherMode(true); onChange('') }}>أخرى…</button>
+          {otherMode && (
+            <input className="srv-input srv-other-input" autoFocus placeholder="اكتب إجابتك هنا…"
+              value={valueIsOther ? value : ''} onChange={e => onChange(e.target.value)} />
+          )}
+        </>
+      )}
     </div>
   )
 }

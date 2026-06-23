@@ -2056,3 +2056,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .share-qr { background: #fff; padding: 16px; border-radius: 14px; display: inline-block; margin: 14px auto; border: 1px solid var(--border); }
 .share-link { font-size: 12px; background: var(--bg); padding: 10px 12px; border-radius: 8px; word-break: break-all; color: var(--text-soft); margin-bottom: 12px; }
 .share-actions { display: flex; gap: 10px; align-items: center; }
+
+/* ===== خيار «أخرى» ===== */
+.q-other-toggle { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-soft); cursor: pointer; margin-top: 8px; }
+.srv-other-input { margin-top: 4px; animation: srvFade .25s ease; }
