@@ -77,11 +77,11 @@ function StudentProfileInner({ session }) {
   async function handleSave(e) {
     e.preventDefault(); setSaving(true); setMsg(null)
     try {
-      // التحقق من رقم الإقامة: 10 أرقام تبدأ بـ 2
+      // التحقق من رقم الإقامة: 10 أرقام تبدأ بـ 1 أو 2 أو 3 أو 4 (إقامة/زيارة/هوية)
       const byKeyCheck = {}
       fields.forEach(f => { if (f.field_key) byKeyCheck[f.field_key] = values[f.id] || '' })
-      if (byKeyCheck.residency_no && !/^2\d{9}$/.test(byKeyCheck.residency_no.trim())) {
-        setSaving(false); setMsg({ type: 'error', text: 'رقم الإقامة يجب أن يكون ١٠ أرقام ويبدأ بالرقم ٢.' }); return
+      if (byKeyCheck.residency_no && !/^[1-4]\d{9}$/.test(byKeyCheck.residency_no.trim())) {
+        setSaving(false); setMsg({ type: 'error', text: 'رقم الإقامة/الهوية يجب أن يكون ١٠ أرقام.' }); return
       }
       const rows = fields.map(f => ({ student_id: student.id, field_id: f.id, value: values[f.id] || '' }))
       const { error } = await supabase.from('student_field_values').upsert(rows, { onConflict: 'student_id,field_id' })

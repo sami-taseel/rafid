@@ -24,7 +24,7 @@ export default function Companions({ studentId, personId }) {
 
   function validate() {
     if (!form.full_name.trim()) { toast('اكتب اسم المرافق', 'error'); return false }
-    if (form.residency_no && !/^2\d{9}$/.test(form.residency_no.trim())) { toast('رقم الإقامة يجب أن يكون ١٠ أرقام ويبدأ بالرقم ٢', 'error'); return false }
+    if (form.residency_no && !/^[1-4]\d{9}$/.test(form.residency_no.trim())) { toast('رقم الإقامة/الهوية يجب أن يكون ١٠ أرقام', 'error'); return false }
     return true
   }
 
