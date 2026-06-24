@@ -45,7 +45,7 @@ function StudentProfileInner({ session }) {
       const unsigned = (tpls.data || []).filter(t => !approvedIds.has(t.id))
       setUnsignedVisible(unsigned.length)
       // نزامن حالة الحساب في الخلفية
-      supabase.rpc('refresh_account_completion', { p_student: student.id }).catch(() => {})
+      supabase.rpc('refresh_account_completion', { p_student: student.id }).then(() => {}, () => {})
     }
     checkVisibleForms()
   }, [student?.id, student?.account_state, tab])

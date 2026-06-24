@@ -194,13 +194,16 @@ export default function StudentAttachments({ studentId }) {
   function TermlyCard({ type }) {
     const records = mine.filter(m => m.type_id === type.id).sort((a, b) => (b.term_label || '').localeCompare(a.term_label || ''))
     const [term, setTerm] = useState('الأول')
-    const [year, setYear] = useState('')
+    const [year, setYear] = useState(String(new Date().getFullYear()))  // السنة الحالية افتراضياً
+    const yearValid = /^\d{4}$/.test(year)
 
     function doUpload(file) {
       if (!file) return
-      if (!year || !/^\d{4}$/.test(year)) { setErr('اكتب السنة بأربعة أرقام (مثل 2026).'); return }
+      if (!yearValid) {
+        const msg = 'اكتب السنة بأربعة أرقام (مثل 2026) قبل رفع السجل.'
+        setErr(msg); toast(msg, 'error'); return
+      }
       uploadTermly(type.id, file, `الفصل ${term} ${year}`)
-      setYear('')
     }
     return (
       <div className="sp-card">
@@ -221,15 +224,26 @@ export default function StudentAttachments({ studentId }) {
           </div>
         ) : <p className="muted" style={{ fontSize: 12, marginBottom: 10 }}>لا سجلات بعد.</p>}
 
-        <div className="termly-add">
-          <select value={term} onChange={e => setTerm(e.target.value)}>
-            <option value="الأول">الفصل الأول</option>
-            <option value="الثاني">الفصل الثاني</option>
-          </select>
-          <input type="number" placeholder="السنة (2026)" value={year} onChange={e => setYear(e.target.value)} style={{ width: 120, padding: '9px 12px', border: '1px solid var(--border)', borderRadius: 8, fontFamily: 'inherit' }} />
-          <label className="file-btn-primary">{busy === 'term_' + type.id ? 'جارٍ…' : <><Icon name="upload" size={15} /> رفع السجل</>}
-            <input type="file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png" hidden onChange={e => doUpload(e.target.files[0])} /></label>
+        <div className="termly-fields">
+          <div className="termly-field">
+            <label>الفصل الدراسي</label>
+            <select value={term} onChange={e => setTerm(e.target.value)}>
+              <option value="الأول">الفصل الأول</option>
+              <option value="الثاني">الفصل الثاني</option>
+              <option value="الصيفي">الفصل الصيفي</option>
+            </select>
+          </div>
+          <div className="termly-field">
+            <label>السنة <span className="req-star">*</span></label>
+            <input type="number" placeholder="2026" value={year} onChange={e => setYear(e.target.value)}
+              className={!yearValid ? 'termly-year-input invalid' : 'termly-year-input'} />
+          </div>
         </div>
+        {!yearValid && <p className="termly-hint">اكتب السنة أولاً لتفعيل زر الرفع.</p>}
+        <label className={'termly-upload-btn' + (yearValid ? '' : ' disabled')}>
+          {busy === 'term_' + type.id ? 'جارٍ الرفع…' : <><Icon name="upload" size={16} /> رفع السجل</>}
+          {yearValid && <input type="file" accept="image/*,application/pdf,.pdf,.jpg,.jpeg,.png" hidden onChange={e => doUpload(e.target.files[0])} />}
+        </label>
       </div>
     )
   }

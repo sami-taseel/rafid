@@ -93,7 +93,7 @@ export default function StudentSurveys({ studentId }) {
       const rows = visibleQuestions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
       await supabase.from('survey_answers').insert(rows)
       const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
-      await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).catch(() => {})
+      await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).then(() => {}, () => {})
       setDone(true)
     } catch (e) { toast('تعذّر الإرسال، حاول مجدداً', 'error') }
     setSubmitting(false)

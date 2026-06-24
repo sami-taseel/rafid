@@ -42,7 +42,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
 
   useEffect(() => {
     if (!studentId) return
-    supabase.rpc('student_points', { p_student: studentId }).then(({ data, error }) => { if (!error) setPoints(data || 0) }).catch(() => {})
+    supabase.rpc('student_points', { p_student: studentId }).then(({ data, error }) => { if (!error) setPoints(data || 0) }, () => {})
     // الموافقات المعلّقة بعد تحديث جوهري
     supabase.from('form_records').select('id, form_templates(title)').eq('student_id', studentId).eq('status', 'pending')
       .then(({ data }) => setPending(data || [])).catch(() => {})

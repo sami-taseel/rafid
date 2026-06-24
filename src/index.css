@@ -2132,3 +2132,16 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .q-card-tools { gap: 2px; }
   .q-tool { width: 30px; height: 30px; }
 }
+
+/* ===== رفع السجل الفصلي — تصميم محسّن ===== */
+.termly-fields { display: flex; gap: 12px; margin-bottom: 10px; }
+.termly-field { flex: 1; }
+.termly-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: var(--text-soft); }
+.termly-field select, .termly-year-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); }
+.termly-year-input.invalid { border-color: #e0a800; background: #fffbf0; }
+:root[data-theme="dark"] .termly-year-input.invalid { background: #2a2410; }
+.termly-hint { font-size: 12px; color: #92660a; background: #fff8e8; padding: 7px 12px; border-radius: 8px; margin-bottom: 10px; }
+:root[data-theme="dark"] .termly-hint { background: #2a2410; color: #f0c060; }
+.termly-upload-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; background: var(--navy); color: #fff; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.termly-upload-btn:hover:not(.disabled) { filter: brightness(1.1); }
+.termly-upload-btn.disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
