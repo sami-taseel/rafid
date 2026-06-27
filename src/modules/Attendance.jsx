@@ -204,6 +204,7 @@ export default function Attendance() {
           )
         })}
       </div>
+      {qrSession && <QRModal session={qrSession} onClose={() => setQrSession(null)} />}
       {reschedule && <RescheduleModal session={reschedule} onConfirm={confirmReschedule} onClose={() => setReschedule(null)} />}
     </div>
   )
