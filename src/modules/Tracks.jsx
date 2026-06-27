@@ -4,6 +4,8 @@ import { useToast } from '../Toast'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import ExcelImport from './ExcelImport'
+import Icon from '../Icon'
+import QRModal, { canGenerateQR } from './QRModal'
 
 const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
 
@@ -15,6 +17,7 @@ export default function Tracks() {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [sessFor, setSessFor] = useState(null)
+  const [qrSession, setQrSession] = useState(null)
   const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
@@ -119,6 +122,7 @@ export default function Tracks() {
 
   if (loading) return <Spinner />
   return (
+    <>
     <div>
       <div className="stats">
         <div className="stat-card"><div className="num">{tracks.length}</div><div className="label">المسارات</div></div>
@@ -196,6 +200,11 @@ export default function Tracks() {
                 <span className="muted">{s.planned_date}{s.start_time ? ' · ' + s.start_time.slice(0,5) : ''}{s.duration_min ? ' · ' + s.duration_min + 'د' : ''}</span>
                 <span className={'status-' + s.status}>{statusLabel(s.status)}</span>
                 <div className="sess-actions">
+                  {canGenerateQR(s) && (
+                    <button className="mini sess-qr" onClick={() => setQrSession({ ...s, activities: { title: a.title } })} title="باركود الحضور">
+                      <Icon name="image" size={14} /> باركود
+                    </button>
+                  )}
                   <button className="mini" onClick={() => setSessionStatus(s.id, 'held')}>منعقدة</button>
                   <button className="mini" onClick={() => setSessionStatus(s.id, 'postponed')}>تأجيل</button>
                   <button className="mini" onClick={() => setSessionStatus(s.id, 'cancelled')}>إلغاء</button>
@@ -286,6 +295,8 @@ export default function Tracks() {
         </div>
       )}
     </div>
+      {qrSession && <QRModal session={qrSession} onClose={() => setQrSession(null)} />}
+    </>
   )
 }
 function statusLabel(s) {

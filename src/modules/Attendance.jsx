@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { Spinner } from './Students'
 import QRCode from 'qrcode'
+import QRModal, { canGenerateQR } from './QRModal'
+import Icon from '../Icon'
 
 export default function Attendance() {
   const [sessions, setSessions] = useState([])
@@ -10,19 +12,16 @@ export default function Attendance() {
   const [marks, setMarks] = useState({})
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
-  const [qr, setQr] = useState(null)
+  const [qrSession, setQrSession] = useState(null)
 
-  async function showQR(sessionId) {
-    // حارس إضافي: لا QR قبل يوم الجلسة (الخادم يمنع التحضير أيضاً)
-    const todayStr = new Date().toLocaleDateString('en-CA')
-    if (sel?.planned_date && sel.planned_date > todayStr) {
+  // فتح نافذة الباركود (مع حارس التاريخ)
+  function openQR(sess) {
+    if (!canGenerateQR(sess)) {
       setMsg('لا يمكن توليد رمز الحضور قبل موعد الجلسة.')
       setTimeout(() => setMsg(null), 4000)
       return
     }
-    const url = window.location.origin + '/#checkin=' + sessionId
-    const dataUrl = await QRCode.toDataURL(url, { width: 280, margin: 2 })
-    setQr(dataUrl)
+    setQrSession(sess)
   }
 
   useEffect(() => {
@@ -76,20 +75,11 @@ export default function Attendance() {
           <div className="att-counters">
             <span className="cnt present">حاضر {present}</span>
             <span className="cnt absent">غائب {absent}</span>
-            <button className="mini" onClick={() => showQR(sel.id)}>رمز QR للحضور</button>
+            <button className="mini" onClick={() => openQR(sel)}>رمز QR للحضور</button>
           </div>
         </div>
         {msg && <div className="save-ok">{msg}</div>}
-        {qr && (
-          <div className="qr-overlay" onClick={() => setQr(null)}>
-            <div className="qr-box" onClick={e => e.stopPropagation()}>
-              <h3>رمز حضور الجلسة</h3>
-              <p className="muted">يمسحه الطلاب بكاميرا الجوال لتسجيل حضورهم</p>
-              <img src={qr} alt="QR" />
-              <button className="mini" onClick={() => setQr(null)}>إغلاق</button>
-            </div>
-          </div>
-        )}
+        {qrSession && <QRModal session={qrSession} onClose={() => setQrSession(null)} />}
         <div className="panel">
           <div className="bulk-bar">
             <button className="mini" onClick={() => { const m={}; students.forEach(s=>m[s.id]='present'); setMarks(m) }}>تحديد الكل حاضر</button>
@@ -132,14 +122,20 @@ export default function Attendance() {
           const todayStr = new Date().toLocaleDateString('en-CA')  // YYYY-MM-DD محلي
           const isFuture = s.planned_date && s.planned_date > todayStr
           return (
-            <button className={'session-card' + (isFuture ? ' locked' : '')} key={s.id} onClick={() => openSession(s)}>
+            <div className={'session-card' + (isFuture ? ' locked' : '')} key={s.id} onClick={() => openSession(s)} role="button" tabIndex={0}>
+              {!isFuture && (
+                <button className="sc-qr-btn" title="باركود الحضور" aria-label="باركود الحضور"
+                  onClick={e => { e.stopPropagation(); openQR(s) }}>
+                  <Icon name="image" size={16} />
+                </button>
+              )}
               <div className="sc-title">{sessName}</div>
               {actTitle && <div className="sc-act-name">{actTitle}</div>}
               <div className="sc-meta">{s.activities?.tracks?.name_ar}</div>
               <div className="sc-date">📅 {s.planned_date || 'بلا تاريخ'}</div>
               {isFuture && <div className="sc-locked-note">🔒 يُتاح التحضير يوم الجلسة</div>}
               <span className={'sc-status status-' + s.status}>{statusLabel(s.status)}</span>
-            </button>
+            </div>
           )
         })}
       </div>
