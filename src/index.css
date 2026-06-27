@@ -2146,7 +2146,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .termly-upload-btn:hover:not(.disabled) { filter: brightness(1.1); }
 .termly-upload-btn.disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
 
-/* صفحة طلبات الاستئذان (المدير) */
+/* صفحة طلبات الإذن (المدير) */
 .excuse-list { display: flex; flex-direction: column; gap: 12px; }
 .excuse-req-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
 .excuse-req-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -2164,7 +2164,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .excuse-approve:disabled, .excuse-reject:disabled { opacity: .6; cursor: default; }
 
 /* ============================================================
-   طلب الاستئذان (الطالب) — تصميم احترافي
+   طلب الإذن (الطالب) — تصميم احترافي
    ============================================================ */
 .up-excuse { margin-top: 10px; }
 
@@ -2259,40 +2259,80 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .exc-btn-send:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
 .exc-btn-send:disabled { opacity: .5; cursor: default; box-shadow: none; }
 
-/* ============================================================
-   بطاقة الجلسة الموحّدة (SessionCard)
-   ============================================================ */
-.sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-.sc-card { --sc-color: #2e5496; position: relative; display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s; }
-.sc-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.09); }
-.sc-stripe { width: 5px; background: var(--sc-color); flex-shrink: 0; }
-.sc-main { flex: 1; padding: 16px 16px 14px; min-width: 0; }
-
-.sc-head { display: flex; gap: 13px; align-items: flex-start; }
-.sc-date { flex-shrink: 0; width: 54px; text-align: center; background: linear-gradient(160deg, var(--sc-color), color-mix(in srgb, var(--sc-color) 75%, #fff)); border-radius: 12px; padding: 8px 4px; color: #fff; }
-.sc-date-num { display: block; font-size: 22px; font-weight: 800; line-height: 1.1; }
-.sc-date-mon { display: block; font-size: 11px; opacity: .9; }
-.sc-head-text { flex: 1; min-width: 0; }
-.sc-type-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
-.sc-type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
-.sc-track { font-size: 11px; color: var(--text-soft); background: var(--bg); padding: 3px 10px; border-radius: 12px; }
-.sc-title { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
-.sc-subtitle { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
-
-.sc-details { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
-.sc-detail { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-soft); background: var(--bg); padding: 6px 11px; border-radius: 9px; }
-.sc-detail svg { color: var(--sc-color); flex-shrink: 0; }
-
-.sc-footer { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--border); }
-
-/* البطاقة البارزة (أقرب موعد) */
-.sc-feature { border: none; box-shadow: 0 4px 20px rgba(46,84,150,.12); }
-.sc-feature .sc-stripe { width: 6px; }
-.sc-feature .sc-title { font-size: 18px; }
-.sc-feature .sc-main { padding: 20px; }
-
-/* إلغاء طلب الاستئذان */
+/* إلغاء طلب الإذن */
 .exc-status-row { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .exc-cancel-link { background: none; border: none; color: var(--text-soft); font-family: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
 .exc-cancel-link:hover:not(:disabled) { color: #c0392b; }
 .exc-cancel-link:disabled { opacity: .5; cursor: default; }
+
+/* ============================================================
+   بطاقة أقرب موعد (FeatureCard) — مُعاد تنظيمها
+   ============================================================ */
+.fc-grid { display: grid; gap: 14px; }
+.fc-card { --sc-color: #2e5496; background: var(--surface); border: 1px solid var(--border); border-right: 5px solid var(--sc-color); border-radius: 16px; padding: 18px 20px; box-shadow: 0 4px 18px rgba(46,84,150,.10); }
+.fc-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.fc-type { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
+.fc-track { font-size: 12px; color: var(--text-soft); background: var(--bg); padding: 4px 12px; border-radius: 20px; }
+.fc-time { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: var(--sc-color); }
+.fc-title { margin: 0; font-size: 19px; font-weight: 800; line-height: 1.4; }
+.fc-subtitle { font-size: 13px; color: var(--text-soft); margin-top: 3px; }
+.fc-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+.fc-info { display: flex; align-items: center; gap: 9px; background: var(--bg); border-radius: 11px; padding: 11px 13px; }
+.fc-info svg { color: var(--sc-color); flex-shrink: 0; }
+.fc-info > div { display: flex; flex-direction: column; min-width: 0; }
+.fc-info-lbl { font-size: 11px; color: var(--text-soft); }
+.fc-info-val { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fc-action { margin-top: 16px; }
+@media (max-width: 560px) { .fc-info-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   البطاقة المختصرة (CompactCard) — بطاقتان بالصف
+   ============================================================ */
+.cc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.cc-card { --sc-color: #2e5496; display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); transition: box-shadow .15s; }
+.cc-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.cc-stripe { width: 4px; background: var(--sc-color); flex-shrink: 0; }
+.cc-body { flex: 1; padding: 13px 14px; min-width: 0; display: flex; flex-direction: column; }
+.cc-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 8px; }
+.cc-type { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; }
+.cc-date { font-size: 11px; color: var(--text-soft); white-space: nowrap; }
+.cc-title { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.4; }
+.cc-subtitle { font-size: 12px; color: var(--text-soft); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 11px; }
+.cc-time { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--sc-color); }
+.cc-actions { display: flex; align-items: center; gap: 6px; }
+.cc-icon-btn { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg); color: var(--text-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .12s; }
+.cc-icon-btn:hover { border-color: var(--sc-color); color: var(--sc-color); }
+.cc-icon-btn.excuse { background: linear-gradient(135deg, #2e5496, #4571b5); color: #fff; border: none; }
+.cc-icon-btn.excuse:hover { filter: brightness(1.1); }
+
+/* شارات الإذن المختصرة */
+.exc-mini { width: 32px; height: 32px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; }
+.exc-mini-pending { background: #fff4e0; color: #b3730a; }
+.exc-mini-approved { background: #e3f6ed; color: #15784e; }
+.exc-mini-rejected { background: #fce8e8; color: #b32d2d; }
+:root[data-theme="dark"] .exc-mini-pending { background: #2e2510; color: #f0c060; }
+:root[data-theme="dark"] .exc-mini-approved { background: #15271e; color: #5fcf9f; }
+:root[data-theme="dark"] .exc-mini-rejected { background: #2a1414; color: #f08080; }
+
+/* نافذة تفاصيل البطاقة المختصرة */
+.cc-detail-overlay { position: fixed; inset: 0; background: rgba(20,28,46,.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000; animation: excFadeIn .2s ease; }
+.cc-detail-card { background: var(--surface); border-radius: 18px; width: 100%; max-width: 400px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: excPop .26s cubic-bezier(.2,.9,.3,1.2); }
+.cc-detail-hero { position: relative; padding: 22px 22px 18px; color: #fff; }
+.cc-detail-close { position: absolute; top: 13px; left: 13px; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.cc-detail-close:hover { background: rgba(255,255,255,.35); }
+.cc-detail-type { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.2); padding: 4px 12px; border-radius: 12px; }
+.cc-detail-title { margin: 12px 0 0; font-size: 19px; font-weight: 800; }
+.cc-detail-sub { margin: 4px 0 0; font-size: 13px; opacity: .9; }
+.cc-detail-body { padding: 16px 20px 8px; }
+.cc-detail-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+.cc-detail-row:last-child { border-bottom: none; }
+.cc-detail-ic { width: 38px; height: 38px; border-radius: 10px; background: var(--bg); color: var(--text-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cc-detail-text { display: flex; flex-direction: column; }
+.cc-detail-lbl { font-size: 12px; color: var(--text-soft); }
+.cc-detail-val { font-size: 15px; font-weight: 600; }
+.cc-detail-foot { padding: 8px 20px 20px; }
+
+@media (max-width: 560px) {
+  .cc-grid { grid-template-columns: 1fr; }
+}

@@ -5,7 +5,7 @@ import Icon from '../Icon'
 import { Spinner } from './Students'
 import { formatDate } from '../dateUtils'
 
-// صفحة المدير: طلبات الاستئذان عن الجلسات
+// صفحة المدير: طلبات الإذن عن الجلسات
 export default function ExcuseRequests() {
   const toast = useToast()
   const [list, setList] = useState(null)
@@ -32,15 +32,15 @@ export default function ExcuseRequests() {
 
   return (
     <div>
-      <h2 className="section-title">طلبات الاستئذان</h2>
+      <h2 className="section-title">طلبات الإذن</h2>
       <p className="muted" style={{ fontSize: 13, marginBottom: 16 }}>
-        راجع طلبات استئذان الطلاب عن الجلسات. القبول يسجّل الطالب «مستأذناً»، والرفض يسجّله «غائباً»، ويُشعر الطالب في الحالتين.
+        راجع طلبات إذن الطلاب عن الجلسات. القبول يسجّل الطالب «مستأذناً»، والرفض يسجّله «غائباً»، ويُشعر الطالب في الحالتين.
       </p>
 
       {list.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>
           <Icon name="check" size={34} />
-          <div style={{ marginTop: 8 }}>لا طلبات استئذان معلّقة</div>
+          <div style={{ marginTop: 8 }}>لا طلبات إذن معلّقة</div>
         </div>
       )}
 

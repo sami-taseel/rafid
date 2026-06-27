@@ -142,7 +142,7 @@ function StudentsGroup() {
   return <TabGroup tabs={[
     { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
     { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
-    { key: 'excuses', label: 'طلبات الاستئذان', el: <ExcuseRequests />, badge: excuses },
+    { key: 'excuses', label: 'طلبات الإذن', el: <ExcuseRequests />, badge: excuses },
     { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },

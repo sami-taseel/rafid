@@ -3,8 +3,7 @@ import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 import Icon from '../Icon'
-import ExcuseButton from './ExcuseButton'
-import SessionCard from './SessionCard'
+import { FeatureCard, CompactCard } from './SessionCard'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [points, setPoints] = useState(0)
@@ -87,10 +86,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       {nextDaySessions.length > 0 ? (
         <div className="next-wrap">
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
-          <div className="sc-grid">
+          <div className="fc-grid">
             {nextDaySessions.map(s => (
-              <SessionCard key={s.id} session={s} variant="feature" showDate={false}
-                footer={<ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />} />
+              <FeatureCard key={s.id} session={s} studentId={studentId}
+                sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
             ))}
           </div>
         </div>
@@ -115,10 +114,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           )}
         </div>
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
-        <div className="sc-grid">
+        <div className="cc-grid">
           {shownUpcoming.map(s => (
-            <SessionCard key={s.id} session={s} variant="list"
-              footer={<ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />} />
+            <CompactCard key={s.id} session={s} studentId={studentId}
+              sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
           ))}
         </div>
       </div>}

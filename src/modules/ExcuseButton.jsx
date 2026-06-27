@@ -5,7 +5,7 @@ import { useToast } from '../Toast'
 import Icon from '../Icon'
 
 // زر «طلب إذن» احترافي لكل جلسة + مربع حوار إلزامي للسبب
-export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessionDate }) {
+export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessionDate, compact = false }) {
   const toast = useToast()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
@@ -33,7 +33,7 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
         .insert({ student_id: studentId, session_id: sessionId, reason: reason.trim() })
       if (error) throw error
       setStatus('pending'); setOpen(false); setReason('')
-      toast('تم إرسال طلب الاستئذان', 'success')
+      toast('تم إرسال طلب الإذن', 'success')
     } catch (e) {
       const m = (e.message || '').toLowerCase()
       toast(m.includes('duplicate') || m.includes('unique') ? 'سبق إرسال طلب لهذه الجلسة' : 'تعذّر الإرسال، حاول مجدداً', 'error')
@@ -58,21 +58,33 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
 
   // حالة الطلب السابق
   if (status === 'pending') return (
-    <span className="exc-status-row">
-      <span className="exc-chip exc-chip-pending"><Icon name="clock" size={13} /> قيد المراجعة</span>
-      <button className="exc-cancel-link" onClick={cancelRequest} disabled={busy}>إلغاء الطلب</button>
-    </span>
+    compact
+      ? <span className="exc-mini exc-mini-pending" title="طلب الإذن قيد المراجعة"><Icon name="clock" size={14} /></span>
+      : <span className="exc-status-row">
+          <span className="exc-chip exc-chip-pending"><Icon name="clock" size={13} /> قيد المراجعة</span>
+          <button className="exc-cancel-link" onClick={cancelRequest} disabled={busy}>إلغاء الطلب</button>
+        </span>
   )
-  if (status === 'approved') return <span className="exc-chip exc-chip-approved"><Icon name="check" size={13} /> مستأذن</span>
-  if (status === 'rejected') return <span className="exc-chip exc-chip-rejected"><Icon name="x" size={13} /> رُفض الطلب</span>
+  if (status === 'approved') return compact
+    ? <span className="exc-mini exc-mini-approved" title="مستأذن"><Icon name="check" size={14} /></span>
+    : <span className="exc-chip exc-chip-approved"><Icon name="check" size={13} /> مستأذن</span>
+  if (status === 'rejected') return compact
+    ? <span className="exc-mini exc-mini-rejected" title="رُفض الطلب"><Icon name="x" size={14} /></span>
+    : <span className="exc-chip exc-chip-rejected"><Icon name="x" size={13} /> رُفض الطلب</span>
 
   const reasonOk = reason.trim().length >= 3
 
   return (
     <>
-      <button className="exc-trigger" onClick={() => setOpen(true)}>
-        <Icon name="hand" size={15} /> طلب استئذان
-      </button>
+      {compact ? (
+        <button className="cc-icon-btn excuse" onClick={() => setOpen(true)} title="طلب إذن" aria-label="طلب إذن">
+          <Icon name="hand" size={15} />
+        </button>
+      ) : (
+        <button className="exc-trigger" onClick={() => setOpen(true)}>
+          <Icon name="hand" size={15} /> طلب إذن
+        </button>
+      )}
 
       {open && createPortal(
         <div className="exc-overlay" onClick={() => !busy && setOpen(false)}>
@@ -81,18 +93,18 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
             <div className="exc-dialog-hero">
               <button className="exc-close" onClick={() => !busy && setOpen(false)} aria-label="إغلاق"><Icon name="x" size={18} /></button>
               <div className="exc-hero-ic"><Icon name="hand" size={26} /></div>
-              <h3 className="exc-hero-title">طلب استئذان</h3>
+              <h3 className="exc-hero-title">طلب إذن</h3>
               <p className="exc-hero-sub">{sessionTitle}{sessionDate ? ` · ${sessionDate}` : ''}</p>
             </div>
 
             {/* الجسم */}
             <div className="exc-dialog-body">
               <label className="exc-label">
-                <Icon name="edit" size={14} /> سبب الاستئذان <span className="exc-required">إلزامي</span>
+                <Icon name="edit" size={14} /> سبب الإذن <span className="exc-required">إلزامي</span>
               </label>
               <textarea className="exc-textarea" rows={4} value={reason} maxLength={400}
                 onChange={e => setReason(e.target.value)} autoFocus
-                placeholder="اكتب سبب طلبك للاستئذان عن هذه الجلسة بوضوح…" />
+                placeholder="اكتب سبب طلبك للإذن عن هذه الجلسة بوضوح…" />
               <div className="exc-char">{reason.length}/400</div>
 
               <div className="exc-info-box">
