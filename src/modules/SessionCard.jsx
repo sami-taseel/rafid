@@ -23,10 +23,31 @@ function sessInfo(s) {
   return { act, sessName, actTitle, meta: typeMeta(act.activity_type) }
 }
 
+// حالة حضور الطالب: present | absent | excused | not_recorded | undefined
+// نعتبر الحالة "محسومة" إذا كانت حضر/غائب/مستأذن (نُخفي زر الإذن ونعرض شارة)
+const ATT_META = {
+  present: { label: 'حضرت', icon: 'check', color: '#15784e', bg: '#e3f6ed' },
+  excused: { label: 'مستأذن', icon: 'hand', color: '#b3730a', bg: '#fff4e0' },
+  absent: { label: 'غياب', icon: 'x', color: '#b32d2d', bg: '#fce8e8' },
+}
+function attDecided(status) { return status === 'present' || status === 'absent' || status === 'excused' }
+
+// شارة حالة الحضور
+function AttBadge({ status, size = 'normal' }) {
+  const m = ATT_META[status]
+  if (!m) return null
+  return (
+    <span className={'att-badge att-badge-' + size} style={{ background: m.bg, color: m.color }}>
+      <Icon name={m.icon} size={size === 'mini' ? 13 : 14} /> {m.label}
+    </span>
+  )
+}
+
 // ============ البطاقة البارزة (أقرب موعد) — مُعاد تنظيمها ============
-export function FeatureCard({ session, studentId, sessionDate }) {
+export function FeatureCard({ session, studentId, sessionDate, attStatus }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
+  const decided = attDecided(attStatus)
   return (
     <div className="fc-card" style={{ '--sc-color': meta.color }}>
       <div className="fc-top">
@@ -34,7 +55,9 @@ export function FeatureCard({ session, studentId, sessionDate }) {
           <Icon name={meta.icon} size={13} /> {act.activity_type || 'نشاط'}
         </span>
         {act.tracks?.name_ar && <span className="fc-track">{act.tracks.name_ar}</span>}
-        {s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
+        {decided
+          ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
+          : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
       </div>
       <h4 className="fc-title">{sessName}</h4>
       {actTitle && <div className="fc-subtitle">{actTitle}</div>}
@@ -42,7 +65,8 @@ export function FeatureCard({ session, studentId, sessionDate }) {
         {act.provider && <div className="fc-info"><Icon name="user" size={15} /><div><span className="fc-info-lbl">مقدّم الجلسة</span><span className="fc-info-val">{act.provider}</span></div></div>}
         {act.location && <div className="fc-info"><Icon name="pin" size={15} /><div><span className="fc-info-lbl">المكان</span><span className="fc-info-val">{act.location}</span></div></div>}
       </div>
-      {studentId && (
+      {/* زر الإذن يظهر فقط إن لم تُحسم الحالة بعد */}
+      {studentId && !decided && (
         <div className="fc-action">
           <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />
         </div>
@@ -52,22 +76,23 @@ export function FeatureCard({ session, studentId, sessionDate }) {
 }
 
 // ============ البطاقة المختصرة (بطاقتان بالصف) ============
-export function CompactCard({ session, studentId, sessionDate, showExcuse = true }) {
+export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const [details, setDetails] = useState(false)
   const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
+  const decided = attDecided(attStatus)
 
   return (
     <>
-      <div className="cc-card" style={{ '--sc-color': meta.color }}>
+      <div className={'cc-card' + (decided ? ' cc-decided cc-' + attStatus : '')} style={{ '--sc-color': meta.color }}>
         <div className="cc-stripe"></div>
         <div className="cc-body">
           <div className="cc-head">
             <span className="cc-type" style={{ background: meta.color + '18', color: meta.color }}>
               <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
             </span>
-            {date && <span className="cc-date">{date.getDate()} {MON[date.getMonth()]}</span>}
+            {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{date.getDate()} {MON[date.getMonth()]}</span>)}
           </div>
           <h4 className="cc-title">{sessName}</h4>
           {actTitle && <div className="cc-subtitle">{actTitle}</div>}
@@ -77,7 +102,8 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               <button className="cc-icon-btn" onClick={() => setDetails(true)} title="التفاصيل" aria-label="التفاصيل">
                 <Icon name="eye" size={15} />
               </button>
-              {showExcuse && studentId && (
+              {/* زر الإذن يظهر فقط إن لم تُحسم الحالة */}
+              {showExcuse && studentId && !decided && (
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} compact />
               )}
             </div>
@@ -95,13 +121,14 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               {actTitle && <p className="cc-detail-sub">{actTitle}</p>}
             </div>
             <div className="cc-detail-body">
+              {decided && <div className="cc-detail-att"><AttBadge status={attStatus} /></div>}
               {date && <DetailRow icon="calendar" label="التاريخ" value={`${date.getDate()} ${MON[date.getMonth()]} ${date.getFullYear()}`} />}
               {s.start_time && <DetailRow icon="clock" label="الوقت" value={`${formatTime(s.start_time)}${s.duration_min ? ` · ${s.duration_min} دقيقة` : ''}`} />}
               {act.provider && <DetailRow icon="user" label="مقدّم الجلسة" value={act.provider} />}
               {act.location && <DetailRow icon="pin" label="المكان" value={act.location} />}
               {act.tracks?.name_ar && <DetailRow icon="tag" label="المسار" value={act.tracks.name_ar} />}
             </div>
-            {showExcuse && studentId && (
+            {showExcuse && studentId && !decided && (
               <div className="cc-detail-foot">
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />
               </div>

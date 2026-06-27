@@ -13,6 +13,7 @@ export default function StudentCalendar({ studentId }) {
   const [actMonth, setActMonth] = useState(new Date()) // شهر «الأنشطة القادمة»
   const [daySel, setDaySel] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [attMap, setAttMap] = useState({})
 
   useEffect(() => {
     async function load() {
@@ -20,8 +21,13 @@ export default function StudentCalendar({ studentId }) {
       const ids = (visIds || []).map(x => (typeof x === 'object' && x !== null) ? (x.visible_activity_ids || x.id) : x).filter(Boolean)
       let q = supabase.from('sessions').select('id, planned_date, start_time, duration_min, title, status, activities(title, activity_type, provider, location, tracks(name_ar, code))')
       if (ids.length) q = q.in('activity_id', ids)
-      const { data } = await q
-      setSessions(data || []); setLoading(false)
+      const [sessRes, attRes] = await Promise.all([
+        q,
+        supabase.from('attendance').select('status, session_id').eq('student_id', studentId),
+      ])
+      const m = {}; (attRes.data || []).forEach(x => { if (x.session_id) m[x.session_id] = x.status })
+      setAttMap(m)
+      setSessions(sessRes.data || []); setLoading(false)
     }
     load()
   }, [studentId])
@@ -85,7 +91,7 @@ export default function StudentCalendar({ studentId }) {
         </div>
         {monthActivities.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة في هذا الشهر.</div>}
         <div className="cc-grid">
-          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId}
+          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]}
             sessionDate={DOW[new Date(s.planned_date).getDay()] + '، ' + s.planned_date.slice(8,10) + ' ' + MON[parseInt(s.planned_date.slice(5,7))-1]} />)}
         </div>
       </div>
@@ -95,7 +101,7 @@ export default function StudentCalendar({ studentId }) {
           <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right', maxWidth: 460 }}>
             <div className="confirm-title">{DOW[new Date(year, month, daySel.d).getDay()]} {daySel.d} {MON[month]}</div>
             <div className="cc-grid" style={{ marginTop: 12 }}>
-              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId}
+              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]}
                 sessionDate={DOW[new Date(year, month, daySel.d).getDay()] + '، ' + daySel.d + ' ' + MON[month]} />)}
             </div>
             <div className="confirm-actions"><button className="confirm-ok" onClick={() => setDaySel(null)}>إغلاق</button></div>

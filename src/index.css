@@ -2373,3 +2373,23 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* زر باركود في صف جلسة الأنشطة */
 .sess-qr { display: inline-flex; align-items: center; gap: 4px; color: var(--navy); border-color: var(--navy) !important; }
 .sess-qr:hover { background: var(--navy); color: #fff; }
+
+/* ============================================================
+   شارات حالة الحضور (حضر / مستأذن / غياب)
+   ============================================================ */
+.att-badge { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; border-radius: 20px; }
+.att-badge-normal { font-size: 12px; padding: 5px 12px; }
+.att-badge-mini { font-size: 11px; padding: 4px 10px; }
+:root[data-theme="dark"] .att-badge[style] { filter: brightness(1.3); }
+
+/* البطاقة البارزة: مكان الشارة في الصف العلوي */
+.fc-att-slot { margin-inline-start: auto; }
+
+/* البطاقة المختصرة المحسومة: شريط جانبي بلون الحالة */
+.cc-decided.cc-present .cc-stripe { background: #15784e; }
+.cc-decided.cc-excused .cc-stripe { background: #b3730a; }
+.cc-decided.cc-absent .cc-stripe { background: #b32d2d; }
+.cc-decided { opacity: .94; }
+
+/* شارة الحالة في نافذة التفاصيل */
+.cc-detail-att { display: flex; justify-content: center; margin-bottom: 6px; }

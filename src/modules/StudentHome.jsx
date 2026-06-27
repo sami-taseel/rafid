@@ -18,7 +18,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
-        supabase.from('attendance').select('status').eq('student_id', studentId),
+        supabase.from('attendance').select('status, session_id').eq('student_id', studentId),
         supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, duration_min, activities(title, activity_type, provider, location, tracks(name_ar))')
           .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
@@ -29,11 +29,15 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       const visSet = new Set(visible)
       const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
       const a = att.data || []
+      // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
+      const attMap = {}
+      a.forEach(x => { if (x.session_id) attMap[x.session_id] = x.status })
       setData({
         present: a.filter(x => x.status === 'present').length,
         absent: a.filter(x => x.status === 'absent').length,
         total: a.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
+        attMap,
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
@@ -88,7 +92,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="fc-grid">
             {nextDaySessions.map(s => (
-              <FeatureCard key={s.id} session={s} studentId={studentId}
+              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]}
                 sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
             ))}
           </div>
@@ -116,7 +120,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
         <div className="cc-grid">
           {shownUpcoming.map(s => (
-            <CompactCard key={s.id} session={s} studentId={studentId}
+            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]}
               sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
           ))}
         </div>
