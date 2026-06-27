@@ -47,6 +47,7 @@ const PATHS = {
   image: <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"/></>,
   send: <><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></>,
   signature: <><path d="M3 17c2-3 4-5 6-5s2 3 4 3 3-4 5-4 3 2 3 2"/><path d="M3 21h18"/></>,
+  hand: <><path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></>,
 }
 
 export default function Icon({ name, size = 20, strokeWidth = 1.9, className = '', style }) {

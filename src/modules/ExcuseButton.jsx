@@ -3,8 +3,8 @@ import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
 import Icon from '../Icon'
 
-// زر «طلب إذن» لكل جلسة + مربع حوار إلزامي للسبب
-export default function ExcuseButton({ studentId, sessionId, sessionTitle }) {
+// زر «طلب إذن» احترافي لكل جلسة + مربع حوار إلزامي للسبب
+export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessionDate }) {
   const toast = useToast()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
@@ -18,6 +18,11 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle }) {
       .then(({ data }) => { if (alive) { setStatus(data?.status || null); setLoaded(true) } }, () => { if (alive) setLoaded(true) })
     return () => { alive = false }
   }, [studentId, sessionId])
+
+  // قفل تمرير الخلفية عند فتح المربع
+  useEffect(() => {
+    if (open) { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = '' } }
+  }, [open])
 
   async function submit() {
     if (reason.trim().length < 3) { toast('يرجى كتابة سبب واضح', 'error'); return }
@@ -37,34 +42,51 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle }) {
 
   if (!loaded) return null
 
-  // إن وُجد طلب سابق، نعرض حالته بدل الزر
-  if (status === 'pending') return <span className="excuse-badge pending"><Icon name="clock" size={12} /> طلب قيد المراجعة</span>
-  if (status === 'approved') return <span className="excuse-badge approved"><Icon name="check" size={12} /> مستأذن</span>
-  if (status === 'rejected') return <span className="excuse-badge rejected"><Icon name="x" size={12} /> رُفض الطلب</span>
+  // حالة الطلب السابق
+  if (status === 'pending') return <span className="exc-chip exc-chip-pending"><Icon name="clock" size={13} /> قيد المراجعة</span>
+  if (status === 'approved') return <span className="exc-chip exc-chip-approved"><Icon name="check" size={13} /> مستأذن</span>
+  if (status === 'rejected') return <span className="exc-chip exc-chip-rejected"><Icon name="x" size={13} /> رُفض الطلب</span>
+
+  const reasonOk = reason.trim().length >= 3
 
   return (
     <>
-      <button className="excuse-btn" onClick={() => setOpen(true)}><Icon name="bell" size={13} /> طلب إذن</button>
+      <button className="exc-trigger" onClick={() => setOpen(true)}>
+        <Icon name="hand" size={15} /> طلب استئذان
+      </button>
+
       {open && (
-        <div className="modal-overlay" onClick={() => setOpen(false)}>
-          <div className="modal-card excuse-modal" onClick={e => e.stopPropagation()}>
-            <div className="excuse-modal-head">
-              <div className="excuse-modal-ic"><Icon name="bell" size={22} /></div>
-              <div>
-                <h3>طلب استئذان</h3>
-                <p className="muted">{sessionTitle}</p>
+        <div className="exc-overlay" onClick={() => !busy && setOpen(false)}>
+          <div className="exc-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            {/* الترويسة المتدرّجة */}
+            <div className="exc-dialog-hero">
+              <button className="exc-close" onClick={() => !busy && setOpen(false)} aria-label="إغلاق"><Icon name="x" size={18} /></button>
+              <div className="exc-hero-ic"><Icon name="hand" size={26} /></div>
+              <h3 className="exc-hero-title">طلب استئذان</h3>
+              <p className="exc-hero-sub">{sessionTitle}{sessionDate ? ` · ${sessionDate}` : ''}</p>
+            </div>
+
+            {/* الجسم */}
+            <div className="exc-dialog-body">
+              <label className="exc-label">
+                <Icon name="edit" size={14} /> سبب الاستئذان <span className="exc-required">إلزامي</span>
+              </label>
+              <textarea className="exc-textarea" rows={4} value={reason} maxLength={400}
+                onChange={e => setReason(e.target.value)} autoFocus
+                placeholder="اكتب سبب طلبك للاستئذان عن هذه الجلسة بوضوح…" />
+              <div className="exc-char">{reason.length}/400</div>
+
+              <div className="exc-info-box">
+                <Icon name="alert" size={15} />
+                <span>سيراجع المشرف طلبك. عند <strong>القبول</strong> تُسجّل مستأذناً، وعند <strong>الرفض</strong> يُسجّل غياب. ستصلك النتيجة بإشعار.</span>
               </div>
             </div>
-            <div className="field">
-              <label>سبب الاستئذان <span className="req-star">*</span></label>
-              <textarea rows={4} value={reason} onChange={e => setReason(e.target.value)}
-                placeholder="اكتب سبب طلبك للاستئذان عن هذه الجلسة…" autoFocus />
-              <p className="excuse-note">سيراجع المشرف طلبك. عند القبول تُسجّل مستأذناً، وعند الرفض يُسجّل غياب.</p>
-            </div>
-            <div className="excuse-modal-actions">
-              <button className="btn-ghost" onClick={() => setOpen(false)}>إلغاء</button>
-              <button className="btn-primary" onClick={submit} disabled={busy || reason.trim().length < 3}>
-                {busy ? 'جارٍ الإرسال…' : 'إرسال الطلب'}
+
+            {/* الأزرار */}
+            <div className="exc-dialog-foot">
+              <button className="exc-btn-cancel" onClick={() => !busy && setOpen(false)}>إلغاء</button>
+              <button className="exc-btn-send" onClick={submit} disabled={busy || !reasonOk}>
+                {busy ? <>جارٍ الإرسال…</> : <><Icon name="send" size={15} /> إرسال الطلب</>}
               </button>
             </div>
           </div>

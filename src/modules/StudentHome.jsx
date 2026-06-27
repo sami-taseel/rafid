@@ -132,7 +132,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
                 <div className="up-sess">{sessName(s)}</div>
                 {s.activities?.title && s.activities.title !== sessName(s) && <div className="up-title">{s.activities.title}</div>}
                 <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + formatTime(s.start_time)}</div>
-                <div className="up-excuse"><ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} /></div>
+                <div className="up-excuse"><ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} /></div>
               </div>
             </div>
           ))}

@@ -2146,29 +2146,6 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .termly-upload-btn:hover:not(.disabled) { filter: brightness(1.1); }
 .termly-upload-btn.disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
 
-/* ===== طلب الاستئذان (الطالب) ===== */
-.up-excuse { margin-top: 8px; }
-.excuse-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-soft); color: var(--blue); border: 1px solid transparent; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
-.excuse-btn:hover { border-color: var(--blue); }
-.excuse-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 12px; border-radius: 10px; font-weight: 600; }
-.excuse-badge.pending { background: #fff8e8; color: #92660a; }
-.excuse-badge.approved { background: #e7f6ef; color: #1d7a52; }
-.excuse-badge.rejected { background: #fcecec; color: #c0392b; }
-:root[data-theme="dark"] .excuse-badge.pending { background: #2a2410; color: #f0c060; }
-:root[data-theme="dark"] .excuse-badge.approved { background: #14271e; color: #5fcf9f; }
-:root[data-theme="dark"] .excuse-badge.rejected { background: #2a1414; color: #f08080; }
-
-/* مربع حوار الاستئذان */
-.excuse-modal { max-width: 440px; }
-.excuse-modal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-.excuse-modal-ic { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--blue), #5b8fd4); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.excuse-modal-head h3 { margin: 0; font-size: 18px; }
-.excuse-modal textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border-strong, var(--border)); border-radius: 10px; font-family: inherit; font-size: 15px; background: var(--bg); color: var(--text); resize: vertical; }
-.excuse-modal textarea:focus { outline: none; border-color: var(--blue); }
-.excuse-note { font-size: 12px; color: var(--text-soft); background: var(--bg); padding: 8px 12px; border-radius: 8px; margin-top: 8px; line-height: 1.7; }
-.excuse-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-.req-star { color: #c0392b; }
-
 /* صفحة طلبات الاستئذان (المدير) */
 .excuse-list { display: flex; flex-direction: column; gap: 12px; }
 .excuse-req-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
@@ -2185,3 +2162,99 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .excuse-reject { background: #fcecec; color: #c0392b; }
 .excuse-reject:hover:not(:disabled) { background: #f8dcdc; }
 .excuse-approve:disabled, .excuse-reject:disabled { opacity: .6; cursor: default; }
+
+/* ============================================================
+   طلب الاستئذان (الطالب) — تصميم احترافي
+   ============================================================ */
+.up-excuse { margin-top: 10px; }
+
+/* الزر المُشغّل */
+.exc-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, #2e5496, #4571b5); color: #fff;
+  border: none; border-radius: 10px; padding: 8px 16px;
+  font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(46,84,150,.25); transition: all .15s;
+}
+.exc-trigger:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(46,84,150,.35); }
+.exc-trigger:active { transform: translateY(0); }
+
+/* شارات الحالة */
+.exc-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; margin-top: 4px; }
+.exc-chip-pending { background: #fff4e0; color: #b3730a; }
+.exc-chip-approved { background: #e3f6ed; color: #15784e; }
+.exc-chip-rejected { background: #fce8e8; color: #b32d2d; }
+:root[data-theme="dark"] .exc-chip-pending { background: #2e2510; color: #f0c060; }
+:root[data-theme="dark"] .exc-chip-approved { background: #15271e; color: #5fcf9f; }
+:root[data-theme="dark"] .exc-chip-rejected { background: #2a1414; color: #f08080; }
+
+/* الطبقة الخلفية */
+.exc-overlay {
+  position: fixed; inset: 0; background: rgba(20,28,46,.55); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000;
+  animation: excFadeIn .2s ease;
+}
+@keyframes excFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* مربع الحوار */
+.exc-dialog {
+  background: var(--surface); border-radius: 20px; width: 100%; max-width: 430px;
+  overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  animation: excPop .28s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes excPop { from { opacity: 0; transform: scale(.92) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+/* الترويسة المتدرّجة */
+.exc-dialog-hero {
+  position: relative; background: linear-gradient(135deg, #2e5496, #5b8fd4);
+  padding: 28px 24px 24px; text-align: center; color: #fff;
+}
+.exc-close {
+  position: absolute; top: 14px; left: 14px; width: 32px; height: 32px;
+  border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s;
+}
+.exc-close:hover { background: rgba(255,255,255,.35); }
+.exc-hero-ic {
+  width: 60px; height: 60px; border-radius: 18px; background: rgba(255,255,255,.18);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;
+  border: 1.5px solid rgba(255,255,255,.3);
+}
+.exc-hero-title { margin: 0; font-size: 21px; font-weight: 700; }
+.exc-hero-sub { margin: 6px 0 0; font-size: 13px; color: rgba(255,255,255,.85); }
+
+/* الجسم */
+.exc-dialog-body { padding: 22px 24px 8px; }
+.exc-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+.exc-required { font-size: 11px; font-weight: 600; background: #fce8e8; color: #b32d2d; padding: 2px 9px; border-radius: 8px; }
+:root[data-theme="dark"] .exc-required { background: #2a1414; color: #f08080; }
+.exc-textarea {
+  width: 100%; padding: 13px 15px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-family: inherit; font-size: 15px; background: var(--bg); color: var(--text); resize: vertical; line-height: 1.7;
+  transition: border-color .15s, box-shadow .15s;
+}
+.exc-textarea:focus { outline: none; border-color: #2e5496; box-shadow: 0 0 0 3px rgba(46,84,150,.13); }
+.exc-char { text-align: left; font-size: 11px; color: var(--text-soft); margin-top: 5px; }
+.exc-info-box {
+  display: flex; gap: 9px; align-items: flex-start; margin-top: 14px;
+  background: #eef3fb; border-radius: 12px; padding: 12px 14px;
+  font-size: 12.5px; line-height: 1.7; color: #34537e;
+}
+.exc-info-box svg { flex-shrink: 0; margin-top: 2px; }
+:root[data-theme="dark"] .exc-info-box { background: #16243a; color: #9fc0ed; }
+
+/* الأزرار */
+.exc-dialog-foot { display: flex; gap: 10px; padding: 8px 24px 22px; }
+.exc-btn-cancel {
+  flex: 0 0 auto; padding: 13px 22px; border: 1.5px solid var(--border); background: transparent;
+  color: var(--text-soft); border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s;
+}
+.exc-btn-cancel:hover { border-color: var(--text-soft); color: var(--text); }
+.exc-btn-send {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 13px; background: linear-gradient(135deg, #2e5496, #4571b5); color: #fff; border: none;
+  border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 3px 10px rgba(46,84,150,.3); transition: all .15s;
+}
+.exc-btn-send:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.exc-btn-send:disabled { opacity: .5; cursor: default; box-shadow: none; }
