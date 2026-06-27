@@ -13,6 +13,13 @@ export default function Attendance() {
   const [qr, setQr] = useState(null)
 
   async function showQR(sessionId) {
+    // حارس إضافي: لا QR قبل يوم الجلسة (الخادم يمنع التحضير أيضاً)
+    const todayStr = new Date().toLocaleDateString('en-CA')
+    if (sel?.planned_date && sel.planned_date > todayStr) {
+      setMsg('لا يمكن توليد رمز الحضور قبل موعد الجلسة.')
+      setTimeout(() => setMsg(null), 4000)
+      return
+    }
     const url = window.location.origin + '/#checkin=' + sessionId
     const dataUrl = await QRCode.toDataURL(url, { width: 280, margin: 2 })
     setQr(dataUrl)
@@ -20,12 +27,19 @@ export default function Attendance() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('sessions').select('id, planned_date, status, activities(title, tracks(name_ar))').order('planned_date', { ascending: false }),
+      supabase.from('sessions').select('id, title, planned_date, start_time, status, activities(title, tracks(name_ar))').order('planned_date', { ascending: false }),
       supabase.from('students').select('id, persons(full_name)'),
     ]).then(([s, st]) => { setSessions(s.data || []); setStudents(st.data || []); setLoading(false) })
   }, [])
 
   async function openSession(sess) {
+    // منع التحضير قبل يوم الجلسة (يُتاح في يوم الجلسة فأحدث)
+    const todayStr = new Date().toLocaleDateString('en-CA')
+    if (sess.planned_date && sess.planned_date > todayStr) {
+      setMsg('لا يمكن رصد الحضور قبل موعد الجلسة. يُتاح التحضير في يوم الجلسة (' + sess.planned_date + ').')
+      setTimeout(() => setMsg(null), 5000)
+      return
+    }
     setSel(sess)
     const { data } = await supabase.from('attendance').select('student_id, status').eq('session_id', sess.id)
     const m = {}; (data || []).forEach(r => m[r.student_id] = r.status); setMarks(m)
@@ -56,8 +70,8 @@ export default function Attendance() {
         <button className="mini" onClick={() => setSel(null)}>→ رجوع للجلسات</button>
         <div className="att-header">
           <div>
-            <h3>{sel.activities?.title}</h3>
-            <span className="muted">{sel.activities?.tracks?.name_ar} · {sel.planned_date}</span>
+            <h3>{sel.title || sel.activities?.title || 'جلسة'}</h3>
+            <span className="muted">{sel.activities?.title && sel.activities.title !== (sel.title || sel.activities?.title) ? sel.activities.title + ' · ' : ''}{sel.activities?.tracks?.name_ar} · {sel.planned_date}</span>
           </div>
           <div className="att-counters">
             <span className="cnt present">حاضر {present}</span>
@@ -112,14 +126,22 @@ export default function Attendance() {
       </h3>
       {sessions.length === 0 && <div className="panel muted">لا توجد جلسات بعد. أضِفها من وحدة المسارات والأنشطة.</div>}
       <div className="session-cards">
-        {sessions.map(s => (
-          <button className="session-card" key={s.id} onClick={() => openSession(s)}>
-            <div className="sc-title">{s.activities?.title || 'نشاط'}</div>
-            <div className="sc-meta">{s.activities?.tracks?.name_ar}</div>
-            <div className="sc-date">📅 {s.planned_date || 'بلا تاريخ'}</div>
-            <span className={'sc-status status-' + s.status}>{statusLabel(s.status)}</span>
-          </button>
-        ))}
+        {sessions.map(s => {
+          const sessName = s.title || s.activities?.title || 'جلسة'
+          const actTitle = s.activities?.title && s.activities.title !== sessName ? s.activities.title : null
+          const todayStr = new Date().toLocaleDateString('en-CA')  // YYYY-MM-DD محلي
+          const isFuture = s.planned_date && s.planned_date > todayStr
+          return (
+            <button className={'session-card' + (isFuture ? ' locked' : '')} key={s.id} onClick={() => openSession(s)}>
+              <div className="sc-title">{sessName}</div>
+              {actTitle && <div className="sc-act-name">{actTitle}</div>}
+              <div className="sc-meta">{s.activities?.tracks?.name_ar}</div>
+              <div className="sc-date">📅 {s.planned_date || 'بلا تاريخ'}</div>
+              {isFuture && <div className="sc-locked-note">🔒 يُتاح التحضير يوم الجلسة</div>}
+              <span className={'sc-status status-' + s.status}>{statusLabel(s.status)}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
