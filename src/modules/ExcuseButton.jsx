@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
 import Icon from '../Icon'
@@ -73,7 +74,7 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
         <Icon name="hand" size={15} /> طلب استئذان
       </button>
 
-      {open && (
+      {open && createPortal(
         <div className="exc-overlay" onClick={() => !busy && setOpen(false)}>
           <div className="exc-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
             {/* الترويسة المتدرّجة */}
@@ -108,7 +109,8 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
