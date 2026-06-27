@@ -1524,8 +1524,16 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .attach-row { flex-direction: column; align-items: stretch; gap: 8px; }
   .attach-actions { justify-content: flex-end; }
 
-  /* لوحة الإشعارات: أوسع على الجوال */
-  .notif-panel { width: calc(100vw - 32px); max-width: 340px; }
+  /* لوحة الإشعارات على الجوال: تموضع ثابت آمن لا يُقصّ */
+  .notif-panel {
+    position: fixed;
+    top: 64px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-width: none;
+    max-height: 70vh;
+  }
 
   /* لوحة التوقيع */
   .sig-canvas { height: 160px; }
