@@ -2500,3 +2500,6 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .rb-sess input { width: 15px; height: 15px; accent-color: var(--blue); }
 .rb-sess-title { flex: 1; font-size: 13px; }
 .rb-sess-date { font-size: 12px; color: var(--text-soft); }
+
+/* رمز السبب التقني في رسالة الخطأ */
+.err-code { font-size: 11px; opacity: .7; font-weight: 400; }

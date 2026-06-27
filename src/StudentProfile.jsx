@@ -77,18 +77,37 @@ function StudentProfileInner({ session }) {
   async function handleSave(e) {
     e.preventDefault(); setSaving(true); setMsg(null)
     try {
-      // التحقق من رقم الإقامة: 10 أرقام تبدأ بـ 1 أو 2 أو 3 أو 4 (إقامة/زيارة/هوية)
+      // ===== (1) تحقق إجباري دقيق: نُحدّد الحقل الناقص بالاسم =====
+      const missing = []
+      for (const f of fields) {
+        if (!f.required) continue
+        const v = (values[f.id] ?? '').toString().trim()
+        if (!v) missing.push(f.label)
+      }
+      if (missing.length) {
+        setSaving(false)
+        setMsg({ type: 'error', text: missing.length === 1
+          ? `يرجى تعبئة الحقل الإلزامي: «${missing[0]}».`
+          : `يرجى تعبئة الحقول الإلزامية: ${missing.map(m => `«${m}»`).join('، ')}.` })
+        return
+      }
+
+      // ===== (2) تحقق رقم الإقامة بالاسم الدقيق =====
       const byKeyCheck = {}
       fields.forEach(f => { if (f.field_key) byKeyCheck[f.field_key] = values[f.id] || '' })
       if (byKeyCheck.residency_no && !/^[1-4]\d{9}$/.test(byKeyCheck.residency_no.trim())) {
-        setSaving(false); setMsg({ type: 'error', text: 'رقم الإقامة/الهوية يجب أن يكون ١٠ أرقام.' }); return
+        const resField = fields.find(f => f.field_key === 'residency_no')
+        setSaving(false)
+        setMsg({ type: 'error', text: `«${resField?.label || 'رقم الإقامة'}» غير صحيح: يجب أن يكون ١٠ أرقام بالضبط (يبدأ بـ ١ أو ٢ أو ٣ أو ٤)، دون مسافات أو رموز.` })
+        return
       }
-      const rows = fields.map(f => ({ student_id: student.id, field_id: f.id, value: values[f.id] || '' }))
-      const { error } = await supabase.from('student_field_values').upsert(rows, { onConflict: 'student_id,field_id' })
-      if (error) throw error
 
-      // توحيد البيانات: نكتب الحقول الأساسية في الأعمدة المباشرة أيضاً
-      // حتى يظهر الطالب في الفلاتر والفئات مثل بقية الطلاب
+      // ===== (3) حفظ قيم الحقول =====
+      const rows = fields.map(f => ({ student_id: student.id, field_id: f.id, value: values[f.id] || '' }))
+      const { error: vErr } = await supabase.from('student_field_values').upsert(rows, { onConflict: 'student_id,field_id' })
+      if (vErr) throw new Error('FIELD_VALUES: ' + vErr.message)
+
+      // ===== (4) تحديث جدول persons (كل عمود على حدة لعزل الخطأ) =====
       const byKey = {}
       fields.forEach(f => { if (f.field_key) byKey[f.field_key] = values[f.id] || null })
       const personUpd = {}
@@ -98,32 +117,49 @@ function StudentProfileInner({ session }) {
       if ('phone' in byKey) personUpd.phone = byKey.phone
       if ('gender' in byKey) personUpd.gender = byKey.gender
       if (Object.keys(personUpd).length) {
-        await supabase.from('persons').update(personUpd).eq('id', student.person_id)
+        const { error: pErr } = await supabase.from('persons').update(personUpd).eq('id', student.person_id)
+        if (pErr) throw new Error('PERSON: ' + pErr.message)
       }
+
+      // ===== (5) تحديث جدول students =====
       const studentUpd = { profile_reviewed: true }
       if ('degree_level' in byKey) studentUpd.degree_level = byKey.degree_level
       if ('housing_building' in byKey) studentUpd.housing_building_id = byKey.housing_building || null
       if ('university' in byKey) studentUpd.university = byKey.university
       if ('college' in byKey) studentUpd.college = byKey.college
       if ('major' in byKey) studentUpd.major = byKey.major
-      await supabase.from('students').update(studentUpd).eq('id', student.id)
+      const { error: sErr } = await supabase.from('students').update(studentUpd).eq('id', student.id)
+      if (sErr) throw new Error('STUDENT: ' + sErr.message)
 
       setMsg({ type: 'ok', text: 'تم حفظ بياناتك بنجاح. شكراً لك.' })
-      // إن كان الحساب قيد الإعداد، نعيد التحميل لتحديث خطوات التفعيل
       if ((student?.account_state || 'pending_data') === 'pending_data') {
         setTimeout(() => window.location.reload(), 800)
       }
     } catch (err) {
-      const m = (err.message || '').toLowerCase()
+      const raw = err.message || String(err)
+      const m = raw.toLowerCase()
       let friendly = 'تعذّر حفظ بياناتك. يرجى المحاولة مرة أخرى.'
-      if (m.includes('row-level security') || m.includes('policy')) {
-        friendly = 'حدث خطأ في الصلاحيات أثناء الحفظ. يرجى تحديث الصفحة وإعادة المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
-      } else if (m.includes('network') || m.includes('fetch')) {
+      // تحديد السبب بدقة
+      if (m.includes('row-level security') || m.includes('policy') || m.includes('permission')) {
+        friendly = 'تعذّر الحفظ بسبب الصلاحيات. حدّث الصفحة وأعد المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+      } else if (m.includes('network') || m.includes('fetch') || m.includes('failed to')) {
         friendly = 'تعذّر الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد المحاولة.'
       } else if (m.includes('duplicate') || m.includes('unique')) {
-        friendly = 'هذه البيانات مسجّلة مسبقاً.'
+        if (m.includes('residency')) friendly = 'رقم الإقامة/الهوية مسجّل لطالب آخر. تأكد من صحته.'
+        else friendly = 'بعض البيانات مسجّلة مسبقاً لحساب آخر.'
+      } else if (m.includes('invalid input') || m.includes('numeric') || m.includes('integer') || m.includes('type')) {
+        friendly = 'إحدى القيم بصيغة غير صحيحة. تأكد من الحقول الرقمية (مثل رقم الإقامة والجوال).'
+      } else if (m.includes('null value') || m.includes('not-null') || m.includes('violates not')) {
+        friendly = 'هناك حقل إلزامي فارغ في النظام. يرجى تعبئة جميع الحقول المطلوبة.'
+      } else if (m.includes('student:') || m.includes('person:') || m.includes('field_values:')) {
+        // خطأ في جزء محدّد — نعرض تلميحاً للمكان
+        const part = m.includes('student:') ? 'بيانات الملف الأكاديمي' : m.includes('person:') ? 'البيانات الشخصية' : 'حقول النموذج'
+        friendly = `تعذّر حفظ ${part}. تأكد من صحة القيم، وإن استمرت المشكلة تواصل مع إدارة السكن.`
       }
-      setMsg({ type: 'error', text: friendly })
+      // نُلحق رمز السبب التقني (مختصراً) ليسهل على الإدارة التشخيص
+      const code = raw.split(':')[0]
+      setMsg({ type: 'error', text: friendly, detail: code && code.length < 30 ? code : null })
+      console.error('حفظ بيانات الطالب — الخطأ الفعلي:', raw)
     } finally { setSaving(false) }
   }
   useEffect(() => { supabase.rpc('active_buildings').then(({ data }) => setBuildings(data || [])) }, [])
@@ -261,7 +297,7 @@ function StudentProfileInner({ session }) {
                 ))}
               </div>
             ))}
-            {msg && <div className={msg.type === 'ok' ? 'save-ok' : 'login-error'}>{msg.text}</div>}
+            {msg && <div className={msg.type === 'ok' ? 'save-ok' : 'login-error'}>{msg.text}{msg.detail && <span className="err-code"> (رمز: {msg.detail})</span>}</div>}
             <button type="submit" disabled={saving} className="sp-save">
               {saving ? t('saving') : t('save')}
             </button>
