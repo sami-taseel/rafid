@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 import Icon from '../Icon'
+import ExcuseButton from './ExcuseButton'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [points, setPoints] = useState(0)
@@ -131,6 +132,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
                 <div className="up-sess">{sessName(s)}</div>
                 {s.activities?.title && s.activities.title !== sessName(s) && <div className="up-title">{s.activities.title}</div>}
                 <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + formatTime(s.start_time)}</div>
+                <div className="up-excuse"><ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} /></div>
               </div>
             </div>
           ))}

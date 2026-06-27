@@ -38,6 +38,7 @@ import FormsAdmin from './modules/FormsAdmin'
 import FormRecords from './modules/FormRecords'
 import ApprovalRequests, { pendingApprovalCount } from './modules/ApprovalRequests'
 import StudentDiagnostics from './modules/StudentDiagnostics'
+import ExcuseRequests, { pendingExcuseCount } from './modules/ExcuseRequests'
 import { registerSW } from './push'
 
 export default function App() {
@@ -84,18 +85,22 @@ function RoleRouter({ session }) {
   useEffect(() => {
     async function check() {
       try {
-        const { data } = await supabase.from('persons')
-          .select('id, user_roles(roles(code))').eq('auth_user_id', session.user.id).maybeSingle()
-        const codes = (data?.user_roles || []).map(ur => ur.roles?.code)
-        if (codes.includes('sponsor')) setRole('sponsor')
-        else if (codes.some(c => c && c !== 'student')) setRole('staff')
-        else {
-          setRole('student')
-          // فحص حالة قبول الطالب: المجمّد/المرفوض يُمنع
-          if (data?.id) {
-            const { data: st } = await supabase.from('students').select('admission_status').eq('person_id', data.id).maybeSingle()
-            if (st && (st.admission_status === 'frozen' || st.admission_status === 'rejected')) setFrozen(st.admission_status)
-          }
+        // نجلب كل صفوف persons المرتبطة بالمستخدم (قد يوجد تكرار) لتفادي خطأ maybeSingle
+        const { data: rows } = await supabase.from('persons')
+          .select('id, created_at, user_roles(roles(code))').eq('auth_user_id', session.user.id)
+        const persons = rows || []
+        // نجمع كل الأدوار من كل الصفوف
+        const allCodes = persons.flatMap(p => (p.user_roles || []).map(ur => ur.roles?.code)).filter(Boolean)
+
+        if (allCodes.includes('sponsor')) { setRole('sponsor'); setChecking(false); return }
+        if (allCodes.some(c => c !== 'student')) { setRole('staff'); setChecking(false); return }
+
+        // طالب: نختار صفّ الطالب (الأقدم عادةً) لفحص حالة القبول
+        setRole('student')
+        const personId = persons.length ? persons.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0].id : null
+        if (personId) {
+          const { data: st } = await supabase.from('students').select('admission_status').eq('person_id', personId).maybeSingle()
+          if (st && (st.admission_status === 'frozen' || st.admission_status === 'rejected')) setFrozen(st.admission_status)
         }
       } catch { setRole('student') }
       finally { setChecking(false) }
@@ -127,14 +132,17 @@ function RoleRouter({ session }) {
 
 function StudentsGroup() {
   const [pending, setPending] = useState(0)
+  const [excuses, setExcuses] = useState(0)
   useEffect(() => {
     pendingApprovalCount().then(setPending)
-    const t = setInterval(() => pendingApprovalCount().then(setPending), 60000)
+    pendingExcuseCount().then(setExcuses)
+    const t = setInterval(() => { pendingApprovalCount().then(setPending); pendingExcuseCount().then(setExcuses) }, 60000)
     return () => clearInterval(t)
   }, [])
   return <TabGroup tabs={[
     { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
     { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
+    { key: 'excuses', label: 'طلبات الاستئذان', el: <ExcuseRequests />, badge: excuses },
     { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },

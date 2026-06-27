@@ -2145,3 +2145,43 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .termly-upload-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; background: var(--navy); color: #fff; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .15s; }
 .termly-upload-btn:hover:not(.disabled) { filter: brightness(1.1); }
 .termly-upload-btn.disabled { background: var(--border); color: var(--text-soft); cursor: not-allowed; }
+
+/* ===== طلب الاستئذان (الطالب) ===== */
+.up-excuse { margin-top: 8px; }
+.excuse-btn { display: inline-flex; align-items: center; gap: 5px; background: var(--blue-soft); color: var(--blue); border: 1px solid transparent; border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.excuse-btn:hover { border-color: var(--blue); }
+.excuse-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 12px; border-radius: 10px; font-weight: 600; }
+.excuse-badge.pending { background: #fff8e8; color: #92660a; }
+.excuse-badge.approved { background: #e7f6ef; color: #1d7a52; }
+.excuse-badge.rejected { background: #fcecec; color: #c0392b; }
+:root[data-theme="dark"] .excuse-badge.pending { background: #2a2410; color: #f0c060; }
+:root[data-theme="dark"] .excuse-badge.approved { background: #14271e; color: #5fcf9f; }
+:root[data-theme="dark"] .excuse-badge.rejected { background: #2a1414; color: #f08080; }
+
+/* مربع حوار الاستئذان */
+.excuse-modal { max-width: 440px; }
+.excuse-modal-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.excuse-modal-ic { width: 46px; height: 46px; border-radius: 12px; background: linear-gradient(135deg, var(--blue), #5b8fd4); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.excuse-modal-head h3 { margin: 0; font-size: 18px; }
+.excuse-modal textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border-strong, var(--border)); border-radius: 10px; font-family: inherit; font-size: 15px; background: var(--bg); color: var(--text); resize: vertical; }
+.excuse-modal textarea:focus { outline: none; border-color: var(--blue); }
+.excuse-note { font-size: 12px; color: var(--text-soft); background: var(--bg); padding: 8px 12px; border-radius: 8px; margin-top: 8px; line-height: 1.7; }
+.excuse-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+.req-star { color: #c0392b; }
+
+/* صفحة طلبات الاستئذان (المدير) */
+.excuse-list { display: flex; flex-direction: column; gap: 12px; }
+.excuse-req-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); }
+.excuse-req-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.excuse-req-av { width: 42px; height: 42px; border-radius: 50%; background: var(--blue-soft); color: var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+.excuse-req-name { font-weight: 700; font-size: 15px; }
+.excuse-req-session { font-size: 13px; color: var(--text-soft); }
+.excuse-req-reason { background: var(--bg); border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+.excuse-req-label { font-weight: 700; color: var(--text-soft); }
+.excuse-req-actions { display: flex; gap: 10px; }
+.excuse-approve, .excuse-reject { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; border-radius: 10px; padding: 11px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.excuse-approve { background: #1d7a52; color: #fff; }
+.excuse-approve:hover:not(:disabled) { filter: brightness(1.1); }
+.excuse-reject { background: #fcecec; color: #c0392b; }
+.excuse-reject:hover:not(:disabled) { background: #f8dcdc; }
+.excuse-approve:disabled, .excuse-reject:disabled { opacity: .6; cursor: default; }

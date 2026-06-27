@@ -38,9 +38,10 @@ export default function StudentCalendar({ studentId }) {
   const isToday = d => today.getFullYear() === year && today.getMonth() === month && today.getDate() === d
   const monthCount = sessions.filter(s => s.planned_date?.startsWith(`${year}-${String(month + 1).padStart(2, '0')}`)).length
 
-  // أنشطة شهر «الأنشطة القادمة»
+  // أنشطة شهر «الأنشطة القادمة» — نُخفي ما فات وقته (يبقى ظاهراً في التقويم عند التنقّل للسابق)
   const aMonthStr = `${actMonth.getFullYear()}-${String(actMonth.getMonth() + 1).padStart(2, '0')}`
-  const monthActivities = sessions.filter(s => s.planned_date?.startsWith(aMonthStr))
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  const monthActivities = sessions.filter(s => s.planned_date?.startsWith(aMonthStr) && s.planned_date >= todayStr)
     .sort((a, b) => a.planned_date.localeCompare(b.planned_date) || (a.start_time || '').localeCompare(b.start_time || ''))
 
   return (
