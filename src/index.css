@@ -2393,3 +2393,53 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 
 /* شارة الحالة في نافذة التفاصيل */
 .cc-detail-att { display: flex; justify-content: center; margin-bottom: 6px; }
+
+/* ============================================================
+   بطاقة الحضور: الجزء القابل للنقر + شريط الأيقونات الثلاث
+   ============================================================ */
+.session-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.sc-clickable { padding: 16px 16px 12px; cursor: pointer; flex: 1; }
+.sc-clickable:hover { background: var(--surface-2, var(--bg)); }
+.sc-icons { display: flex; border-top: 1px solid var(--border); }
+.sc-ico { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px; background: var(--surface); border: none; border-inline-start: 1px solid var(--border); color: var(--text-soft); font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.sc-ico:first-child { border-inline-start: none; }
+.sc-ico:hover:not(.disabled) { background: var(--blue-soft); color: var(--blue); }
+.sc-ico.active { background: var(--blue-soft); color: var(--blue); }
+.sc-ico.active.warn { background: #fff4e0; color: #b3730a; }
+.sc-ico.disabled { opacity: .4; cursor: not-allowed; }
+.sc-ico svg { display: block; }
+
+/* زر إلغاء التحضير في صف الطالب */
+.att-btn.clear { background: #fce8e8; color: #b32d2d; padding: 6px 9px; }
+.att-btn.clear:hover { background: #f8d4d4; }
+
+/* أزرار الحالة المفعّلة في الأنشطة */
+.mini.btn-on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.mini.btn-on-warn { background: #b3730a; color: #fff; border-color: #b3730a; }
+
+/* ============================================================
+   نافذة التأجيل (RescheduleModal) — تقويم احترافي
+   ============================================================ */
+.rs-overlay { position: fixed; inset: 0; background: rgba(20,28,46,.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000; animation: excFadeIn .2s ease; }
+.rs-card { position: relative; background: var(--surface); border-radius: 20px; width: 100%; max-width: 380px; padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: excPop .26s cubic-bezier(.2,.9,.3,1.2); }
+.rs-close { position: absolute; top: 14px; left: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg); color: var(--text-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.rs-close:hover { background: var(--border); }
+.rs-head { text-align: center; margin-bottom: 16px; }
+.rs-head-ic { width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.rs-title { margin: 0; font-size: 19px; font-weight: 800; }
+.rs-sub { margin: 4px 0 0; font-size: 13px; color: var(--text-soft); }
+.rs-cal-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.rs-month { font-size: 15px; font-weight: 700; }
+.rs-nav { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.rs-nav:hover { border-color: var(--blue); color: var(--blue); }
+.rs-dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+.rs-dow span { text-align: center; font-size: 11px; color: var(--text-soft); font-weight: 600; }
+.rs-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.rs-empty { aspect-ratio: 1; }
+.rs-day { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.rs-day:hover:not(.past) { background: var(--blue); color: #fff; border-color: var(--blue); transform: scale(1.05); }
+.rs-day.today { border-color: var(--blue); color: var(--blue); }
+.rs-day.past { opacity: .35; cursor: not-allowed; }
+.rs-tbd { width: 100%; margin-top: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 13px; border: 1.5px dashed #d97706; background: #fff8ed; color: #b3730a; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s; }
+.rs-tbd:hover { background: #fef0db; }
+:root[data-theme="dark"] .rs-tbd { background: #2a2010; border-color: #5a4420; }

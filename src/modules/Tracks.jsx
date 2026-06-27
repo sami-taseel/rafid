@@ -6,6 +6,7 @@ import { useConfirm } from '../Confirm'
 import ExcelImport from './ExcelImport'
 import Icon from '../Icon'
 import QRModal, { canGenerateQR } from './QRModal'
+import RescheduleModal from './RescheduleModal'
 
 const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
 
@@ -18,6 +19,7 @@ export default function Tracks() {
   const [loading, setLoading] = useState(true)
   const [sessFor, setSessFor] = useState(null)
   const [qrSession, setQrSession] = useState(null)
+  const [reschedule, setReschedule] = useState(null)
   const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
@@ -119,6 +121,24 @@ export default function Tracks() {
   async function setSessionStatus(id, status) {
     await supabase.from('sessions').update({ status }).eq('id', id); loadAll()
   }
+  // تبديل منعقدة (منعقدة ⇄ مجدولة)
+  async function toggleHeld(s) {
+    const next = s.status === 'held' ? 'scheduled' : 'held'
+    await supabase.from('sessions').update({ status: next }).eq('id', s.id); loadAll()
+  }
+  // تأجيل أو إلغاء تأجيل (مؤجلة → مجدولة)
+  async function handlePostpone(s) {
+    if (s.status === 'postponed') {
+      await supabase.from('sessions').update({ status: 'scheduled' }).eq('id', s.id); loadAll()
+    } else { setReschedule(s) }
+  }
+  async function confirmReschedule(newDate) {
+    const s = reschedule
+    const payload = { status: 'postponed' }
+    if (newDate) payload.planned_date = newDate
+    await supabase.from('sessions').update(payload).eq('id', s.id)
+    setReschedule(null); flash(newDate ? 'تم تأجيل الجلسة إلى ' + newDate : 'تم تأجيل الجلسة إلى إشعار آخر'); loadAll()
+  }
 
   if (loading) return <Spinner />
   return (
@@ -205,9 +225,12 @@ export default function Tracks() {
                       <Icon name="image" size={14} /> باركود
                     </button>
                   )}
-                  <button className="mini" onClick={() => setSessionStatus(s.id, 'held')}>منعقدة</button>
-                  <button className="mini" onClick={() => setSessionStatus(s.id, 'postponed')}>تأجيل</button>
-                  <button className="mini" onClick={() => setSessionStatus(s.id, 'cancelled')}>إلغاء</button>
+                  <button className={'mini' + (s.status === 'held' ? ' btn-on' : '')} onClick={() => toggleHeld(s)}>
+                    {s.status === 'held' ? '✓ منعقدة' : 'منعقدة'}
+                  </button>
+                  <button className={'mini' + (s.status === 'postponed' ? ' btn-on-warn' : '')} onClick={() => handlePostpone(s)}>
+                    {s.status === 'postponed' ? 'مؤجلة ✕' : 'تأجيل'}
+                  </button>
                   <button className="mini" onClick={() => openEditSession(s)}>تعديل</button>
                   <button className="fr-del" onClick={() => deleteSession(s)}>حذف</button>
                 </div>
@@ -296,6 +319,7 @@ export default function Tracks() {
       )}
     </div>
       {qrSession && <QRModal session={qrSession} onClose={() => setQrSession(null)} />}
+      {reschedule && <RescheduleModal session={reschedule} onConfirm={confirmReschedule} onClose={() => setReschedule(null)} />}
     </>
   )
 }
