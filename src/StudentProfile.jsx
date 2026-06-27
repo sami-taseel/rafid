@@ -54,14 +54,24 @@ function StudentProfileInner({ session }) {
     async function load() {
       try {
         const uid = session.user.id
-        // نجلب كل صفوف الشخص (قد يوجد تكرار) ونختار الأقدم — يتفادى خطأ maybeSingle
+        const email = session.user.email
+        // نجلب كل صفوف الشخص المطابقة لـ auth_user_id
         const { data: persons } = await supabase.from('persons').select('*').eq('auth_user_id', uid).order('created_at')
         let p = (persons && persons.length) ? persons[0] : null
 
+        // إن لم يوجد، نبحث عن صفّ أنشأه المدير بنفس البريد ونربطه (نتفادى التكرار)
+        if (!p && email) {
+          const { data: byEmail } = await supabase.from('persons').select('*').eq('email', email).is('auth_user_id', null).order('created_at')
+          if (byEmail && byEmail.length) {
+            const { data: linked } = await supabase.from('persons').update({ auth_user_id: uid }).eq('id', byEmail[0].id).select().single()
+            p = linked || byEmail[0]
+          }
+        }
+
         if (!p) {
-          // لا يوجد شخص: ننشئه مع صف طالب
+          // لا صفّ موجود إطلاقاً: ننشئه مع صف طالب
           const { data: np, error: npErr } = await supabase.from('persons')
-            .insert({ full_name: '', auth_user_id: uid, email: session.user.email }).select().single()
+            .insert({ full_name: '', auth_user_id: uid, email }).select().single()
           if (npErr || !np) throw new Error('PERSON_CREATE: ' + (npErr?.message || 'تعذّر إنشاء الحساب'))
           p = np
           await supabase.from('students').insert({ person_id: p.id })
