@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { formatTime } from '../dateUtils'
+import SessionCard from './SessionCard'
 
 const DOW = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
@@ -17,7 +18,7 @@ export default function StudentCalendar({ studentId }) {
     async function load() {
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
       const ids = (visIds || []).map(x => (typeof x === 'object' && x !== null) ? (x.visible_activity_ids || x.id) : x).filter(Boolean)
-      let q = supabase.from('sessions').select('id, planned_date, start_time, title, status, activities(title, location, tracks(name_ar, code))')
+      let q = supabase.from('sessions').select('id, planned_date, start_time, duration_min, title, status, activities(title, activity_type, provider, location, tracks(name_ar, code))')
       if (ids.length) q = q.in('activity_id', ids)
       const { data } = await q
       setSessions(data || []); setLoading(false)
@@ -83,37 +84,18 @@ export default function StudentCalendar({ studentId }) {
           </div>
         </div>
         {monthActivities.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة في هذا الشهر.</div>}
-        <div className="act-grid">
-          {monthActivities.map(s => (
-            <div key={s.id} className="act-card">
-              <div className="act-card-date">
-                <div className="act-d-dow">{DOW[new Date(s.planned_date).getDay()]}</div>
-                <div className="act-d-num">{s.planned_date?.slice(8, 10)}</div>
-                <div className="act-d-mon">{MON[parseInt(s.planned_date?.slice(5, 7)) - 1]}</div>
-              </div>
-              <div className="act-card-body">
-                <div className="act-card-title">{s.title || s.activities?.title || 'نشاط'}</div>
-                <div className="act-card-meta">
-                  {s.start_time && <span>🕐 {formatTime(s.start_time)}</span>}
-                  {s.activities?.location && <span>📍 {s.activities.location}</span>}
-                </div>
-                {s.activities?.tracks?.name_ar && <span className="act-pill">{s.activities.tracks.name_ar}</span>}
-              </div>
-            </div>
-          ))}
+        <div className="sc-grid">
+          {monthActivities.map(s => <SessionCard key={s.id} session={s} variant="list" />)}
         </div>
       </div>
 
       {daySel && (
         <div className="confirm-overlay" onClick={() => setDaySel(null)}>
-          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
+          <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right', maxWidth: 460 }}>
             <div className="confirm-title">{DOW[new Date(year, month, daySel.d).getDay()]} {daySel.d} {MON[month]}</div>
-            {daySel.ss.map(s => (
-              <div key={s.id} className="st-cal-day-item">
-                <strong>{s.title || s.activities?.title}</strong>
-                <div className="muted" style={{ fontSize: 13 }}>{s.activities?.tracks?.name_ar}{s.start_time && ` · ${formatTime(s.start_time)}`}{s.activities?.location && ` · ${s.activities.location}`}</div>
-              </div>
-            ))}
+            <div className="sc-grid" style={{ marginTop: 12 }}>
+              {daySel.ss.map(s => <SessionCard key={s.id} session={s} variant="list" showDate={false} />)}
+            </div>
             <div className="confirm-actions"><button className="confirm-ok" onClick={() => setDaySel(null)}>إغلاق</button></div>
           </div>
         </div>

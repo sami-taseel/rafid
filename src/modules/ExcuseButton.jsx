@@ -40,10 +40,28 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
     setBusy(false)
   }
 
+  // إلغاء طلب معلّق (قبل مراجعة المشرف)
+  async function cancelRequest() {
+    setBusy(true)
+    try {
+      const { error } = await supabase.from('excuse_requests')
+        .delete().eq('student_id', studentId).eq('session_id', sessionId).eq('status', 'pending')
+      if (error) throw error
+      setStatus(null)
+      toast('تم إلغاء الطلب', 'info')
+    } catch (e) { toast('تعذّر إلغاء الطلب', 'error') }
+    setBusy(false)
+  }
+
   if (!loaded) return null
 
   // حالة الطلب السابق
-  if (status === 'pending') return <span className="exc-chip exc-chip-pending"><Icon name="clock" size={13} /> قيد المراجعة</span>
+  if (status === 'pending') return (
+    <span className="exc-status-row">
+      <span className="exc-chip exc-chip-pending"><Icon name="clock" size={13} /> قيد المراجعة</span>
+      <button className="exc-cancel-link" onClick={cancelRequest} disabled={busy}>إلغاء الطلب</button>
+    </span>
+  )
   if (status === 'approved') return <span className="exc-chip exc-chip-approved"><Icon name="check" size={13} /> مستأذن</span>
   if (status === 'rejected') return <span className="exc-chip exc-chip-rejected"><Icon name="x" size={13} /> رُفض الطلب</span>
 

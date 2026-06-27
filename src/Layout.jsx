@@ -35,9 +35,14 @@ export default function Layout({ active, onNavigate, children }) {
       const { data: tk } = await supabase.from('tickets').select('status_code, ticket_types(handler_role)').neq('status_code', 'closed')
       const visible = (tk || []).filter(t => admin || (t.ticket_types?.handler_role && roles.includes(t.ticket_types.handler_role)))
       setOpenTickets(visible.length)
-      // عدد طلبات الاعتماد المنتظرة
+      // عدد طلبات الاعتماد المنتظرة + طلبات الاستئذان المعلّقة (تظهر جوار «الطلاب»)
       const { count } = await supabase.from('students').select('id', { count: 'exact', head: true }).eq('account_state', 'pending_approval')
-      setPendingApprovals(count || 0)
+      let excuseCount = 0
+      try {
+        const { count: ec } = await supabase.from('excuse_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        excuseCount = ec || 0
+      } catch { /* الجدول قد لا يكون منفّذاً بعد */ }
+      setPendingApprovals((count || 0) + excuseCount)
     }
     countTickets()
   }, [active])

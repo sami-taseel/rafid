@@ -4,6 +4,7 @@ import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 import Icon from '../Icon'
 import ExcuseButton from './ExcuseButton'
+import SessionCard from './SessionCard'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [points, setPoints] = useState(0)
@@ -19,7 +20,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
         supabase.from('attendance').select('status').eq('student_id', studentId),
-        supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, activities(title, activity_type, location, tracks(name_ar))')
+        supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, duration_min, activities(title, activity_type, provider, location, tracks(name_ar))')
           .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
         supabase.from('notifications').select('id, title, body, kind, created_at, is_read')
@@ -86,17 +87,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       {nextDaySessions.length > 0 ? (
         <div className="next-wrap">
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
-          <div className="next-grid">
+          <div className="sc-grid">
             {nextDaySessions.map(s => (
-              <div className="next-card" key={s.id}>
-                <div className="next-sess">{sessName(s)}</div>
-                {s.activities?.title && s.activities.title !== sessName(s) && <div className="next-act">{s.activities.title}</div>}
-                <div className="next-meta">
-                  {s.start_time && <span>🕐 {formatTime(s.start_time)}</span>}
-                  {s.activities?.location && <span>📍 {s.activities.location}</span>}
-                </div>
-                {s.activities?.tracks?.name_ar && <span className="pill">{s.activities.tracks.name_ar}</span>}
-              </div>
+              <SessionCard key={s.id} session={s} variant="feature" showDate={false}
+                footer={<ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />} />
             ))}
           </div>
         </div>
@@ -121,20 +115,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           )}
         </div>
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
-        <div className="up-grid">
+        <div className="sc-grid">
           {shownUpcoming.map(s => (
-            <div key={s.id} className="up-card">
-              <div className="up-date">
-                <div className="up-day">{dayName(s.planned_date)}</div>
-                <div className="up-num">{s.planned_date?.slice(8,10)}</div>
-              </div>
-              <div className="up-info">
-                <div className="up-sess">{sessName(s)}</div>
-                {s.activities?.title && s.activities.title !== sessName(s) && <div className="up-title">{s.activities.title}</div>}
-                <div className="up-sub">{s.activities?.tracks?.name_ar}{s.activities?.location && ' · ' + s.activities.location}{s.start_time && ' · ' + formatTime(s.start_time)}</div>
-                <div className="up-excuse"><ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} /></div>
-              </div>
-            </div>
+            <SessionCard key={s.id} session={s} variant="list"
+              footer={<ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName(s)} sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />} />
           ))}
         </div>
       </div>}

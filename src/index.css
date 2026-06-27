@@ -2258,3 +2258,41 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 }
 .exc-btn-send:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
 .exc-btn-send:disabled { opacity: .5; cursor: default; box-shadow: none; }
+
+/* ============================================================
+   بطاقة الجلسة الموحّدة (SessionCard)
+   ============================================================ */
+.sc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.sc-card { --sc-color: #2e5496; position: relative; display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s; }
+.sc-card:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(0,0,0,.09); }
+.sc-stripe { width: 5px; background: var(--sc-color); flex-shrink: 0; }
+.sc-main { flex: 1; padding: 16px 16px 14px; min-width: 0; }
+
+.sc-head { display: flex; gap: 13px; align-items: flex-start; }
+.sc-date { flex-shrink: 0; width: 54px; text-align: center; background: linear-gradient(160deg, var(--sc-color), color-mix(in srgb, var(--sc-color) 75%, #fff)); border-radius: 12px; padding: 8px 4px; color: #fff; }
+.sc-date-num { display: block; font-size: 22px; font-weight: 800; line-height: 1.1; }
+.sc-date-mon { display: block; font-size: 11px; opacity: .9; }
+.sc-head-text { flex: 1; min-width: 0; }
+.sc-type-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+.sc-type-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+.sc-track { font-size: 11px; color: var(--text-soft); background: var(--bg); padding: 3px 10px; border-radius: 12px; }
+.sc-title { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
+.sc-subtitle { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+
+.sc-details { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.sc-detail { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--text-soft); background: var(--bg); padding: 6px 11px; border-radius: 9px; }
+.sc-detail svg { color: var(--sc-color); flex-shrink: 0; }
+
+.sc-footer { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--border); }
+
+/* البطاقة البارزة (أقرب موعد) */
+.sc-feature { border: none; box-shadow: 0 4px 20px rgba(46,84,150,.12); }
+.sc-feature .sc-stripe { width: 6px; }
+.sc-feature .sc-title { font-size: 18px; }
+.sc-feature .sc-main { padding: 20px; }
+
+/* إلغاء طلب الاستئذان */
+.exc-status-row { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.exc-cancel-link { background: none; border: none; color: var(--text-soft); font-family: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; padding: 0; }
+.exc-cancel-link:hover:not(:disabled) { color: #c0392b; }
+.exc-cancel-link:disabled { opacity: .5; cursor: default; }
