@@ -54,21 +54,51 @@ function StudentProfileInner({ session }) {
     async function load() {
       try {
         const uid = session.user.id
-        let { data: p } = await supabase.from('persons').select('*').eq('auth_user_id', uid).maybeSingle()
+        // نجلب كل صفوف الشخص (قد يوجد تكرار) ونختار الأقدم — يتفادى خطأ maybeSingle
+        const { data: persons } = await supabase.from('persons').select('*').eq('auth_user_id', uid).order('created_at')
+        let p = (persons && persons.length) ? persons[0] : null
+
         if (!p) {
-          const { data: np } = await supabase.from('persons')
+          // لا يوجد شخص: ننشئه مع صف طالب
+          const { data: np, error: npErr } = await supabase.from('persons')
             .insert({ full_name: '', auth_user_id: uid, email: session.user.email }).select().single()
+          if (npErr || !np) throw new Error('PERSON_CREATE: ' + (npErr?.message || 'تعذّر إنشاء الحساب'))
           p = np
           await supabase.from('students').insert({ person_id: p.id })
         }
-        const { data: s } = await supabase.from('students').select('*').eq('person_id', p.id).maybeSingle()
+
+        // نجلب صف الطالب (قد يوجد تكرار) ونختار الأقدم
+        let { data: studentRows } = await supabase.from('students').select('*').eq('person_id', p.id).order('created_at')
+        let s = (studentRows && studentRows.length) ? studentRows[0] : null
+
+        // إن لم يوجد صف طالب، ننشئه الآن (إصلاح ذاتي)
+        if (!s) {
+          const { data: ns, error: nsErr } = await supabase.from('students')
+            .insert({ person_id: p.id }).select().single()
+          if (nsErr || !ns) throw new Error('STUDENT_CREATE: ' + (nsErr?.message || 'تعذّر إنشاء سجل الطالب'))
+          s = ns
+        }
+
         setStudent({ ...s, _person: p })
+
         const { data: fs } = await supabase.from('profile_fields').select('*').eq('is_active', true).order('sort_order')
         setFields(fs || [])
+
+        // s مضمون الآن (غير null) فلا يحدث خطأ reading 'id'
         const { data: vals } = await supabase.from('student_field_values').select('field_id, value').eq('student_id', s.id)
         const vmap = {}; (vals || []).forEach(v => { vmap[v.field_id] = v.value }); setValues(vmap)
       } catch (err) {
-        setMsg({ type: 'error', text: 'تعذّر التحميل: ' + (err.message || err) })
+        const raw = err.message || String(err)
+        let friendly = 'تعذّر تحميل بياناتك. حدّث الصفحة وأعد المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+        const m = raw.toLowerCase()
+        if (m.includes('network') || m.includes('fetch') || m.includes('failed to')) {
+          friendly = 'تعذّر الاتصال بالخادم. تأكد من اتصالك بالإنترنت وأعد فتح الصفحة.'
+        } else if (m.includes('row-level') || m.includes('policy') || m.includes('permission')) {
+          friendly = 'تعذّر التحميل بسبب الصلاحيات. حدّث الصفحة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+        }
+        const code = raw.split(':')[0]
+        setMsg({ type: 'error', text: friendly, detail: code && code.length < 30 ? code : null })
+        console.error('تحميل بيانات الطالب — الخطأ الفعلي:', raw)
       } finally { setLoading(false) }
     }
     load()
@@ -76,6 +106,12 @@ function StudentProfileInner({ session }) {
 
   async function handleSave(e) {
     e.preventDefault(); setSaving(true); setMsg(null)
+    // حارس: إن لم يُحمّل سجل الطالب بعد، نمنع الحفظ برسالة واضحة
+    if (!student?.id) {
+      setSaving(false)
+      setMsg({ type: 'error', text: 'لم يكتمل تحميل بياناتك بعد. يرجى تحديث الصفحة والمحاولة مجدداً.' })
+      return
+    }
     try {
       // ===== (1) تحقق إجباري دقيق: نُحدّد الحقل الناقص بالاسم =====
       const missing = []
