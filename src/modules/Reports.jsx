@@ -85,6 +85,11 @@ export default function Reports() {
   const [report, setReport] = useState(null)   // بيانات التقرير المولّد
   const [generating, setGenerating] = useState(false)
   const [exporting, setExporting] = useState(false)
+  // اختيار أنشطة/جلسات محدّدة (لنطاق الأنشطة)
+  const [actList, setActList] = useState([])          // [{id, title, sessions:[{id,title,planned_date}]}]
+  const [selActs, setSelActs] = useState({})          // {activityId: true}
+  const [selSess, setSelSess] = useState({})          // {sessionId: true}
+  const [expandedAct, setExpandedAct] = useState({})  // {activityId: true} لعرض الجلسات
   const listRef = useRef(null)
   const reportRef = useRef(null)
 
@@ -92,6 +97,19 @@ export default function Reports() {
   useEffect(() => {
     setOrder(SCOPES[scope].sections.map(s => s[0]))
     setHidden({})
+  }, [scope])
+
+  // تحميل قائمة الأنشطة وجلساتها عند اختيار نطاق «الأنشطة»
+  useEffect(() => {
+    if (scope !== 'activities') return
+    async function loadActs() {
+      const { data: acts } = await supabase.from('activities').select('id, title').order('title')
+      const { data: sess } = await supabase.from('sessions').select('id, title, planned_date, activity_id').order('planned_date', { ascending: false })
+      const byAct = {}
+      ;(sess || []).forEach(s => { (byAct[s.activity_id] = byAct[s.activity_id] || []).push(s) })
+      setActList((acts || []).map(a => ({ ...a, sessions: byAct[a.id] || [] })))
+    }
+    loadActs()
   }, [scope])
 
   // تحميل الإعدادات المحفوظة
@@ -116,6 +134,27 @@ export default function Reports() {
 
   function toggleSection(key) { setHidden({ ...hidden, [key]: !hidden[key] }) }
 
+  // اختيار الأنشطة/الجلسات
+  function toggleActivity(actId) {
+    const act = actList.find(a => a.id === actId)
+    const on = !selActs[actId]
+    setSelActs({ ...selActs, [actId]: on })
+    // عند اختيار/إلغاء نشاط، نطبّق ذلك على كل جلساته
+    const ns = { ...selSess }
+    ;(act?.sessions || []).forEach(s => { ns[s.id] = on })
+    setSelSess(ns)
+    if (on) setExpandedAct({ ...expandedAct, [actId]: true })
+  }
+  function toggleSession(sessId, actId) {
+    const ns = { ...selSess, [sessId]: !selSess[sessId] }
+    setSelSess(ns)
+    // إن صار أي جلسة مختارة، نعتبر النشاط مختاراً
+    const act = actList.find(a => a.id === actId)
+    const anyOn = (act?.sessions || []).some(s => ns[s.id])
+    setSelActs({ ...selActs, [actId]: anyOn })
+  }
+  const selectedActivityCount = Object.values(selActs).filter(Boolean).length
+  const selectedSessionIds = Object.entries(selSess).filter(([, v]) => v).map(([k]) => k)
   // حفظ/تطبيق الإعدادات
   function currentConfig() { return { period, customFrom, customTo, scope, order, hidden } }
   async function savePreset(slot) {
@@ -144,7 +183,9 @@ export default function Reports() {
   async function generate() {
     setGenerating(true)
     const [from, to] = periodRange(period, customFrom, customTo)
-    const data = await fetchReportData(scope, from, to)
+    // للأنشطة: مرّر الجلسات المحدّدة (إن وُجدت)
+    const sessFilter = (scope === 'activities' && selectedSessionIds.length) ? selectedSessionIds : null
+    const data = await fetchReportData(scope, from, to, sessFilter)
     setReport({ scope, period, from, to, data, order: order.filter(k => !hidden[k]), generatedAt: new Date() })
     setGenerating(false)
     setTimeout(() => reportRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
@@ -214,6 +255,47 @@ export default function Reports() {
         </div>
       </div>
 
+      {/* اختيار أنشطة/جلسات محدّدة — يظهر فقط لنطاق الأنشطة */}
+      {scope === 'activities' && (
+        <div className="panel">
+          <h3 className="rb-h">② تحديد الأنشطة والجلسات <span className="rb-opt">(اختياري)</span></h3>
+          <p className="muted" style={{ fontSize: 13, marginBottom: 12 }}>
+            اترك الكل دون تحديد لتقرير عن جميع الأنشطة، أو اختر أنشطة وجلسات محدّدة لتقرير مخصّص.
+            {selectedActivityCount > 0 && <strong> (محدّد: {selectedActivityCount} نشاط، {selectedSessionIds.length} جلسة)</strong>}
+          </p>
+          {actList.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة.</div>}
+          <div className="rb-act-list">
+            {actList.map(a => (
+              <div key={a.id} className={'rb-act' + (selActs[a.id] ? ' on' : '')}>
+                <div className="rb-act-head">
+                  <label className="rb-act-check">
+                    <input type="checkbox" checked={!!selActs[a.id]} onChange={() => toggleActivity(a.id)} />
+                    <span className="rb-act-title">{a.title}</span>
+                  </label>
+                  <span className="rb-act-count">{a.sessions.length} جلسة</span>
+                  {a.sessions.length > 0 && (
+                    <button className="rb-act-expand" onClick={() => setExpandedAct({ ...expandedAct, [a.id]: !expandedAct[a.id] })}>
+                      <Icon name={expandedAct[a.id] ? 'chevronLeft' : 'chevronRight'} size={16} />
+                    </button>
+                  )}
+                </div>
+                {expandedAct[a.id] && a.sessions.length > 0 && (
+                  <div className="rb-sess-list">
+                    {a.sessions.map(s => (
+                      <label key={s.id} className="rb-sess">
+                        <input type="checkbox" checked={!!selSess[s.id]} onChange={() => toggleSession(s.id, a.id)} />
+                        <span className="rb-sess-title">{s.title || 'جلسة'}</span>
+                        <span className="rb-sess-date">{s.planned_date || ''}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* الإعدادات المحفوظة */}
       <div className="panel">
         <h3 className="rb-h">③ الإعدادات المحفوظة</h3>
@@ -271,17 +353,22 @@ export default function Reports() {
 }
 
 // جلب بيانات التقرير حسب النطاق
-async function fetchReportData(scope, from, to) {
+async function fetchReportData(scope, from, to, sessFilter = null) {
   const d = {}
   if (scope === 'comprehensive' || scope === 'students_data' || scope === 'achievements') {
     const { data: students } = await supabase.from('students').select('id, degree_level, profile_reviewed, admission_status, unit_id, persons(nationality, full_name)')
     d.students = students || []
   }
   if (scope === 'comprehensive' || scope === 'activities') {
-    const { data: att } = await supabase.from('attendance').select('status, sessions(planned_date)')
-    d.attendance = (att || []).filter(a => { const dt = a.sessions?.planned_date; return dt && dt >= from && dt <= to })
+    const { data: att } = await supabase.from('attendance').select('status, session_id, sessions(planned_date)')
+    const sessSet = sessFilter ? new Set(sessFilter) : null
+    d.attendance = (att || []).filter(a => {
+      if (sessSet) return sessSet.has(a.session_id)   // جلسات محدّدة (تتجاوز فلتر الفترة)
+      const dt = a.sessions?.planned_date; return dt && dt >= from && dt <= to
+    })
     const { data: acts } = await supabase.from('activities').select('id, tracks(name_ar)')
     d.activities = acts || []
+    d.sessFiltered = !!sessFilter
   }
   if (scope === 'comprehensive' || scope === 'supervisors') {
     const { data: tickets } = await supabase.from('tickets').select('status_code, priority, created_at')
@@ -350,7 +437,12 @@ function Bar({ data, color = '#2e5496', suffix = '', max = null }) {
 function ReportSection({ sectionKey, label, data, scope }) {
   const S = data.students || [], ATT = data.attendance || [], TK = data.tickets || []
   const present = ATT.filter(a => a.status === 'present').length
-  const attRate = ATT.length ? Math.round(present / ATT.length * 100) : 0
+  const absent = ATT.filter(a => a.status === 'absent').length
+  const excused = ATT.filter(a => a.status === 'excused').length
+  const attTotal = present + absent + excused
+  const attRate = attTotal ? Math.round(present / attTotal * 100) : 0
+  const absentRate = attTotal ? Math.round(absent / attTotal * 100) : 0
+  const excusedRate = attTotal ? Math.round(excused / attTotal * 100) : 0
 
   function group(arr, fn) { const m = {}; arr.forEach(x => { const k = fn(x) || 'غير محدّد'; m[k] = (m[k] || 0) + 1 }); return Object.entries(m).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value) }
 
@@ -364,7 +456,7 @@ function ReportSection({ sectionKey, label, data, scope }) {
       <RepKpi n={S.length} l="إجمالي الطلاب" /><RepKpi n={S.filter(s => s.profile_reviewed).length} l="ملفات مكتملة" />
       <RepKpi n={S.filter(s => s.unit_id).length} l="مسكّنون" />
     </div>,
-    attendance: () => <div className="rep-kpis"><RepKpi n={attRate + '%'} l="نسبة الحضور" /><RepKpi n={present} l="حضور" /><RepKpi n={ATT.length - present} l="غياب" /></div>,
+    attendance: () => <AttCards present={present} excused={excused} absent={absent} total={attTotal} pRate={attRate} eRate={excusedRate} aRate={absentRate} />,
     attendance_trend: () => <Bar data={Object.entries((ATT).reduce((m, a) => { const mo = a.sessions?.planned_date?.slice(0, 7); if (mo) { m[mo] = m[mo] || { p: 0, t: 0 }; m[mo].t++; if (a.status === 'present') m[mo].p++ } return m }, {})).map(([k, v]) => ({ label: k.slice(5) + '/' + k.slice(2, 4), value: v.t ? Math.round(v.p / v.t * 100) : 0 }))} suffix="%" max={100} />,
     housing: () => <div className="rep-kpis"><RepKpi n={S.filter(s => s.unit_id).length} l="مسكّنون" /><RepKpi n={(data.buildings || []).length} l="عمارات" /><RepKpi n={(data.buildings || []).filter(b => b.building_type === 'families').length} l="عمائر عوائل" /></div>,
     admissions: () => <Bar data={group(S, s => ({ active: 'نشط', pending: 'قيد المراجعة', interview: 'مقابلة', accepted: 'مقبول', rejected: 'مرفوض', frozen: 'مجمّد' }[s.admission_status] || 'نشط'))} color="#6b3fc0" />,
@@ -385,9 +477,9 @@ function ReportSection({ sectionKey, label, data, scope }) {
     ticket_ratings: () => <div className="rep-note">تقييمات البلاغات للفترة المحدّدة.</div>,
     violations_logged: () => <div className="rep-kpis"><RepKpi n={(data.violations || []).length} l="مخالفات الفترة" /></div>,
     // الأنشطة
-    act_summary: () => <div className="rep-kpis"><RepKpi n={(data.activities || []).length} l="الأنشطة" /><RepKpi n={ATT.length} l="سجلات حضور" /><RepKpi n={attRate + '%'} l="نسبة الحضور" /></div>,
+    act_summary: () => <div><div className="rep-kpis"><RepKpi n={(data.activities || []).length} l="الأنشطة" /><RepKpi n={attTotal} l="سجلات حضور" /><RepKpi n={attRate + '%'} l="نسبة الحضور" /></div><div style={{ marginTop: 14 }}><AttCards present={present} excused={excused} absent={absent} total={attTotal} pRate={attRate} eRate={excusedRate} aRate={absentRate} /></div></div>,
     by_track: () => <Bar data={group(data.activities || [], a => a.tracks?.name_ar)} color="#157080" />,
-    sessions_list: () => <div className="rep-note">عدد الجلسات في الفترة: {ATT.length} سجل حضور.</div>,
+    sessions_list: () => <div className="rep-note">{data.sessFiltered ? `تقرير عن جلسات محدّدة — ${attTotal} سجل حضور.` : `عدد سجلات الحضور في الفترة: ${attTotal} سجل.`}</div>,
     // بيانات الطلاب
     demographics: () => <div className="rep-kpis"><RepKpi n={S.length} l="الطلاب" /><RepKpi n={group(S, s => s.persons?.nationality).length} l="جنسيات" /><RepKpi n={(data.companions || []).length} l="مرافقون" /></div>,
     by_nationality: () => <Bar data={group(S, s => s.persons?.nationality).slice(0, 8)} color="#6b3fc0" />,
@@ -427,4 +519,35 @@ function ReportSection({ sectionKey, label, data, scope }) {
 }
 
 function RepKpi({ n, l }) { return <div className="rep-kpi"><div className="rep-kpi-n">{n}</div><div className="rep-kpi-l">{l}</div></div> }
+
+// بطاقات إحصائية احترافية للحضور (حاضر/مستأذن/غائب + نسب)
+function AttCards({ present, excused, absent, total, pRate, eRate, aRate }) {
+  return (
+    <div className="rep-att-cards">
+      <div className="rep-att-card present">
+        <div className="rep-att-ic">✓</div>
+        <div className="rep-att-num">{present}</div>
+        <div className="rep-att-lbl">حاضر</div>
+        <div className="rep-att-pct">{pRate}%</div>
+      </div>
+      <div className="rep-att-card excused">
+        <div className="rep-att-ic">⊘</div>
+        <div className="rep-att-num">{excused}</div>
+        <div className="rep-att-lbl">مستأذن</div>
+        <div className="rep-att-pct">{eRate}%</div>
+      </div>
+      <div className="rep-att-card absent">
+        <div className="rep-att-ic">✕</div>
+        <div className="rep-att-num">{absent}</div>
+        <div className="rep-att-lbl">غائب</div>
+        <div className="rep-att-pct">{aRate}%</div>
+      </div>
+      <div className="rep-att-card total">
+        <div className="rep-att-ic">Σ</div>
+        <div className="rep-att-num">{total}</div>
+        <div className="rep-att-lbl">إجمالي الرصد</div>
+      </div>
+    </div>
+  )
+}
 

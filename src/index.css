@@ -337,6 +337,7 @@ tbody tr:hover { background: #fafbfe; }
 .att-counters { display: flex; gap: 8px; }
 .cnt { padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; }
 .cnt.present { background: #e6f6ee; color: var(--green); }
+.cnt.excused { background: #fff4e0; color: #b3730a; }
 .cnt.absent { background: #fcecec; color: #c0392b; }
 .att-name { flex: 1; font-size: 14px; }
 
@@ -2443,3 +2444,59 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .rs-tbd { width: 100%; margin-top: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 13px; border: 1.5px dashed #d97706; background: #fff8ed; color: #b3730a; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s; }
 .rs-tbd:hover { background: #fef0db; }
 :root[data-theme="dark"] .rs-tbd { background: #2a2010; border-color: #5a4420; }
+
+/* ===== إحصاءات الحضور في لوحة المدير ===== */
+.att-stats-section { margin: 20px 0; }
+.att-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.att-stat { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.att-stat::before { content: ''; position: absolute; inset-inline-start: 0; top: 0; bottom: 0; width: 4px; }
+.att-stat-present::before { background: #1d9e75; }
+.att-stat-excused::before { background: #d97706; }
+.att-stat-absent::before { background: #c0392b; }
+.att-stat-total::before { background: #2e5496; }
+.att-stat-ic { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+.att-stat-present .att-stat-ic { background: #e6f6ee; color: #1d9e75; }
+.att-stat-excused .att-stat-ic { background: #fff4e0; color: #d97706; }
+.att-stat-absent .att-stat-ic { background: #fcecec; color: #c0392b; }
+.att-stat-total .att-stat-ic { background: #e8f0fc; color: #2e5496; }
+.att-stat-body { flex: 1; min-width: 0; }
+.att-stat-num { font-size: 26px; font-weight: 800; line-height: 1.1; }
+.att-stat-lbl { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+.att-stat-pct { font-size: 18px; font-weight: 700; color: var(--text-soft); }
+@media (max-width: 768px) { .att-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ===== بطاقات الحضور الاحترافية في التقارير ===== */
+.rep-att-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.rep-att-card { position: relative; text-align: center; padding: 18px 12px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); }
+.rep-att-card.present { background: linear-gradient(160deg, #e6f6ee, #fff); border-color: #b8e6cf; }
+.rep-att-card.excused { background: linear-gradient(160deg, #fff4e0, #fff); border-color: #f5dba8; }
+.rep-att-card.absent { background: linear-gradient(160deg, #fcecec, #fff); border-color: #f3c4c4; }
+.rep-att-card.total { background: linear-gradient(160deg, #e8f0fc, #fff); border-color: #c2d6f0; }
+.rep-att-ic { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; margin: 0 auto 8px; }
+.rep-att-card.present .rep-att-ic { background: #1d9e75; color: #fff; }
+.rep-att-card.excused .rep-att-ic { background: #d97706; color: #fff; }
+.rep-att-card.absent .rep-att-ic { background: #c0392b; color: #fff; }
+.rep-att-card.total .rep-att-ic { background: #2e5496; color: #fff; }
+.rep-att-num { font-size: 28px; font-weight: 800; line-height: 1; }
+.rep-att-lbl { font-size: 13px; color: var(--text-soft); margin-top: 4px; }
+.rep-att-pct { font-size: 15px; font-weight: 700; margin-top: 6px; color: var(--text); }
+@media (max-width: 768px) { .rep-att-cards { grid-template-columns: repeat(2, 1fr); } }
+
+/* ===== اختيار الأنشطة والجلسات في التقارير ===== */
+.rb-opt { font-size: 12px; font-weight: 500; color: var(--text-soft); }
+.rb-act-list { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; }
+.rb-act { border: 1px solid var(--border); border-radius: 11px; overflow: hidden; transition: border-color .15s; }
+.rb-act.on { border-color: var(--blue); }
+.rb-act-head { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: var(--surface); }
+.rb-act-check { display: flex; align-items: center; gap: 9px; flex: 1; cursor: pointer; }
+.rb-act-check input { width: 17px; height: 17px; accent-color: var(--blue); }
+.rb-act-title { font-weight: 600; font-size: 14px; }
+.rb-act-count { font-size: 12px; color: var(--text-soft); background: var(--bg); padding: 3px 10px; border-radius: 10px; }
+.rb-act-expand { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text-soft); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.rb-act-expand:hover { border-color: var(--blue); color: var(--blue); }
+.rb-sess-list { border-top: 1px solid var(--border); padding: 8px 13px 11px; background: var(--bg); display: flex; flex-direction: column; gap: 4px; }
+.rb-sess { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+.rb-sess:hover { background: var(--surface); }
+.rb-sess input { width: 15px; height: 15px; accent-color: var(--blue); }
+.rb-sess-title { flex: 1; font-size: 13px; }
+.rb-sess-date { font-size: 12px; color: var(--text-soft); }

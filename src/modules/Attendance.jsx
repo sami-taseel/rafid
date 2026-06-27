@@ -98,6 +98,7 @@ export default function Attendance() {
   if (sel) {
     const present = Object.values(marks).filter(v => v === 'present').length
     const absent = Object.values(marks).filter(v => v === 'absent').length
+    const excused = Object.values(marks).filter(v => v === 'excused').length
     return (
       <div>
         <button className="mini" onClick={() => setSel(null)}>→ رجوع للجلسات</button>
@@ -108,6 +109,7 @@ export default function Attendance() {
           </div>
           <div className="att-counters">
             <span className="cnt present">حاضر {present}</span>
+            <span className="cnt excused">مستأذن {excused}</span>
             <span className="cnt absent">غائب {absent}</span>
             <button className="mini" onClick={() => openQR(sel)}>رمز QR للحضور</button>
           </div>

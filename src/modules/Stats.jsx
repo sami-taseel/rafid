@@ -71,7 +71,12 @@ export default function Stats({ onNavigate }) {
       const trend = Object.keys(monthly).sort().slice(-6).map(m=>({month:m.slice(5)+'/'+m.slice(2,4), rate: monthly[m].t? Math.round(monthly[m].p/monthly[m].t*100):0}))
 
       const present = ATT.filter(a=>a.status==='present').length
-      const attRate = ATT.length ? Math.round(present/ATT.length*100) : 0
+      const absentCount = ATT.filter(a=>a.status==='absent').length
+      const excusedCount = ATT.filter(a=>a.status==='excused').length
+      const attTotal = present + absentCount + excusedCount
+      const attRate = attTotal ? Math.round(present/attTotal*100) : 0
+      const absentRate = attTotal ? Math.round(absentCount/attTotal*100) : 0
+      const excusedRate = attTotal ? Math.round(excusedCount/attTotal*100) : 0
 
       // تنبيهات استباقية
       const openByType = {}
@@ -112,7 +117,8 @@ export default function Stats({ onNavigate }) {
 
       setD({
         students: S.length, sessions: SES.length, activities: (activities.data||[]).length,
-        attRate, sanctions: SAN.length, support: (support.data||[]).length,
+        attRate, present, absentCount, excusedCount, attTotal, absentRate, excusedRate,
+        sanctions: SAN.length, support: (support.data||[]).length,
         responses: (responses.data||[]).length, surveys: (surveys.data||[]).length,
         activeSurveys: (surveys.data||[]).filter(x=>x.is_active).length,
         categories: (categories.data||[]).length, buildings: (buildings.data||[]).length,
@@ -197,6 +203,44 @@ export default function Stats({ onNavigate }) {
         <Kpi num={d.activities} label="الأنشطة" icon="📚" color="purple" onClick={()=>onNavigate&&onNavigate('activities')} />
         <Kpi num={d.completeRate+'%'} label="اكتمال الملفات" icon="📋" color="teal" />
         <Kpi num={d.support} label="مساعدات" icon="🎁" color="amber" />
+      </div>
+
+      {/* إحصاءات الحضور التفصيلية */}
+      <div className="att-stats-section">
+        <h3 className="dash-sec">إحصاءات الحضور</h3>
+        <div className="att-stats-grid">
+          <div className="att-stat att-stat-present">
+            <div className="att-stat-ic">✓</div>
+            <div className="att-stat-body">
+              <div className="att-stat-num">{d.present}</div>
+              <div className="att-stat-lbl">حاضر</div>
+            </div>
+            <div className="att-stat-pct">{d.attRate}%</div>
+          </div>
+          <div className="att-stat att-stat-excused">
+            <div className="att-stat-ic">⊘</div>
+            <div className="att-stat-body">
+              <div className="att-stat-num">{d.excusedCount}</div>
+              <div className="att-stat-lbl">مستأذن</div>
+            </div>
+            <div className="att-stat-pct">{d.excusedRate}%</div>
+          </div>
+          <div className="att-stat att-stat-absent">
+            <div className="att-stat-ic">✕</div>
+            <div className="att-stat-body">
+              <div className="att-stat-num">{d.absentCount}</div>
+              <div className="att-stat-lbl">غائب</div>
+            </div>
+            <div className="att-stat-pct">{d.absentRate}%</div>
+          </div>
+          <div className="att-stat att-stat-total">
+            <div className="att-stat-ic">Σ</div>
+            <div className="att-stat-body">
+              <div className="att-stat-num">{d.attTotal}</div>
+              <div className="att-stat-lbl">إجمالي الرصد</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* الرسوم البيانية */}
