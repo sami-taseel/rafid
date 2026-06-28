@@ -81,14 +81,17 @@ function RoleRouter({ session }) {
   const [role, setRole] = useState(null)
   const [frozen, setFrozen] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [mustChange, setMustChange] = useState(false)
 
   useEffect(() => {
     async function check() {
       try {
         // نجلب كل صفوف persons المرتبطة بالمستخدم (قد يوجد تكرار) لتفادي خطأ maybeSingle
         const { data: rows } = await supabase.from('persons')
-          .select('id, created_at, user_roles(roles(code))').eq('auth_user_id', session.user.id)
+          .select('id, created_at, must_change_password, user_roles(roles(code))').eq('auth_user_id', session.user.id)
         const persons = rows || []
+        // إلزام تغيير كلمة المرور إن كانت العلامة مرفوعة لأي صف
+        if (persons.some(p => p.must_change_password)) { setMustChange(true); setChecking(false); return }
         // نجمع كل الأدوار من كل الصفوف
         const allCodes = persons.flatMap(p => (p.user_roles || []).map(ur => ur.roles?.code)).filter(Boolean)
 
@@ -111,6 +114,7 @@ function RoleRouter({ session }) {
   async function logout() { await supabase.auth.signOut() }
 
   if (checking) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
+  if (mustChange) return <ForcePasswordChange session={session} onDone={() => { setMustChange(false); setChecking(true); window.location.reload() }} />
   if (role === 'student' && frozen) return (
     <div className="frozen-screen">
       <div className="frozen-box">
@@ -188,4 +192,52 @@ function StaffApp() {
     surveys: <Surveys />, categories: <Categories />, help: <Help />, account: <MyAccount />,
   }
   return <Layout active={active} onNavigate={setActive}>{views[active]}</Layout>
+}
+
+// شاشة إلزام تغيير كلمة المرور عند أول دخول (لحسابات المشرفين الجديدة)
+function ForcePasswordChange({ session, onDone }) {
+  const [pw, setPw] = useState({ next: '', confirm: '' })
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState(null)
+
+  async function submit() {
+    setErr(null)
+    if (pw.next.length < 8) { setErr('كلمة المرور يجب ألا تقل عن ٨ أحرف.'); return }
+    if (pw.next !== pw.confirm) { setErr('كلمتا المرور غير متطابقتين.'); return }
+    setBusy(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw.next })
+      if (error) throw error
+      // نرفع علامة الإلزام عن كل صفوف هذا المستخدم
+      await supabase.from('persons').update({ must_change_password: false }).eq('auth_user_id', session.user.id)
+      onDone()
+    } catch (e) {
+      setErr('تعذّر تغيير كلمة المرور: ' + (e.message || ''))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="fpc-screen">
+      <div className="fpc-box">
+        <div className="fpc-icon">🔐</div>
+        <h2 className="fpc-title">مرحباً بك في منصة رافد</h2>
+        <p className="fpc-sub">لأمان حسابك، يلزم تعيين كلمة مرور جديدة خاصة بك قبل المتابعة.</p>
+        <div className="fpc-field">
+          <label>كلمة المرور الجديدة</label>
+          <input type="password" value={pw.next} onChange={e => setPw({ ...pw, next: e.target.value })}
+            placeholder="٨ أحرف على الأقل" autoFocus />
+        </div>
+        <div className="fpc-field">
+          <label>تأكيد كلمة المرور</label>
+          <input type="password" value={pw.confirm} onChange={e => setPw({ ...pw, confirm: e.target.value })}
+            placeholder="أعد كتابة كلمة المرور" onKeyDown={e => e.key === 'Enter' && submit()} />
+        </div>
+        {err && <div className="fpc-err">{err}</div>}
+        <button className="fpc-btn" onClick={submit} disabled={busy}>
+          {busy ? 'جارٍ الحفظ…' : 'تعيين كلمة المرور والمتابعة'}
+        </button>
+      </div>
+    </div>
+  )
 }
