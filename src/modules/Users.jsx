@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import { useConfirm } from '../Confirm'
 import { Spinner } from './Students'
 
 const ROLES = [
@@ -12,6 +13,7 @@ const ROLES = [
 
 export default function Users() {
   const toast = useToast()
+  const confirmDialog = useConfirm()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ name: '', email: '', role: 'housing_supervisor' })
@@ -56,6 +58,20 @@ export default function Users() {
 
   async function removeRole(personId, code) {
     await supabase.rpc('remove_role_by_person', { p_person: personId, p_role_code: code }); load()
+  }
+
+  async function deleteAccount(u) {
+    const name = u.full_name || u.email
+    const ok = await confirmDialog({
+      title: 'حذف الحساب نهائياً',
+      message: `سيُحذف حساب «${name}» وكل بياناته نهائياً (لا يمكن التراجع). هل أنت متأكد؟`,
+      confirmText: 'حذف نهائي', danger: true,
+    })
+    if (!ok) return
+    const { data, error } = await supabase.rpc('delete_user_account', { p_person: u.person_id })
+    if (error) { toast('تعذّر الحذف: ' + error.message, 'error'); return }
+    if (data && data.startsWith('تم')) { toast('تم حذف الحساب نهائياً', 'success'); load() }
+    else { toast(data || 'تعذّر الحذف', 'error') }
   }
 
   function copyCredentials() {
@@ -139,6 +155,11 @@ export default function Users() {
                 </span>
               ))}
             </div>
+            {!(u.role_codes || []).includes('system_admin') && (
+              <button className="user-delete-btn" onClick={() => deleteAccount(u)} title="حذف الحساب نهائياً">
+                🗑 حذف الحساب
+              </button>
+            )}
           </div>
         ))}
       </div>
