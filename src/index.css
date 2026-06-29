@@ -2567,3 +2567,20 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .user-row { flex-wrap: wrap; }
 .user-delete-btn { background: #fce8e8; color: #b32d2d; border: 1px solid transparent; border-radius: 9px; padding: 7px 13px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .12s; margin-inline-start: auto; }
 .user-delete-btn:hover { background: #b32d2d; color: #fff; }
+
+/* ===== تبويبات باركود الحضور/الاستماع ===== */
+.qrm-tabs { display: flex; gap: 8px; margin: 4px 0 4px; }
+.qrm-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-soft); border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.qrm-tab.on { border-color: var(--navy); background: var(--navy); color: #fff; }
+.qrm-tab.on.rec { border-color: #6b3fc0; background: #6b3fc0; }
+
+/* عدّاد الاستماع المسجّل */
+.cnt.recorded { background: #f1ebfb; color: #6b3fc0; }
+:root[data-theme="dark"] .cnt.recorded { background: #241a3a; color: #b39ae0; }
+
+/* زر رصد الاستماع المسجّل */
+.att-btn.sel.recorded { background: #6b3fc0; color: #fff; }
+
+/* بطاقة الاستماع المسجّل في اللوحة */
+.att-stat-recorded::before { background: #6b3fc0; }
+.att-stat-recorded .att-stat-ic { background: #f1ebfb; color: #6b3fc0; font-size: 18px; }

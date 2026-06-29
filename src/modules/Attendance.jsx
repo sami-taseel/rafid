@@ -99,6 +99,7 @@ export default function Attendance() {
     const present = Object.values(marks).filter(v => v === 'present').length
     const absent = Object.values(marks).filter(v => v === 'absent').length
     const excused = Object.values(marks).filter(v => v === 'excused').length
+    const recorded = Object.values(marks).filter(v => v === 'recorded').length
     return (
       <div>
         <button className="mini" onClick={() => setSel(null)}>→ رجوع للجلسات</button>
@@ -110,6 +111,7 @@ export default function Attendance() {
           <div className="att-counters">
             <span className="cnt present">حاضر {present}</span>
             <span className="cnt excused">مستأذن {excused}</span>
+            <span className="cnt recorded">استماع {recorded}</span>
             <span className="cnt absent">غائب {absent}</span>
             <button className="mini" onClick={() => openQR(sel)}>رمز QR للحضور</button>
           </div>
@@ -134,7 +136,7 @@ export default function Attendance() {
                 <div className="att-row" key={s.id}>
                   <span className="att-name">{s.persons?.full_name}</span>
                   <div className="att-btns">
-                    {[['present','حاضر'],['absent','غائب'],['excused','مستأذن']].map(([v, l]) => (
+                    {[['present','حاضر'],['absent','غائب'],['excused','مستأذن'],['recorded','استماع']].map(([v, l]) => (
                       <button key={v} className={marks[s.id] === v ? 'att-btn sel ' + v : 'att-btn'}
                         onClick={() => marks[s.id] === v ? clearMark() : setMarks({ ...marks, [s.id]: v })}>{l}</button>
                     ))}

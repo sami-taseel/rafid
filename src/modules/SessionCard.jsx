@@ -28,9 +28,10 @@ function sessInfo(s) {
 const ATT_META = {
   present: { label: 'حضرت', icon: 'check', color: '#15784e', bg: '#e3f6ed' },
   excused: { label: 'مستأذن', icon: 'hand', color: '#b3730a', bg: '#fff4e0' },
+  recorded: { label: 'استماع مسجّل', icon: 'clock', color: '#6b3fc0', bg: '#f1ebfb' },
   absent: { label: 'غياب', icon: 'x', color: '#b32d2d', bg: '#fce8e8' },
 }
-function attDecided(status) { return status === 'present' || status === 'absent' || status === 'excused' }
+function attDecided(status) { return status === 'present' || status === 'absent' || status === 'excused' || status === 'recorded' }
 
 // شارة حالة الحضور
 function AttBadge({ status, size = 'normal' }) {

@@ -46,13 +46,16 @@ export default function App() {
   const [ready, setReady] = useState(false)
   const [recovery, setRecovery] = useState(false)
   const [checkin, setCheckin] = useState(null)
+  const [checkinMode, setCheckinMode] = useState('present')
   const [offline, setOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
     // كشف رابط استعادة كلمة المرور
     if (window.location.hash.includes('type=recovery')) setRecovery(true)
     const ci = window.location.hash.match(/checkin=([\w-]+)/)
-    if (ci) setCheckin(ci[1])
+    if (ci) { setCheckin(ci[1]); setCheckinMode('present') }
+    const rec = window.location.hash.match(/record=([\w-]+)/)
+    if (rec) { setCheckin(rec[1]); setCheckinMode('recorded') }
     registerSW()  // تفعيل وضع عدم الاتصال والإشعارات
     const goOnline = () => setOffline(false), goOffline = () => setOffline(true)
     window.addEventListener('online', goOnline)
@@ -72,7 +75,7 @@ export default function App() {
   if (!ready) return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div>
   const offlineBar = offline ? <div className="offline-bar">📡 أنت غير متصل بالإنترنت — تُعرض آخر البيانات المحفوظة</div> : null
   if (recovery) return <ResetPassword onDone={() => { setRecovery(false); window.location.hash = '' }} />
-  if (checkin && session) return <CheckIn sessionId={checkin} onDone={() => { setCheckin(null); window.location.hash = '' }} />
+  if (checkin && session) return <CheckIn sessionId={checkin} mode={checkinMode} onDone={() => { setCheckin(null); window.location.hash = '' }} />
   if (!session) return <Login />
   return <>{offlineBar}<RoleRouter session={session} /></>
 }

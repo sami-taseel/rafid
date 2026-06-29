@@ -73,7 +73,8 @@ export default function Stats({ onNavigate }) {
       const present = ATT.filter(a=>a.status==='present').length
       const absentCount = ATT.filter(a=>a.status==='absent').length
       const excusedCount = ATT.filter(a=>a.status==='excused').length
-      const attTotal = present + absentCount + excusedCount
+      const recordedCount = ATT.filter(a=>a.status==='recorded').length
+      const attTotal = present + absentCount + excusedCount + recordedCount
       const attRate = attTotal ? Math.round(present/attTotal*100) : 0
       const absentRate = attTotal ? Math.round(absentCount/attTotal*100) : 0
       const excusedRate = attTotal ? Math.round(excusedCount/attTotal*100) : 0
@@ -117,7 +118,7 @@ export default function Stats({ onNavigate }) {
 
       setD({
         students: S.length, sessions: SES.length, activities: (activities.data||[]).length,
-        attRate, present, absentCount, excusedCount, attTotal, absentRate, excusedRate,
+        attRate, present, absentCount, excusedCount, recordedCount, attTotal, absentRate, excusedRate,
         sanctions: SAN.length, support: (support.data||[]).length,
         responses: (responses.data||[]).length, surveys: (surveys.data||[]).length,
         activeSurveys: (surveys.data||[]).filter(x=>x.is_active).length,
@@ -224,6 +225,13 @@ export default function Stats({ onNavigate }) {
               <div className="att-stat-lbl">مستأذن</div>
             </div>
             <div className="att-stat-pct">{d.excusedRate}%</div>
+          </div>
+          <div className="att-stat att-stat-recorded">
+            <div className="att-stat-ic">🎧</div>
+            <div className="att-stat-body">
+              <div className="att-stat-num">{d.recordedCount}</div>
+              <div className="att-stat-lbl">استماع مسجّل</div>
+            </div>
           </div>
           <div className="att-stat att-stat-absent">
             <div className="att-stat-ic">✕</div>
