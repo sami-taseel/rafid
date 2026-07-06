@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
 import Icon from '../Icon'
+import PauseRequest from './PauseRequest'
 import { FeatureCard, CompactCard } from './SessionCard'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
@@ -19,7 +20,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
         supabase.from('attendance').select('status, session_id').eq('student_id', studentId),
-        supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, duration_min, activities(title, activity_type, provider, location, tracks(name_ar))')
+        supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, duration_min, recording_url, activities(title, activity_type, provider, location, tracks(name_ar))')
           .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
         supabase.from('notifications').select('id, title, body, kind, created_at, is_read')
@@ -108,6 +109,12 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         <div className="st-stat"><div className="st-num">{data.upcoming.length}</div><div className="st-lbl">مواعيد قادمة</div></div>
         <div className="st-stat"><div className="st-num">{data.surveysCount}</div><div className="st-lbl">استبانات متاحة</div></div>
       </div>
+
+      {isFull && studentId && (
+        <div className="pause-section">
+          <PauseRequest studentId={studentId} />
+        </div>
+      )}
 
       {/* المواعيد القادمة — للحساب المكتمل فقط */}
       {isFull && <div className="st-section">

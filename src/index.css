@@ -2584,3 +2584,77 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* بطاقة الاستماع المسجّل في اللوحة */
 .att-stat-recorded::before { background: #6b3fc0; }
 .att-stat-recorded .att-stat-ic { background: #f1ebfb; color: #6b3fc0; font-size: 18px; }
+
+/* ============================================================
+   طلب التوقّف عن الدراسة
+   ============================================================ */
+.pause-section { margin: 16px 0; }
+.pause-trigger { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #6b3fc0, #8a5cd8); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s; box-shadow: 0 3px 12px rgba(107,63,192,.3); }
+.pause-trigger:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.pause-badge { display: inline-block; margin-inline-start: 10px; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 20px; }
+.pause-badge.pending { background: #fff4e0; color: #b3730a; }
+.pause-badge.active { background: #f1ebfb; color: #6b3fc0; }
+
+/* نافذة طلب التوقّف */
+.pr-overlay { position: fixed; inset: 0; background: rgba(20,28,46,.55); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 18px; z-index: 1000; animation: excFadeIn .2s ease; }
+.pr-dialog { background: var(--surface); border-radius: 20px; width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); animation: excPop .26s cubic-bezier(.2,.9,.3,1.2); }
+.pr-hero { position: relative; background: linear-gradient(135deg, #6b3fc0, #8a5cd8); color: #fff; padding: 24px; text-align: center; border-radius: 20px 20px 0 0; }
+.pr-close { position: absolute; top: 14px; left: 14px; width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.pr-hero-ic { width: 54px; height: 54px; border-radius: 16px; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+.pr-title { margin: 0; font-size: 20px; font-weight: 800; }
+.pr-sub { margin: 5px 0 0; font-size: 13px; opacity: .9; }
+.pr-body { padding: 20px; }
+.pr-label { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.pr-req { font-size: 11px; background: #fce8e8; color: #b32d2d; padding: 2px 9px; border-radius: 8px; }
+.pr-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; background: var(--bg); color: var(--text); resize: vertical; }
+.pr-textarea:focus { outline: none; border-color: #6b3fc0; box-shadow: 0 0 0 3px rgba(107,63,192,.13); }
+.pr-toggle { display: flex; align-items: center; gap: 12px; margin-top: 16px; cursor: pointer; }
+.pr-toggle input { display: none; }
+.pr-toggle-track { width: 46px; height: 26px; border-radius: 13px; background: var(--border); position: relative; flex-shrink: 0; transition: background .2s; }
+.pr-toggle-thumb { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.pr-toggle input:checked + .pr-toggle-track { background: #6b3fc0; }
+.pr-toggle input:checked + .pr-toggle-track .pr-toggle-thumb { transform: translateX(-20px); }
+.pr-toggle-text { display: flex; flex-direction: column; }
+.pr-toggle-text strong { font-size: 14px; }
+.pr-toggle-text small { font-size: 12px; color: var(--text-soft); }
+.pr-next, .pr-send { width: 100%; margin-top: 18px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 13px; background: linear-gradient(135deg, #6b3fc0, #8a5cd8); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.pr-next:hover, .pr-send:hover { filter: brightness(1.08); }
+.pr-dates { margin-top: 8px; }
+.pr-date-col label { font-size: 13px; font-weight: 600; }
+.pr-date-val { font-size: 15px; font-weight: 700; color: #6b3fc0; margin: 4px 0 8px; }
+.pr-cal { background: var(--bg); border-radius: 12px; padding: 12px; }
+.pr-cal-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pr-month { font-size: 14px; font-weight: 700; }
+.pr-nav { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.pr-dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 5px; }
+.pr-dow span { text-align: center; font-size: 10px; color: var(--text-soft); }
+.pr-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+.pr-day { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.pr-day:hover:not(.dis) { background: #6b3fc0; color: #fff; border-color: #6b3fc0; }
+.pr-day.sel { background: #6b3fc0; color: #fff; border-color: #6b3fc0; }
+.pr-day.dis { opacity: .3; cursor: not-allowed; }
+.pr-foot { display: flex; gap: 10px; margin-top: 18px; }
+.pr-back { padding: 13px 22px; background: transparent; border: 1.5px solid var(--border); color: var(--text-soft); border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.pr-send { flex: 1; margin-top: 0; }
+
+/* مفتاح الاستعداد في زر الإذن */
+.exc-toggle { display: flex; align-items: center; gap: 12px; margin-top: 14px; cursor: pointer; }
+.exc-toggle input { display: none; }
+.exc-toggle-track { width: 46px; height: 26px; border-radius: 13px; background: var(--border); position: relative; flex-shrink: 0; transition: background .2s; }
+.exc-toggle-thumb { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.exc-toggle input:checked + .exc-toggle-track { background: #6b3fc0; }
+.exc-toggle input:checked + .exc-toggle-track .exc-toggle-thumb { transform: translateX(-20px); }
+.exc-toggle-text { display: flex; flex-direction: column; }
+.exc-toggle-text strong { font-size: 13.5px; }
+.exc-toggle-text small { font-size: 12px; color: var(--text-soft); }
+
+/* رابط التسجيل في تفاصيل البطاقة */
+.cc-rec-link { color: #6b3fc0; font-weight: 700; font-size: 14px; text-decoration: none; }
+.cc-rec-link:hover { text-decoration: underline; }
+.cc-rec-pending { font-size: 13px; color: var(--text-soft); font-style: italic; }
+
+/* وسم رغبة التسجيلات في طلب التوقّف (المدير) */
+.pause-rec-tag { display: inline-block; margin-inline-start: 8px; font-size: 11px; background: #f1ebfb; color: #6b3fc0; padding: 2px 9px; border-radius: 8px; }
+
+/* تلميح الحقل */
+.field-hint { font-size: 11px; font-weight: 400; color: var(--text-soft); }

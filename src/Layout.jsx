@@ -42,7 +42,12 @@ export default function Layout({ active, onNavigate, children }) {
         const { count: ec } = await supabase.from('excuse_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
         excuseCount = ec || 0
       } catch { /* الجدول قد لا يكون منفّذاً بعد */ }
-      setPendingApprovals((count || 0) + excuseCount)
+      let pauseCount = 0
+      try {
+        const { count: pc } = await supabase.from('pause_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        pauseCount = pc || 0
+      } catch { /* الجدول قد لا يكون منفّذاً بعد */ }
+      setPendingApprovals((count || 0) + excuseCount + pauseCount)
     }
     countTickets()
   }, [active])

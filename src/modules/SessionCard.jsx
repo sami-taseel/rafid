@@ -128,6 +128,16 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               {act.provider && <DetailRow icon="user" label="مقدّم الجلسة" value={act.provider} />}
               {act.location && <DetailRow icon="pin" label="المكان" value={act.location} />}
               {act.tracks?.name_ar && <DetailRow icon="tag" label="المسار" value={act.tracks.name_ar} />}
+              {/* رابط تسجيل الدرس */}
+              <div className="cc-detail-row cc-rec-row">
+                <span className="cc-detail-ic" style={{ background: '#f1ebfb', color: '#6b3fc0' }}><Icon name="clock" size={16} /></span>
+                <div className="cc-detail-text">
+                  <span className="cc-detail-lbl">تسجيل الدرس</span>
+                  {s.recording_url
+                    ? <a className="cc-rec-link" href={s.recording_url} target="_blank" rel="noopener noreferrer">فتح رابط التسجيل 🎧</a>
+                    : <span className="cc-rec-pending">سيُضاف الرابط بعد الدرس بـ٢٤ ساعة بإذن الله</span>}
+                </div>
+              </div>
             </div>
             {showExcuse && studentId && !decided && (
               <div className="cc-detail-foot">

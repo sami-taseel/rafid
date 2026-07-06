@@ -39,6 +39,7 @@ import FormRecords from './modules/FormRecords'
 import ApprovalRequests, { pendingApprovalCount } from './modules/ApprovalRequests'
 import StudentDiagnostics from './modules/StudentDiagnostics'
 import ExcuseRequests, { pendingExcuseCount } from './modules/ExcuseRequests'
+import PauseRequests, { pendingPauseCount } from './modules/PauseRequests'
 import { registerSW } from './push'
 
 export default function App() {
@@ -140,16 +141,19 @@ function RoleRouter({ session }) {
 function StudentsGroup() {
   const [pending, setPending] = useState(0)
   const [excuses, setExcuses] = useState(0)
+  const [pauses, setPauses] = useState(0)
   useEffect(() => {
     pendingApprovalCount().then(setPending)
     pendingExcuseCount().then(setExcuses)
-    const t = setInterval(() => { pendingApprovalCount().then(setPending); pendingExcuseCount().then(setExcuses) }, 60000)
+    pendingPauseCount().then(setPauses)
+    const t = setInterval(() => { pendingApprovalCount().then(setPending); pendingExcuseCount().then(setExcuses); pendingPauseCount().then(setPauses) }, 60000)
     return () => clearInterval(t)
   }, [])
   return <TabGroup tabs={[
     { key: 'list', label: 'قائمة الطلاب', el: <Students /> },
     { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
     { key: 'excuses', label: 'طلبات الإذن', el: <ExcuseRequests />, badge: excuses },
+    { key: 'pauses', label: 'طلبات التوقّف', el: <PauseRequests />, badge: pauses },
     { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },

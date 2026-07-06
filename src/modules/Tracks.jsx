@@ -20,7 +20,7 @@ export default function Tracks() {
   const [sessFor, setSessFor] = useState(null)
   const [qrSession, setQrSession] = useState(null)
   const [reschedule, setReschedule] = useState(null)
-  const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
+  const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled', recording_url: '' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
   const [categories, setCategories] = useState([])
@@ -88,12 +88,12 @@ export default function Tracks() {
 
   // ===== الجلسات =====
   function openNewSession(actId) {
-    setSessFor(actId); setSessForm({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled' })
+    setSessFor(actId); setSessForm({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled', recording_url: '' })
   }
   function openEditSession(s) {
     setSessFor(s.activity_id)
     setSessForm({ id: s.id, title: s.title || '', planned_date: s.planned_date || '',
-      start_time: s.start_time ? s.start_time.slice(0,5) : '', duration_min: s.duration_min || '', status: s.status })
+      start_time: s.start_time ? s.start_time.slice(0,5) : '', duration_min: s.duration_min || '', status: s.status, recording_url: s.recording_url || '' })
   }
   async function saveSession() {
     if (!sessForm.planned_date) { flash('اختر تاريخ الجلسة', 'error'); return }
@@ -103,14 +103,25 @@ export default function Tracks() {
       const count = sessions.filter(s => s.activity_id === sessFor && s.id !== sessForm.id).length
       title = (act?.activity_type || 'جلسة') + ' ' + (count + 1)
     }
+    const newUrl = (sessForm.recording_url || '').trim()
     const payload = {
       activity_id: sessFor, planned_date: sessForm.planned_date,
       start_time: sessForm.start_time || null,
       duration_min: sessForm.duration_min ? Number(sessForm.duration_min) : null,
-      title, status: sessForm.status,
+      title, status: sessForm.status, recording_url: newUrl || null,
     }
-    if (sessForm.id) await supabase.from('sessions').update(payload).eq('id', sessForm.id)
-    else await supabase.from('sessions').insert(payload)
+    let sessId = sessForm.id
+    if (sessForm.id) {
+      await supabase.from('sessions').update(payload).eq('id', sessForm.id)
+    } else {
+      const { data: ins } = await supabase.from('sessions').insert(payload).select('id').single()
+      sessId = ins?.id
+    }
+    // إن وُجد رابط، نستدعي الدالة التي تُشعر الطلاب المستأذنين المفعّلين
+    if (newUrl && sessId) {
+      const { data: n } = await supabase.rpc('set_recording_url', { p_session: sessId, p_url: newUrl })
+      if (n > 0) flash('تم حفظ الرابط وإشعار ' + n + ' طالباً مستأذناً', 'success')
+    }
     setSessFor(null); loadAll()
   }
   async function deleteSession(s) {
@@ -266,6 +277,12 @@ export default function Tracks() {
                   <option value="postponed">مؤجلة</option><option value="cancelled">ملغاة</option>
                 </select></div>
             )}
+            <div className="field">
+              <label>🎧 رابط تسجيل الدرس <span className="field-hint">(يُشعر الطلاب المستأذنين المفعّلين)</span></label>
+              <input type="url" dir="ltr" value={sessForm.recording_url}
+                onChange={e => setSessForm({ ...sessForm, recording_url: e.target.value })}
+                placeholder="https://..." />
+            </div>
             <button className="save-btn" onClick={saveSession}>{sessForm.id ? 'حفظ التعديل' : 'حفظ الجلسة'}</button>
           </div>
         </div>

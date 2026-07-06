@@ -12,6 +12,7 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
   const [status, setStatus] = useState(null)   // null | pending | approved | rejected
   const [busy, setBusy] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [wantRec, setWantRec] = useState(true)   // الاستعداد للاستماع للتسجيل
 
   useEffect(() => {
     let alive = true
@@ -32,6 +33,8 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
       const { error } = await supabase.from('excuse_requests')
         .insert({ student_id: studentId, session_id: sessionId, reason: reason.trim() })
       if (error) throw error
+      // نحدّث خيار الاستعداد للاستماع للطالب
+      await supabase.from('students').update({ ready_for_recordings: wantRec }).eq('id', studentId)
       setStatus('pending'); setOpen(false); setReason('')
       toast('تم إرسال طلب الإذن', 'success')
     } catch (e) {
@@ -111,6 +114,15 @@ export default function ExcuseButton({ studentId, sessionId, sessionTitle, sessi
                 <Icon name="alert" size={15} />
                 <span>سيراجع المشرف طلبك. عند <strong>القبول</strong> تُسجّل مستأذناً، وعند <strong>الرفض</strong> يُسجّل غياب. ستصلك النتيجة بإشعار.</span>
               </div>
+
+              <label className="exc-toggle">
+                <input type="checkbox" checked={wantRec} onChange={e => setWantRec(e.target.checked)} />
+                <span className="exc-toggle-track"><span className="exc-toggle-thumb"></span></span>
+                <span className="exc-toggle-text">
+                  <strong>الاستعداد للاستماع للدرس مسجّلاً</strong>
+                  <small>يصلك رابط التسجيل عند إضافته</small>
+                </span>
+              </label>
             </div>
 
             {/* الأزرار */}
