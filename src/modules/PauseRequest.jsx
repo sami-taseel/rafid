@@ -2,46 +2,62 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import { useConfirm } from '../Confirm'
 import Icon from '../Icon'
 
 const DOW = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت']
 const MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
-// تقويم صغير لاختيار تاريخ
-function MiniCal({ value, onPick, minDate }) {
+// تقويم مدى (نمط حجز الطيران): نقرة أولى = البداية، ثانية = النهاية
+function RangeCal({ start, end, onChange, minDate }) {
   const today = new Date()
-  const init = value ? new Date(value + 'T00:00:00') : today
-  const [view, setView] = useState(new Date(init.getFullYear(), init.getMonth(), 1))
+  const base = start ? new Date(start + 'T00:00:00') : today
+  const [view, setView] = useState(new Date(base.getFullYear(), base.getMonth(), 1))
   const y = view.getFullYear(), m = view.getMonth()
   const firstDow = new Date(y, m, 1).getDay()
   const days = new Date(y, m + 1, 0).getDate()
   const cells = []; for (let i = 0; i < firstDow; i++) cells.push(null)
   for (let d = 1; d <= days; d++) cells.push(d)
+
+  function pick(ds) {
+    // لا بداية بعد، أو مدى مكتمل → نبدأ من جديد
+    if (!start || (start && end)) { onChange(ds, null); return }
+    // توجد بداية فقط
+    if (ds < start) { onChange(ds, null); return }   // اختار أبكر → يصبح البداية
+    onChange(start, ds)                               // اختار أحدث → يصبح النهاية
+  }
+
   return (
-    <div className="pr-cal">
-      <div className="pr-cal-bar">
-        <button type="button" className="pr-nav" onClick={() => setView(new Date(y, m - 1, 1))}><Icon name="chevronRight" size={16} /></button>
-        <span className="pr-month">{MON[m]} {y}</span>
-        <button type="button" className="pr-nav" onClick={() => setView(new Date(y, m + 1, 1))}><Icon name="chevronLeft" size={16} /></button>
+    <div className="rc-cal">
+      <div className="rc-bar">
+        <button type="button" className="rc-nav" onClick={() => setView(new Date(y, m - 1, 1))}><Icon name="chevronRight" size={18} /></button>
+        <span className="rc-month">{MON[m]} {y}</span>
+        <button type="button" className="rc-nav" onClick={() => setView(new Date(y, m + 1, 1))}><Icon name="chevronLeft" size={18} /></button>
       </div>
-      <div className="pr-dow">{DOW.map(d => <span key={d}>{d}</span>)}</div>
-      <div className="pr-grid">
+      <div className="rc-dow">{DOW.map(d => <span key={d}>{d}</span>)}</div>
+      <div className="rc-grid">
         {cells.map((d, i) => {
-          if (!d) return <span key={i}></span>
+          if (!d) return <span key={i} className="rc-empty"></span>
           const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
           const disabled = minDate && ds < minDate
-          const sel = value === ds
-          return <button type="button" key={i} className={'pr-day' + (sel ? ' sel' : '') + (disabled ? ' dis' : '')}
-            onClick={() => !disabled && onPick(ds)} disabled={disabled}>{d}</button>
+          const isStart = ds === start, isEnd = ds === end
+          const inRange = start && end && ds > start && ds < end
+          let cls = 'rc-day'
+          if (disabled) cls += ' dis'
+          if (isStart) cls += ' start'
+          if (isEnd) cls += ' end'
+          if (inRange) cls += ' in'
+          return <button type="button" key={i} className={cls} onClick={() => !disabled && pick(ds)} disabled={disabled}>{d}</button>
         })}
       </div>
+      <div className="rc-hint">اختر يوم البداية ثم يوم النهاية</div>
     </div>
   )
 }
 
-// زر + نافذة طلب التوقّف عن الدراسة (للطالب)
 export default function PauseRequest({ studentId }) {
   const toast = useToast()
+  const confirmDialog = useConfirm()
   const [open, setOpen] = useState(false)
   const [existing, setExisting] = useState(null)
   const [reason, setReason] = useState('')
@@ -49,21 +65,19 @@ export default function PauseRequest({ studentId }) {
   const [end, setEnd] = useState('')
   const [wantRec, setWantRec] = useState(true)
   const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState(1)  // 1 السبب+الاستعداد، 2 التواريخ
   const todayStr = new Date().toLocaleDateString('en-CA')
 
-  useEffect(() => {
-    supabase.from('pause_requests').select('*').eq('student_id', studentId)
-      .order('created_at', { ascending: false }).limit(1).maybeSingle()
-      .then(({ data }) => setExisting(data), () => {})
-  }, [studentId, open])
-
+  async function loadExisting() {
+    const { data } = await supabase.from('pause_requests').select('*').eq('student_id', studentId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle().then(r => r, () => ({ data: null }))
+    setExisting(data)
+  }
+  useEffect(() => { loadExisting() }, [studentId])
   useEffect(() => { if (open) { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = '' } } }, [open])
 
   async function submit() {
     if (reason.trim().length < 3) { toast('اكتب سبب التوقّف', 'error'); return }
-    if (!start || !end) { toast('حدّد تاريخ البداية والنهاية', 'error'); return }
-    if (end < start) { toast('تاريخ النهاية يجب أن يكون بعد البداية', 'error'); return }
+    if (!start || !end) { toast('حدّد فترة التوقّف (البداية والنهاية)', 'error'); return }
     setBusy(true)
     try {
       const { error } = await supabase.from('pause_requests').insert({
@@ -71,20 +85,54 @@ export default function PauseRequest({ studentId }) {
       })
       if (error) throw error
       toast('تم إرسال طلب التوقّف', 'success')
-      setOpen(false); setReason(''); setStart(''); setEnd(''); setStep(1)
+      setOpen(false); setReason(''); setStart(''); setEnd('')
+      loadExisting()
     } catch (e) { toast('تعذّر الإرسال، حاول مجدداً', 'error') }
     setBusy(false)
   }
 
-  const activePause = existing && existing.status === 'approved' && existing.end_date >= todayStr
+  async function cancelRequestSafe() {
+    const ok = await confirmDialog({
+      title: 'إلغاء طلب التوقّف',
+      message: isPending ? 'سيُلغى طلب التوقّف المعلّق. هل أنت متأكد؟'
+        : 'سيُلغى توقّفك المعتمد وتعود جلسات الفترة القادمة لحالتها. هل أنت متأكد؟',
+      confirmText: 'نعم، إلغاء الطلب', danger: true,
+    })
+    if (!ok) return
+    setBusy(true)
+    try {
+      // نلغي الطلب؛ وإن كان معتمداً نُعيد جلسات الفترة القادمة (المستأذنة) إلى غير مرصودة
+      if (isApproved) {
+        await supabase.rpc('cancel_pause', { p_request: existing.id }).then(r => r, () => {})
+      }
+      await supabase.from('pause_requests').delete().eq('id', existing.id)
+      toast('تم إلغاء طلب التوقّف', 'info')
+      setExisting(null); loadExisting()
+    } catch (e) { toast('تعذّر الإلغاء', 'error') }
+    setBusy(false)
+  }
+
+  const isPending = existing && existing.status === 'pending'
+  const isApproved = existing && existing.status === 'approved' && existing.end_date >= todayStr
+  const blocked = isPending || isApproved   // لا يُسمح بطلب جديد
 
   return (
     <>
-      <button className="pause-trigger" onClick={() => setOpen(true)}>
-        <Icon name="clock" size={16} /> طلب توقّف عن الدراسة
-      </button>
-      {existing && existing.status === 'pending' && <span className="pause-badge pending">طلب التوقّف قيد المراجعة</span>}
-      {activePause && <span className="pause-badge active">متوقّف حتى {existing.end_date}</span>}
+      {blocked ? (
+        <div className="pause-active-row">
+          <span className={'pause-badge ' + (isPending ? 'pending' : 'active')}>
+            <Icon name={isPending ? 'clock' : 'check'} size={14} />
+            {isPending ? ' طلب التوقّف قيد المراجعة' : ` متوقّف حتى ${existing.end_date}`}
+          </span>
+          <button className="pause-cancel" onClick={cancelRequestSafe} disabled={busy}>
+            <Icon name="x" size={14} /> إلغاء الطلب
+          </button>
+        </div>
+      ) : (
+        <button className="pause-trigger" onClick={() => setOpen(true)}>
+          <Icon name="clock" size={16} /> طلب توقّف عن الدراسة
+        </button>
+      )}
 
       {open && createPortal(
         <div className="pr-overlay" onClick={() => !busy && setOpen(false)}>
@@ -97,47 +145,37 @@ export default function PauseRequest({ studentId }) {
             </div>
 
             <div className="pr-body">
-              {step === 1 ? (
-                <>
-                  <label className="pr-label"><Icon name="edit" size={14} /> سبب التوقّف <span className="pr-req">إلزامي</span></label>
-                  <textarea className="pr-textarea" rows={3} value={reason} maxLength={400}
-                    onChange={e => setReason(e.target.value)} placeholder="اذكر سبب طلب التوقّف عن الدراسة…" autoFocus />
-                  <label className="pr-toggle">
-                    <input type="checkbox" checked={wantRec} onChange={e => setWantRec(e.target.checked)} />
-                    <span className="pr-toggle-track"><span className="pr-toggle-thumb"></span></span>
-                    <span className="pr-toggle-text">
-                      <strong>الاستعداد للاستماع للدروس المسجّلة</strong>
-                      <small>ستصلك روابط تسجيلات الدروس خلال فترة التوقّف</small>
-                    </span>
-                  </label>
-                  <button className="pr-next" onClick={() => { if (reason.trim().length < 3) { toast('اكتب سبب التوقّف', 'error'); return } setStep(2) }}>
-                    التالي: تحديد الفترة <Icon name="chevronLeft" size={16} />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="pr-dates">
-                    <div className="pr-date-col">
-                      <label className="pr-label">من تاريخ</label>
-                      <div className="pr-date-val">{start || '—'}</div>
-                      <MiniCal value={start} onPick={setStart} minDate={todayStr} />
-                    </div>
-                  </div>
-                  <div className="pr-dates">
-                    <div className="pr-date-col">
-                      <label className="pr-label">إلى تاريخ</label>
-                      <div className="pr-date-val">{end || '—'}</div>
-                      <MiniCal value={end} onPick={setEnd} minDate={start || todayStr} />
-                    </div>
-                  </div>
-                  <div className="pr-foot">
-                    <button className="pr-back" onClick={() => setStep(1)}>رجوع</button>
-                    <button className="pr-send" onClick={submit} disabled={busy}>
-                      {busy ? 'جارٍ الإرسال…' : <><Icon name="send" size={15} /> إرسال الطلب</>}
-                    </button>
-                  </div>
-                </>
-              )}
+              <label className="pr-label"><Icon name="edit" size={14} /> سبب التوقّف <span className="pr-req">إلزامي</span></label>
+              <textarea className="pr-textarea" rows={2} value={reason} maxLength={400}
+                onChange={e => setReason(e.target.value)} placeholder="اذكر سبب طلب التوقّف عن الدراسة…" autoFocus />
+
+              <label className="pr-label" style={{ marginTop: 16 }}><Icon name="calendar" size={14} /> فترة التوقّف</label>
+              <div className="pr-range-summary">
+                <div className={'pr-range-chip' + (start ? ' filled' : '')}>
+                  <span className="pr-range-lbl">من</span>
+                  <span className="pr-range-val">{start || 'اختر'}</span>
+                </div>
+                <Icon name="chevronLeft" size={16} />
+                <div className={'pr-range-chip' + (end ? ' filled' : '')}>
+                  <span className="pr-range-lbl">إلى</span>
+                  <span className="pr-range-val">{end || 'اختر'}</span>
+                </div>
+              </div>
+              <RangeCal start={start} end={end} minDate={todayStr}
+                onChange={(s, e) => { setStart(s); setEnd(e) }} />
+
+              <label className="pr-toggle">
+                <input type="checkbox" checked={wantRec} onChange={e => setWantRec(e.target.checked)} />
+                <span className="pr-toggle-track"><span className="pr-toggle-thumb"></span></span>
+                <span className="pr-toggle-text">
+                  <strong>الاستعداد للاستماع للدروس المسجّلة</strong>
+                  <small>ستصلك روابط تسجيلات الدروس خلال فترة التوقّف</small>
+                </span>
+              </label>
+
+              <button className="pr-send" onClick={submit} disabled={busy}>
+                {busy ? 'جارٍ الإرسال…' : <><Icon name="send" size={15} /> إرسال الطلب</>}
+              </button>
             </div>
           </div>
         </div>,
