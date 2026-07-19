@@ -2694,3 +2694,20 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 :root[data-theme="dark"] .rc-day.in { background: #1a2a44; color: #a8c4ea; }
 :root[data-theme="dark"] .pr-range-chip.filled { background: #1a2a44; }
 :root[data-theme="dark"] .pause-badge.active { background: #1a2a44; color: #a8c4ea; }
+
+/* ===== بطاقة مساعدة الرفع ===== */
+.upload-help { margin-bottom: 16px; }
+.upload-help-toggle { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px; background: #e8f0fc; color: #1f3864; border: 1px solid #c2d6f0; border-radius: 11px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.upload-help-toggle:hover { background: #dae8fa; }
+.upload-help-body { margin-top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.uh-diag { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+.uh-diag-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 11px; border-radius: 9px; }
+.uh-diag-row.ok { background: #e6f6ee; color: #15784e; }
+.uh-diag-row.bad { background: #fce8e8; color: #b32d2d; }
+.uh-tips { font-size: 13px; line-height: 1.9; }
+.uh-tips strong { display: block; margin-bottom: 6px; }
+.uh-tips ul { margin: 0; padding-inline-start: 20px; color: var(--text); }
+.uh-tips b { color: #1f3864; }
+:root[data-theme="dark"] .uh-tips b { color: #a8c4ea; }
+.uh-recheck { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--border); color: var(--text-soft); border-radius: 9px; padding: 8px 14px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.uh-recheck:hover { border-color: #2e5496; color: #2e5496; }

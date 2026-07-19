@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { uploadTicketFile } from '../ticketUtils'
+import { compressImage } from '../imageCompress'
 import { useToast } from '../Toast'
 import Attachment from './Attachment'
 import Icon from '../Icon'
@@ -46,14 +47,16 @@ export default function StudentAttachments({ studentId }) {
   function friendlyUploadError(e) {
     const m = (e?.message || '').toLowerCase()
     if (m.includes('row-level security') || m.includes('policy') || m.includes('403') || m.includes('unauthorized'))
-      return 'تعذّر الرفع بسبب الصلاحيات. يرجى تحديث الصفحة وإعادة المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
-    if (m.includes('413') || m.includes('large') || m.includes('كبير'))
-      return 'حجم الملف كبير. الحد الأقصى ١٠ ميجابايت. جرّب صورة أصغر.'
-    if (m.includes('network') || m.includes('fetch') || m.includes('load failed'))
-      return 'تعذّر الاتصال. تأكد من الإنترنت وأعد المحاولة.'
-    if (m.includes('mime') || m.includes('type'))
-      return 'نوع الملف غير مدعوم. ارفع صورة (JPG/PNG) أو PDF.'
-    return 'تعذّر رفع الملف. تأكد أنه صورة أو PDF وحجمه أقل من ١٠ ميجابايت، ثم أعد المحاولة.'
+      return 'تعذّر الرفع بسبب الصلاحيات. حدّث الصفحة وأعد المحاولة، وإن استمرت المشكلة تواصل مع إدارة السكن.'
+    if (m.includes('413') || m.includes('large') || m.includes('كبير') || m.includes('exceeded') || m.includes('maximum'))
+      return 'حجم الملف كبير حتى بعد الضغط. جرّب لقطة شاشة للملف أو صورة أوضح بحجم أصغر.'
+    if (m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('timeout'))
+      return 'تعذّر الاتصال بعد عدة محاولات. تأكد من ثبات الإنترنت (يُفضّل واي‑فاي) وأعد المحاولة.'
+    if (m.includes('mime') || m.includes('type') || m.includes('format'))
+      return 'صيغة الملف غير مدعومة. صوّر المستند صورةً واضحة (سيُحوّل تلقائياً) أو ارفع PDF.'
+    if (m.includes('duplicate') || m.includes('exists'))
+      return 'يبدو أنك رفعت هذا الملف بالفعل. حدّث الصفحة للتأكد.'
+    return 'تعذّر رفع الملف. جرّب تصويره من جديد بصورة أوضح، وتأكد من ثبات الإنترنت، ثم أعد المحاولة.'
   }
 
   async function uploadTermly(typeId, file, termLabel) {
@@ -62,7 +65,8 @@ export default function StudentAttachments({ studentId }) {
     if (!isAllowedFile(file)) { const msg = 'يُقبل رفع الصور أو ملفات PDF فقط.'; setErr(msg); toast(msg, 'error'); return }
     setBusy('term_' + typeId)
     try {
-      const path = await uploadTicketFile('attach_' + studentId, file)
+      const toUpload = await compressImage(file)
+      const path = await uploadTicketFile('attach_' + studentId, toUpload)
       const { error } = await supabase.from('student_attachments').insert({ student_id: studentId, type_id: typeId, file_path: path, term_label: termLabel })
       if (error) throw new Error(error.message)
       await load()
@@ -75,7 +79,8 @@ export default function StudentAttachments({ studentId }) {
     if (!isAllowedFile(file)) { const msg = 'يُقبل رفع الصور أو ملفات PDF فقط.'; setErr(msg); toast(msg, 'error'); return }
     setBusy(typeId + (companionId || 'self'))
     try {
-      const path = await uploadTicketFile('attach_' + studentId, file)
+      const toUpload = await compressImage(file)
+      const path = await uploadTicketFile('attach_' + studentId, toUpload)
       let expires = null
       if (renewMonths) { const d = new Date(); d.setMonth(d.getMonth() + Number(renewMonths)); expires = d.toISOString().slice(0, 10) }
       const { error } = await supabase.from('student_attachments').insert({
@@ -140,6 +145,9 @@ export default function StudentAttachments({ studentId }) {
   return (
     <div className="st-attach">
       {err && <div className="attach-error">⚠ {err}</div>}
+
+      <UploadHelp />
+
       {/* مرفقات لكل شخص: بطاقة لكل نوع، بداخلها الطالب وكل مرافق */}
       {perPersonTypes.map(t => (
         <div className="sp-card" key={t.id}>
@@ -262,4 +270,57 @@ export default function StudentAttachments({ studentId }) {
       </div>
     )
   }
+}
+
+// بطاقة مساعدة الرفع: نصائح + فحص ذاتي للبيئة
+function UploadHelp() {
+  const [open, setOpen] = useState(false)
+  const [diag, setDiag] = useState(null)
+
+  function runDiagnostic() {
+    const results = []
+    // الاتصال
+    results.push({ ok: navigator.onLine, label: navigator.onLine ? 'الاتصال بالإنترنت متوفّر' : 'لا يوجد اتصال بالإنترنت — تحقّق من الشبكة' })
+    // نوع الشبكة إن توفّر
+    const conn = navigator.connection
+    if (conn && conn.effectiveType) {
+      const slow = /2g|slow/i.test(conn.effectiveType)
+      results.push({ ok: !slow, label: slow ? 'الشبكة بطيئة — يُفضّل واي‑فاي للرفع' : 'سرعة الشبكة مناسبة' })
+    }
+    // دعم الضغط
+    results.push({ ok: !!window.createImageBitmap, label: window.createImageBitmap ? 'المتصفح يدعم ضغط الصور تلقائياً' : 'حدّث المتصفح لأداء أفضل' })
+    setDiag(results)
+  }
+
+  return (
+    <div className="upload-help">
+      <button className="upload-help-toggle" onClick={() => { setOpen(!open); if (!diag) runDiagnostic() }}>
+        <Icon name="help" size={16} /> الرفع لا يعمل؟ اضغط للمساعدة
+      </button>
+      {open && (
+        <div className="upload-help-body">
+          {diag && (
+            <div className="uh-diag">
+              {diag.map((r, i) => (
+                <div key={i} className={'uh-diag-row' + (r.ok ? ' ok' : ' bad')}>
+                  <Icon name={r.ok ? 'check' : 'alert'} size={14} /> {r.label}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="uh-tips">
+            <strong>نصائح لرفع ناجح:</strong>
+            <ul>
+              <li>استخدم <b>واي‑فاي</b> بدل بيانات الجوال إن أمكن.</li>
+              <li>صوّر المستند <b>صورةً</b> بدل رفع ملف كبير — سيُضغط تلقائياً.</li>
+              <li>إن ظهر خطأ، انتظر ثوانٍ وأعد المحاولة (يعيد النظام المحاولة تلقائياً).</li>
+              <li>تأكد أن الملف <b>صورة أو PDF</b>.</li>
+              <li>إن استمرت المشكلة، جرّب متصفحاً آخر (Chrome/Safari) أو جهازاً آخر.</li>
+            </ul>
+          </div>
+          <button className="uh-recheck" onClick={runDiagnostic}><Icon name="refresh" size={13} /> إعادة الفحص</button>
+        </div>
+      )}
+    </div>
+  )
 }

@@ -18,15 +18,29 @@ export function isImageFile(file) {
 }
 
 // رفع ملف باسم آمن، يعيد المسار. يرمي خطأً واضحاً عند الفشل
+// يُعيد المحاولة تلقائياً عند فشل الشبكة (٣ محاولات)
 export async function uploadTicketFile(ticketId, file) {
-  // حد الحجم: 10 ميجابايت
+  // حد الحجم: 10 ميجابايت (بعد الضغط عادةً أقل بكثير)
   if (file.size > 10 * 1024 * 1024) throw new Error('حجم الملف كبير (الحد ١٠ ميجابايت)')
   const path = `tickets/${ticketId}/${Date.now()}_${safeName(file.name)}`
-  const { error } = await supabase.storage.from('student-docs').upload(path, file, {
-    contentType: file.type || 'application/octet-stream', upsert: false,
-  })
-  if (error) throw new Error(error.message || 'تعذّر رفع الملف')
-  return path
+  let lastErr = null
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const { error } = await supabase.storage.from('student-docs').upload(path, file, {
+        contentType: file.type || 'application/octet-stream', upsert: false,
+      })
+      if (error) throw new Error(error.message || 'تعذّر رفع الملف')
+      return path
+    } catch (e) {
+      lastErr = e
+      const m = (e?.message || '').toLowerCase()
+      // نُعيد المحاولة فقط لأخطاء الشبكة المؤقتة
+      const retryable = m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('timeout')
+      if (!retryable || attempt === 3) throw e
+      await new Promise(r => setTimeout(r, attempt * 1200))   // تباعد متزايد
+    }
+  }
+  throw lastErr
 }
 
 // جلب رابط موقّع لعرض المرفق
