@@ -2772,3 +2772,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 :root[data-theme="dark"] .cc-opt-note { background: #10312e; color: #6fd4c8; }
 :root[data-theme="dark"] .att-group-head.secondary { background: #10312e; color: #6fd4c8; }
 :root[data-theme="dark"] .att-group-head.primary { background: #1a2a44; color: #a8c4ea; }
+
+/* فئات النشاط الجديد */
+.new-act-cats { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.nac-label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 8px; }

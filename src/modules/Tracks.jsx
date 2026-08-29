@@ -23,6 +23,8 @@ export default function Tracks() {
   const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled', recording_url: '' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
+  const [newActCats, setNewActCats] = useState({})   // {categoryId: 'primary'|'secondary'}
+  const [newScope, setNewScope] = useState('students')
   const [categories, setCategories] = useState([])
   const [actCats, setActCats] = useState({})  // {categoryId: 'primary'|'secondary'}
   const [scope, setScope] = useState('students')  // students | companions | both
@@ -43,18 +45,33 @@ export default function Tracks() {
   function flash(m, type) { toast(m, type) }
 
   // ===== الأنشطة =====
+  function toggleNewCat(cid) {
+    const cur = newActCats[cid]
+    const next = { ...newActCats }
+    if (!cur) next[cid] = 'primary'
+    else if (cur === 'primary') next[cid] = 'secondary'
+    else delete next[cid]
+    setNewActCats(next)
+  }
   async function addActivity() {
     if (!newAct.title || !newAct.track_code) { flash('اكتب اسم النشاط واختر المسار', 'error'); return }
     const track = tracks.find(t => t.code === newAct.track_code)
-    await supabase.from('activities').insert({
+    const { data: created } = await supabase.from('activities').insert({
       title: newAct.title, activity_type: newAct.activity_type,
       provider: newAct.provider, location: newAct.location, track_id: track?.id,
-    })
+    }).select('id').single()
+    // ربط الفئات المستهدفة (رئيسي/ثانوي)
+    const entries = Object.entries(newActCats)
+    if (created?.id && entries.length) {
+      await supabase.from('activity_categories').insert(
+        entries.map(([cid, type]) => ({ activity_id: created.id, category_id: cid, target_type: type })))
+    }
     setNewAct({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
-    flash('أُضيف النشاط'); loadAll()
+    setNewActCats({})
+    flash('أُضيف النشاط وفئاته المستهدفة'); loadAll()
   }
   async function openEditActivity(a) {
-    setEditAct({ id: a.id, title: a.title, activity_type: a.activity_type, provider: a.provider || '', location: a.location || '', track_code: a.tracks?.code || '', max_grade: a.max_grade ?? 10 })
+    setEditAct({ id: a.id, title: a.title, activity_type: a.activity_type, provider: a.provider || '', location: a.location || '', track_code: a.tracks?.code || '' })
     const { data } = await supabase.from('activity_categories').select('category_id, target_type').eq('activity_id', a.id)
     const m = {}; (data || []).forEach(x => { m[x.category_id] = x.target_type || 'primary' })
     setActCats(m)
@@ -75,7 +92,6 @@ export default function Tracks() {
     await supabase.from('activities').update({
       title: editAct.title, activity_type: editAct.activity_type,
       provider: editAct.provider, location: editAct.location, track_id: track?.id,
-      max_grade: editAct.max_grade === '' || editAct.max_grade == null ? 10 : Number(editAct.max_grade),
     }).eq('id', editAct.id)
     // تحديث الفئات المستهدفة
     await supabase.from('activity_categories').delete().eq('activity_id', editAct.id)
@@ -186,6 +202,34 @@ export default function Tracks() {
           <input placeholder="المقدّم" value={newAct.provider} onChange={e => setNewAct({ ...newAct, provider: e.target.value })} />
           <input placeholder="المكان" value={newAct.location} onChange={e => setNewAct({ ...newAct, location: e.target.value })} />
           <button onClick={addActivity}>إضافة</button>
+        </div>
+
+        {/* الفئات المستهدفة للنشاط الجديد */}
+        <div className="new-act-cats">
+          <label className="nac-label">الفئة المستهدفة (الملزمون بالحضور)</label>
+          <div className="seg-group" style={{ marginBottom: 10 }}>
+            <button type="button" className={newScope === 'students' ? 'seg-on' : ''} onClick={() => setNewScope('students')}>الطلاب</button>
+            <button type="button" className={newScope === 'companions' ? 'seg-on' : ''} onClick={() => setNewScope('companions')}>المرافقون</button>
+            <button type="button" className={newScope === 'both' ? 'seg-on' : ''} onClick={() => setNewScope('both')}>الجميع</button>
+          </div>
+          <div className="cat-pick-list">
+            {categories.filter(c => newScope === 'both' ? true : c.member_type === (newScope === 'students' ? 'student' : 'companion')).map(c => (
+              <button type="button" key={c.id}
+                className={'val-chip cat-chip' + (newActCats[c.id] ? ' on ' + newActCats[c.id] : '')}
+                onClick={() => toggleNewCat(c.id)}
+                title="اضغط للتبديل: رئيسي ← ثانوي ← إلغاء">
+                {c.name}
+                {newActCats[c.id] === 'primary' && <span className="cat-tag">رئيسي</span>}
+                {newActCats[c.id] === 'secondary' && <span className="cat-tag">ثانوي</span>}
+              </button>
+            ))}
+            {categories.filter(c => newScope === 'both' ? true : c.member_type === (newScope === 'students' ? 'student' : 'companion')).length === 0 &&
+              <span className="muted" style={{ fontSize: 13 }}>لا توجد فئات من هذا النوع. أنشئها من «الفئات والتصنيفات».</span>}
+          </div>
+          <div className="cat-legend">
+            <span><b className="cat-dot primary"></b> <strong>رئيسي:</strong> حضور إلزامي ← درجة لكل جلسة + نقطتان</span>
+            <span><b className="cat-dot secondary"></b> <strong>ثانوي:</strong> حضور اختياري ← نقطة واحدة</span>
+          </div>
         </div>
       </div>
 
@@ -342,17 +386,13 @@ export default function Tracks() {
                   <span className="muted" style={{ fontSize: 13 }}>لا توجد فئات من هذا النوع. أنشئها من «الفئات والتصنيفات».</span>}
               </div>
               <div className="cat-legend">
-                <span><b className="cat-dot primary"></b> <strong>رئيسي:</strong> حضور إلزامي ← درجة + نقطتان</span>
+                <span><b className="cat-dot primary"></b> <strong>رئيسي:</strong> حضور إلزامي ← درجة لكل جلسة + نقطتان</span>
                 <span><b className="cat-dot secondary"></b> <strong>ثانوي:</strong> حضور اختياري ← نقطة واحدة</span>
               </div>
               <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
                 اضغط الفئة للتبديل بين رئيسي ← ثانوي ← إلغاء. إن لم تختر شيئاً، يكون النشاط عاماً لغير محدّد.
               </p>
-              <div className="field" style={{ marginTop: 12 }}>
-                <label>درجة النشاط القصوى <span className="field-hint">(تُمنح كاملة عند الحضور الإلزامي)</span></label>
-                <input type="number" min="0" step="0.5" value={editAct.max_grade ?? 10}
-                  onChange={e => setEditAct({ ...editAct, max_grade: e.target.value })} />
-              </div>
+
             </div>
 
             <button className="save-btn" onClick={saveEditActivity}>حفظ التعديل</button>
