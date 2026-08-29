@@ -11,6 +11,7 @@ export default function Attendance() {
   const [students, setStudents] = useState([])
   const [sel, setSel] = useState(null)
   const [marks, setMarks] = useState({})
+  const [sessStudents, setSessStudents] = useState(null)  // [{student_id, full_name, target_type}]
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
   const [qrSession, setQrSession] = useState(null)
@@ -76,11 +77,20 @@ export default function Attendance() {
     setSel(sess)
     const { data } = await supabase.from('attendance').select('student_id, status').eq('session_id', sess.id)
     const m = {}; (data || []).forEach(r => m[r.student_id] = r.status); setMarks(m)
+    // تصنيف الطلاب: إلزامي (رئيسي) / اختياري (ثانوي)
+    const { data: ss } = await supabase.rpc('session_students', { p_session: sess.id })
+    setSessStudents(ss || null)
   }
   async function save() {
     const rows = students.map(s => ({ session_id: sel.id, student_id: s.id, status: marks[s.id] || 'not_recorded' }))
     const { error } = await supabase.from('attendance').upsert(rows, { onConflict: 'session_id,student_id' })
     if (error) { setMsg('خطأ: ' + error.message); return }
+    // منح النقاط والدرجات لكل حاضر (رئيسي: درجة+نقطتان، ثانوي: نقطة)
+    for (const sid of Object.keys(marks)) {
+      if (marks[sid] === 'present' || marks[sid] === 'recorded') {
+        await supabase.rpc('award_attendance_reward', { p_student: sid, p_session: sel.id }).then(r => r, () => {})
+      }
+    }
     // فحص آلي للإنذار لكل طالب غائب
     let warnings = []
     for (const s of students) {
@@ -123,33 +133,67 @@ export default function Attendance() {
             <button className="mini" onClick={() => { const m={}; students.forEach(s=>m[s.id]='present'); setMarks(m) }}>تحديد الكل حاضر</button>
             <button className="mini" onClick={() => setMarks({})}>مسح الكل</button>
           </div>
-          <div className="att-list">
-            {students.map(s => {
-              const todayStr = new Date().toLocaleDateString('en-CA')
-              const isPastSession = sel.planned_date && sel.planned_date < todayStr
-              // إلغاء التحضير: نفس اليوم → بدون تحضير، بعد الموعد → غائب
-              function clearMark() {
-                if (isPastSession) setMarks({ ...marks, [s.id]: 'absent' })
-                else { const m = { ...marks }; delete m[s.id]; setMarks(m) }
-              }
+          {(() => {
+            const todayStr = new Date().toLocaleDateString('en-CA')
+            const isPastSession = sel.planned_date && sel.planned_date < todayStr
+            function clearMark(sid) {
+              if (isPastSession) setMarks({ ...marks, [sid]: 'absent' })
+              else { const m = { ...marks }; delete m[sid]; setMarks(m) }
+            }
+            function Row({ sid, name }) {
               return (
-                <div className="att-row" key={s.id}>
-                  <span className="att-name">{s.persons?.full_name}</span>
+                <div className="att-row" key={sid}>
+                  <span className="att-name">{name}</span>
                   <div className="att-btns">
                     {[['present','حاضر'],['absent','غائب'],['excused','مستأذن'],['recorded','استماع']].map(([v, l]) => (
-                      <button key={v} className={marks[s.id] === v ? 'att-btn sel ' + v : 'att-btn'}
-                        onClick={() => marks[s.id] === v ? clearMark() : setMarks({ ...marks, [s.id]: v })}>{l}</button>
+                      <button key={v} className={marks[sid] === v ? 'att-btn sel ' + v : 'att-btn'}
+                        onClick={() => marks[sid] === v ? clearMark(sid) : setMarks({ ...marks, [sid]: v })}>{l}</button>
                     ))}
-                    {marks[s.id] && marks[s.id] !== 'not_recorded' && (
-                      <button className="att-btn clear" title="إلغاء التحضير" onClick={clearMark}>
+                    {marks[sid] && marks[sid] !== 'not_recorded' && (
+                      <button className="att-btn clear" title="إلغاء التحضير" onClick={() => clearMark(sid)}>
                         <Icon name="x" size={13} />
                       </button>
                     )}
                   </div>
                 </div>
               )
-            })}
-          </div>
+            }
+            // إن توفّر التصنيف نعرض قسمين، وإلا نعرض الكل كالسابق
+            if (sessStudents && sessStudents.length) {
+              const prim = sessStudents.filter(x => x.target_type === 'primary')
+              const sec = sessStudents.filter(x => x.target_type === 'secondary')
+              return (
+                <>
+                  <div className="att-group">
+                    <div className="att-group-head primary">
+                      <Icon name="check" size={15} /> حضور إلزامي ({prim.length})
+                      <span className="att-group-note">درجة + نقطتان عند الحضور</span>
+                    </div>
+                    <div className="att-list">
+                      {prim.map(x => <Row key={x.student_id} sid={x.student_id} name={x.full_name} />)}
+                      {prim.length === 0 && <div className="muted" style={{ padding: 12 }}>لا طلاب في الفئات الرئيسية.</div>}
+                    </div>
+                  </div>
+                  {sec.length > 0 && (
+                    <div className="att-group">
+                      <div className="att-group-head secondary">
+                        <Icon name="star" size={15} /> حضور اختياري ({sec.length})
+                        <span className="att-group-note">نقطة واحدة عند الحضور · لا يُرصد غياب</span>
+                      </div>
+                      <div className="att-list">
+                        {sec.map(x => <Row key={x.student_id} sid={x.student_id} name={x.full_name} />)}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )
+            }
+            return (
+              <div className="att-list">
+                {students.map(s => <Row key={s.id} sid={s.id} name={s.persons?.full_name} />)}
+              </div>
+            )
+          })()}
           <button className="save-btn" onClick={save}>حفظ الحضور</button>
         </div>
       </div>

@@ -2742,3 +2742,33 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .srv-text-who { font-size: 11.5px; font-weight: 700; color: #2e5496; }
 .srv-text-val { font-size: 14px; color: var(--text); }
 :root[data-theme="dark"] .srv-text-who { color: #a8c4ea; }
+
+/* ============================================================
+   الفئات الرئيسية والثانوية (إلزامي / اختياري)
+   ============================================================ */
+/* اختيار نوع الفئة في صفحة الأنشطة */
+.cat-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+.cat-chip.on.primary { background: #1f3864; color: #fff; border-color: #1f3864; }
+.cat-chip.on.secondary { background: #0f766e; color: #fff; border-color: #0f766e; }
+.cat-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 7px; background: rgba(255,255,255,.25); }
+.cat-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 12.5px; color: var(--text-soft); }
+.cat-legend b.cat-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.cat-dot.primary { background: #1f3864; }
+.cat-dot.secondary { background: #0f766e; }
+
+/* أقسام الحضور: إلزامي / اختياري */
+.att-group { margin-bottom: 18px; }
+.att-group-head { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-radius: 11px 11px 0 0; font-size: 14px; font-weight: 700; }
+.att-group-head.primary { background: #e8f0fc; color: #1f3864; }
+.att-group-head.secondary { background: #e0f5f2; color: #0f766e; }
+.att-group-note { margin-inline-start: auto; font-size: 11.5px; font-weight: 500; opacity: .85; }
+.att-group .att-list { border: 1px solid var(--border); border-top: none; border-radius: 0 0 11px 11px; }
+
+/* شارة النشاط الاختياري للطالب */
+.cc-opt-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 9px; background: #e0f5f2; color: #0f766e; }
+.cc-card.cc-optional { border-style: dashed; border-color: #7fc9c0; }
+.cc-opt-note { display: flex; align-items: center; gap: 9px; background: #e0f5f2; color: #0f5f58; border-radius: 11px; padding: 11px 13px; font-size: 13px; margin-bottom: 10px; }
+:root[data-theme="dark"] .cc-opt-tag,
+:root[data-theme="dark"] .cc-opt-note { background: #10312e; color: #6fd4c8; }
+:root[data-theme="dark"] .att-group-head.secondary { background: #10312e; color: #6fd4c8; }
+:root[data-theme="dark"] .att-group-head.primary { background: #1a2a44; color: #a8c4ea; }

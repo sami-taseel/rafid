@@ -28,6 +28,18 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       ])
       // فلترة الجلسات حسب الأنشطة المرئية للطالب (فئاته المستهدفة)
       const visSet = new Set(visible)
+      // نوع الاستهداف لكل نشاط (رئيسي/ثانوي)
+      const typeMap = {}
+      try {
+        const { data: myCats } = await supabase.from('category_members').select('category_id').eq('student_id', studentId)
+        const myCatSet = new Set((myCats || []).map(x => x.category_id))
+        const { data: actCats } = await supabase.from('activity_categories').select('activity_id, category_id, target_type')
+        ;(actCats || []).forEach(ac => {
+          if (!myCatSet.has(ac.category_id)) return
+          // الرئيسي يغلب الثانوي
+          if (typeMap[ac.activity_id] !== 'primary') typeMap[ac.activity_id] = ac.target_type || 'primary'
+        })
+      } catch { /* الأعمدة قد لا تكون منفّذة بعد */ }
       const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
       const a = att.data || []
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
@@ -38,7 +50,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         absent: a.filter(x => x.status === 'absent').length,
         total: a.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
-        attMap,
+        attMap, typeMap,
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
@@ -93,7 +105,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="fc-grid">
             {nextDaySessions.map(s => (
-              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]}
+              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]}
                 sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
             ))}
           </div>
@@ -127,7 +139,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
         <div className="cc-grid">
           {shownUpcoming.map(s => (
-            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]}
+            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]}
               sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
           ))}
         </div>

@@ -45,10 +45,11 @@ function AttBadge({ status, size = 'normal' }) {
 }
 
 // ============ البطاقة البارزة (أقرب موعد) — مُعاد تنظيمها ============
-export function FeatureCard({ session, studentId, sessionDate, attStatus }) {
+export function FeatureCard({ session, studentId, sessionDate, attStatus, targetType }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const decided = attDecided(attStatus)
+  const isOptional = targetType === 'secondary'
   return (
     <div className="fc-card" style={{ '--sc-color': meta.color }}>
       <div className="fc-top">
@@ -56,6 +57,7 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus }) {
           <Icon name={meta.icon} size={13} /> {act.activity_type || 'نشاط'}
         </span>
         {act.tracks?.name_ar && <span className="fc-track">{act.tracks.name_ar}</span>}
+        {isOptional && <span className="cc-opt-tag">اختياري</span>}
         {decided
           ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
           : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
@@ -67,7 +69,13 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus }) {
         {act.location && <div className="fc-info"><Icon name="pin" size={15} /><div><span className="fc-info-lbl">المكان</span><span className="fc-info-val">{act.location}</span></div></div>}
       </div>
       {/* زر الإذن يظهر فقط إن لم تُحسم الحالة بعد */}
-      {studentId && !decided && (
+      {isOptional && (
+        <div className="cc-opt-note" style={{ marginTop: 14 }}>
+          <Icon name="star" size={15} />
+          <span>حضورك لهذا النشاط <strong>اختياري</strong>، وتُمنح <strong>نقطة</strong> عند الحضور.</span>
+        </div>
+      )}
+      {studentId && !decided && !isOptional && (
         <div className="fc-action">
           <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />
         </div>
@@ -77,22 +85,24 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus }) {
 }
 
 // ============ البطاقة المختصرة (بطاقتان بالصف) ============
-export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus }) {
+export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus, targetType }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const [details, setDetails] = useState(false)
   const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
   const decided = attDecided(attStatus)
+  const isOptional = targetType === 'secondary'
 
   return (
     <>
-      <div className={'cc-card' + (decided ? ' cc-decided cc-' + attStatus : '')} style={{ '--sc-color': meta.color }}>
+      <div className={'cc-card' + (decided ? ' cc-decided cc-' + attStatus : '') + (isOptional ? ' cc-optional' : '')} style={{ '--sc-color': meta.color }}>
         <div className="cc-stripe"></div>
         <div className="cc-body">
           <div className="cc-head">
             <span className="cc-type" style={{ background: meta.color + '18', color: meta.color }}>
               <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
             </span>
+            {isOptional && <span className="cc-opt-tag">اختياري</span>}
             {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{date.getDate()} {MON[date.getMonth()]}</span>)}
           </div>
           <h4 className="cc-title">{sessName}</h4>
@@ -104,7 +114,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 <Icon name="eye" size={15} />
               </button>
               {/* زر الإذن يظهر فقط إن لم تُحسم الحالة */}
-              {showExcuse && studentId && !decided && (
+              {showExcuse && studentId && !decided && !isOptional && (
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} compact />
               )}
             </div>
@@ -123,6 +133,12 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
             </div>
             <div className="cc-detail-body">
               {decided && <div className="cc-detail-att"><AttBadge status={attStatus} /></div>}
+              {isOptional && (
+                <div className="cc-opt-note">
+                  <Icon name="star" size={15} />
+                  <span>حضورك لهذا النشاط <strong>اختياري</strong>، وتُمنح <strong>نقطة</strong> عند الحضور.</span>
+                </div>
+              )}
               {date && <DetailRow icon="calendar" label="التاريخ" value={`${date.getDate()} ${MON[date.getMonth()]} ${date.getFullYear()}`} />}
               {s.start_time && <DetailRow icon="clock" label="الوقت" value={`${formatTime(s.start_time)}${s.duration_min ? ` · ${s.duration_min} دقيقة` : ''}`} />}
               {act.provider && <DetailRow icon="user" label="مقدّم الجلسة" value={act.provider} />}
@@ -139,7 +155,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 </div>
               </div>
             </div>
-            {showExcuse && studentId && !decided && (
+            {showExcuse && studentId && !decided && !isOptional && (
               <div className="cc-detail-foot">
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />
               </div>
