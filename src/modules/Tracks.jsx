@@ -7,6 +7,7 @@ import ExcelImport from './ExcelImport'
 import Icon from '../Icon'
 import QRModal, { canGenerateQR } from './QRModal'
 import RescheduleModal from './RescheduleModal'
+import BulkSessions from './BulkSessions'
 
 const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
 
@@ -20,6 +21,7 @@ export default function Tracks() {
   const [sessFor, setSessFor] = useState(null)
   const [qrSession, setQrSession] = useState(null)
   const [reschedule, setReschedule] = useState(null)
+  const [bulkFor, setBulkFor] = useState(null)   // النشاط المراد توليد جلساته
   const [sessForm, setSessForm] = useState({ id: null, title: '', planned_date: '', start_time: '', duration_min: '', status: 'scheduled', recording_url: '' })
   const [editAct, setEditAct] = useState(null)
   const [newAct, setNewAct] = useState({ title: '', activity_type: 'درس', provider: '', location: '', track_code: '' })
@@ -172,10 +174,18 @@ export default function Tracks() {
   }
   async function confirmReschedule(newDate) {
     const s = reschedule
-    const payload = { status: 'postponed' }
-    if (newDate) payload.planned_date = newDate
-    await supabase.from('sessions').update(payload).eq('id', s.id)
-    setReschedule(null); flash(newDate ? 'تم تأجيل الجلسة إلى ' + newDate : 'تم تأجيل الجلسة إلى إشعار آخر'); loadAll()
+    // الدالة الخادمية تزحزح الجلسات التالية للجلسات المرقّمة المترابطة
+    const { data, error } = await supabase.rpc('postpone_session', { p_session: s.id, p_new_date: newDate || null })
+    if (error) {
+      // احتياط: التحديث المباشر إن لم تكن الدالة منفّذة بعد
+      const payload = { status: 'postponed' }
+      if (newDate) payload.planned_date = newDate
+      await supabase.from('sessions').update(payload).eq('id', s.id)
+      flash(newDate ? 'تم تأجيل الجلسة إلى ' + newDate : 'تم تأجيل الجلسة إلى إشعار آخر')
+    } else {
+      flash(data || 'تم التأجيل')
+    }
+    setReschedule(null); loadAll()
   }
 
   if (loading) return <Spinner />
@@ -275,6 +285,7 @@ export default function Tracks() {
             </div>
             <div className="sess-actions">
               <button className="mini" onClick={() => openNewSession(a.id)}>+ جلسة</button>
+              <button className="mini bulk-btn" onClick={() => setBulkFor(a)}>📅 جلسات أسبوعية</button>
               <button className="mini" onClick={() => openEditActivity(a)}>تعديل</button>
               <button className="fr-del" onClick={() => deleteActivity(a)}>حذف</button>
             </div>
@@ -402,6 +413,7 @@ export default function Tracks() {
     </div>
       {qrSession && <QRModal session={qrSession} onClose={() => setQrSession(null)} />}
       {reschedule && <RescheduleModal session={reschedule} onConfirm={confirmReschedule} onClose={() => setReschedule(null)} />}
+      {bulkFor && <BulkSessions activity={bulkFor} onClose={() => setBulkFor(null)} onDone={loadAll} />}
     </>
   )
 }
