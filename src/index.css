@@ -2828,3 +2828,61 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 :root[data-theme="dark"] .bs-mode.on { background: #1a2a44; }
 :root[data-theme="dark"] .bs-note.numbered { background: #1a2a44; color: #a8c4ea; }
 :root[data-theme="dark"] .bs-note.titled { background: #10312e; color: #6fd4c8; }
+
+/* ============================================================
+   إضافة نشاط جديد — تصميم مُعاد
+   ============================================================ */
+.na-panel { padding: 0 !important; overflow: hidden; }
+.na-head { display: flex; align-items: center; gap: 13px; padding: 20px 22px; background: linear-gradient(135deg, #1f3864, #3a5da0); color: #fff; }
+.na-head-ic { width: 44px; height: 44px; border-radius: 13px; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.28); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.na-title { margin: 0; font-size: 18px; font-weight: 800; color: #fff; }
+.na-sub { margin: 3px 0 0; font-size: 12.5px; opacity: .88; }
+
+.na-section { padding: 20px 22px; border-bottom: 1px solid var(--border); }
+.na-section-label { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+.na-step { width: 24px; height: 24px; border-radius: 50%; background: #e8f0fc; color: #1f3864; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+
+.na-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.na-field { display: flex; flex-direction: column; }
+.na-field label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.na-required label::after { content: ' *'; color: #b32d2d; }
+.na-opt { font-size: 11px; font-weight: 400; color: var(--text-soft); }
+.na-field input, .na-field select { padding: 11px 13px; border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; background: var(--surface); color: var(--text); transition: border-color .15s, box-shadow .15s; width: 100%; }
+.na-field input:focus, .na-field select:focus { outline: none; border-color: #2e5496; box-shadow: 0 0 0 3px rgba(46,84,150,.12); }
+
+/* مبدّل النطاق */
+.na-scope { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 11px; padding: 4px; gap: 4px; margin-bottom: 14px; }
+.na-scope-btn { padding: 8px 18px; border: none; background: transparent; color: var(--text-soft); border-radius: 8px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.na-scope-btn:hover { color: var(--text); }
+.na-scope-btn.on { background: #1f3864; color: #fff; }
+
+/* شرائح الفئات */
+.na-cats { display: flex; flex-wrap: wrap; gap: 9px; }
+.na-cat { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); border-radius: 22px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.na-cat:hover { border-color: #2e5496; }
+.na-cat.on.primary { background: #1f3864; border-color: #1f3864; color: #fff; }
+.na-cat.on.secondary { background: #0f766e; border-color: #0f766e; color: #fff; }
+.na-cat-tag { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,.25); }
+
+.na-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 14px; font-size: 12.5px; color: var(--text-soft); align-items: center; }
+.na-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.na-dot.primary { background: #1f3864; }
+.na-dot.secondary { background: #0f766e; }
+.na-legend-hint { font-size: 11.5px; font-style: italic; opacity: .8; }
+
+/* شريط الإجراء */
+.na-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 22px; background: var(--bg); flex-wrap: wrap; }
+.na-summary { font-size: 13px; color: var(--text-soft); }
+.na-summary strong { color: var(--text); }
+.na-submit { display: inline-flex; align-items: center; gap: 7px; padding: 12px 26px; background: linear-gradient(135deg, #1f3864, #3a5da0); color: #fff; border: none; border-radius: 11px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .15s; box-shadow: 0 3px 10px rgba(31,56,100,.25); }
+.na-submit:hover:not(:disabled) { filter: brightness(1.09); transform: translateY(-1px); }
+.na-submit:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+
+:root[data-theme="dark"] .na-step { background: #1a2a44; color: #a8c4ea; }
+@media (max-width: 560px) {
+  .na-grid { grid-template-columns: 1fr; }
+  .na-actions { flex-direction: column; align-items: stretch; }
+  .na-submit { justify-content: center; }
+  .na-scope { width: 100%; }
+  .na-scope-btn { flex: 1; padding: 8px 10px; }
+}

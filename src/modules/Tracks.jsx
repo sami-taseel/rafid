@@ -198,48 +198,90 @@ export default function Tracks() {
         <div className="stat-card"><div className="num">{sessions.length}</div><div className="label">الجلسات</div></div>
       </div>
 
-      <div className="panel">
-        <h3>إضافة نشاط جديد</h3>
-        <div className="form-row">
-          <select value={newAct.track_code} onChange={e => setNewAct({ ...newAct, track_code: e.target.value })}>
-            <option value="">اختر المسار…</option>
-            {tracks.map(t => <option key={t.id} value={t.code}>{t.name_ar}</option>)}
-          </select>
-          <input placeholder="اسم النشاط" value={newAct.title} onChange={e => setNewAct({ ...newAct, title: e.target.value })} />
-          <select value={newAct.activity_type} onChange={e => setNewAct({ ...newAct, activity_type: e.target.value })}>
-            {ACT_TYPES.map(t => <option key={t}>{t}</option>)}
-          </select>
-          <input placeholder="المقدّم" value={newAct.provider} onChange={e => setNewAct({ ...newAct, provider: e.target.value })} />
-          <input placeholder="المكان" value={newAct.location} onChange={e => setNewAct({ ...newAct, location: e.target.value })} />
-          <button onClick={addActivity}>إضافة</button>
+      <div className="panel na-panel">
+        <div className="na-head">
+          <div className="na-head-ic"><Icon name="plus" size={20} /></div>
+          <div>
+            <h3 className="na-title">إضافة نشاط جديد</h3>
+            <p className="na-sub">عرّف النشاط وحدّد فئاته المستهدفة في خطوة واحدة</p>
+          </div>
         </div>
 
-        {/* الفئات المستهدفة للنشاط الجديد */}
-        <div className="new-act-cats">
-          <label className="nac-label">الفئة المستهدفة (الملزمون بالحضور)</label>
-          <div className="seg-group" style={{ marginBottom: 10 }}>
-            <button type="button" className={newScope === 'students' ? 'seg-on' : ''} onClick={() => setNewScope('students')}>الطلاب</button>
-            <button type="button" className={newScope === 'companions' ? 'seg-on' : ''} onClick={() => setNewScope('companions')}>المرافقون</button>
-            <button type="button" className={newScope === 'both' ? 'seg-on' : ''} onClick={() => setNewScope('both')}>الجميع</button>
+        {/* بيانات النشاط */}
+        <div className="na-section">
+          <div className="na-section-label"><span className="na-step">1</span> بيانات النشاط</div>
+          <div className="na-grid">
+            <div className="na-field na-required">
+              <label>المسار</label>
+              <select value={newAct.track_code} onChange={e => setNewAct({ ...newAct, track_code: e.target.value })}>
+                <option value="">اختر المسار…</option>
+                {tracks.map(t => <option key={t.id} value={t.code}>{t.name_ar}</option>)}
+              </select>
+            </div>
+            <div className="na-field na-required">
+              <label>اسم النشاط</label>
+              <input placeholder="مثال: دورة إعداد الباحثين" value={newAct.title}
+                onChange={e => setNewAct({ ...newAct, title: e.target.value })} />
+            </div>
+            <div className="na-field">
+              <label>نوع النشاط</label>
+              <select value={newAct.activity_type} onChange={e => setNewAct({ ...newAct, activity_type: e.target.value })}>
+                {ACT_TYPES.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="na-field">
+              <label>مقدّم النشاط <span className="na-opt">اختياري</span></label>
+              <input placeholder="اسم المقدّم" value={newAct.provider}
+                onChange={e => setNewAct({ ...newAct, provider: e.target.value })} />
+            </div>
+            <div className="na-field">
+              <label>المكان <span className="na-opt">اختياري</span></label>
+              <input placeholder="القاعة أو الموقع" value={newAct.location}
+                onChange={e => setNewAct({ ...newAct, location: e.target.value })} />
+            </div>
           </div>
-          <div className="cat-pick-list">
+        </div>
+
+        {/* الفئات المستهدفة */}
+        <div className="na-section">
+          <div className="na-section-label"><span className="na-step">2</span> الفئات المستهدفة</div>
+          <div className="na-scope">
+            <button type="button" className={'na-scope-btn' + (newScope === 'students' ? ' on' : '')} onClick={() => setNewScope('students')}>الطلاب</button>
+            <button type="button" className={'na-scope-btn' + (newScope === 'companions' ? ' on' : '')} onClick={() => setNewScope('companions')}>المرافقون</button>
+            <button type="button" className={'na-scope-btn' + (newScope === 'both' ? ' on' : '')} onClick={() => setNewScope('both')}>الجميع</button>
+          </div>
+          <div className="na-cats">
             {categories.filter(c => newScope === 'both' ? true : c.member_type === (newScope === 'students' ? 'student' : 'companion')).map(c => (
               <button type="button" key={c.id}
-                className={'val-chip cat-chip' + (newActCats[c.id] ? ' on ' + newActCats[c.id] : '')}
+                className={'na-cat' + (newActCats[c.id] ? ' on ' + newActCats[c.id] : '')}
                 onClick={() => toggleNewCat(c.id)}
                 title="اضغط للتبديل: رئيسي ← ثانوي ← إلغاء">
-                {c.name}
-                {newActCats[c.id] === 'primary' && <span className="cat-tag">رئيسي</span>}
-                {newActCats[c.id] === 'secondary' && <span className="cat-tag">ثانوي</span>}
+                <span className="na-cat-name">{c.name}</span>
+                {newActCats[c.id] && (
+                  <span className="na-cat-tag">{newActCats[c.id] === 'primary' ? 'إلزامي' : 'اختياري'}</span>
+                )}
               </button>
             ))}
             {categories.filter(c => newScope === 'both' ? true : c.member_type === (newScope === 'students' ? 'student' : 'companion')).length === 0 &&
               <span className="muted" style={{ fontSize: 13 }}>لا توجد فئات من هذا النوع. أنشئها من «الفئات والتصنيفات».</span>}
           </div>
-          <div className="cat-legend">
-            <span><b className="cat-dot primary"></b> <strong>رئيسي:</strong> حضور إلزامي ← درجة لكل جلسة + نقطتان</span>
-            <span><b className="cat-dot secondary"></b> <strong>ثانوي:</strong> حضور اختياري ← نقطة واحدة</span>
+          <div className="na-legend">
+            <span><b className="na-dot primary"></b> <strong>إلزامي:</strong> درجة لكل جلسة + نقطتان</span>
+            <span><b className="na-dot secondary"></b> <strong>اختياري:</strong> نقطة واحدة</span>
+            <span className="na-legend-hint">اضغط الفئة مرة للإلزامي، مرتين للاختياري، ثلاثاً للإلغاء</span>
           </div>
+        </div>
+
+        {/* شريط الإجراء */}
+        <div className="na-actions">
+          <div className="na-summary">
+            {Object.keys(newActCats).length > 0
+              ? <>محدّد: <strong>{Object.values(newActCats).filter(v => v === 'primary').length}</strong> إلزامية · <strong>{Object.values(newActCats).filter(v => v === 'secondary').length}</strong> اختيارية</>
+              : 'لم تُحدَّد فئات — سيكون النشاط عاماً'}
+          </div>
+          <button className="na-submit" onClick={addActivity} disabled={!newAct.title || !newAct.track_code}>
+            <Icon name="plus" size={16} /> إضافة النشاط
+          </button>
         </div>
       </div>
 
