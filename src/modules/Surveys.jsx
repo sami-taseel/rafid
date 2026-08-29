@@ -611,6 +611,7 @@ function SurveyEditor({ survey, onBack }) {
 
 function SurveyResults({ survey, onBack }) {
   const [data, setData] = useState(null)
+  const [view, setView] = useState('summary')   // summary | respondents
   useEffect(() => {
     async function load() {
       const { data: qs } = await supabase.from('survey_questions').select('*').eq('survey_id', survey.id).order('sort_order')
@@ -621,17 +622,39 @@ function SurveyResults({ survey, onBack }) {
         const { data: a } = await supabase.from('survey_answers').select('response_id, question_id, answer').in('response_id', ids)
         answers = a || []
       }
-      setData({ qs: qs || [], count: ids.length, answers, responses: resp || [] })
+      // جلب أسماء الطلاب المرتبطين بالردود (للاستبانات غير المجهولة)
+      const nameMap = {}
+      const sids = [...new Set((resp || []).map(r => r.student_id).filter(Boolean))]
+      if (sids.length) {
+        const { data: studs } = await supabase.from('students')
+          .select('id, persons(full_name, nationality), degree_level').in('id', sids)
+        ;(studs || []).forEach(s => {
+          nameMap[s.id] = {
+            name: s.persons?.full_name || 'طالب',
+            nationality: s.persons?.nationality || '',
+            degree: s.degree_level || '',
+          }
+        })
+      }
+      setData({ qs: qs || [], count: ids.length, answers, responses: resp || [], nameMap })
     }
     load()
   }, [survey])
   if (!data) return <Spinner />
 
+  // اسم المجيب (أو «مجهول» للاستبانة المجهولة)
+  function respondent(r) {
+    if (survey.is_anonymous) return { name: 'مجهول', nationality: '', degree: '' }
+    if (!r.student_id) return { name: 'غير مرتبط بطالب', nationality: '', degree: '' }
+    return data.nameMap[r.student_id] || { name: 'طالب (حُذف حسابه)', nationality: '', degree: '' }
+  }
+
   // تصدير CSV (مع BOM للعربية) — مدموج من منصة مِرصاد
   function exportCSV() {
-    const headers = ['رقم الرد', 'التاريخ', ...data.qs.map(q => `"${(q.q_text || 'سؤال').replace(/"/g, '""')}"`)]
+    const headers = ['رقم الرد', 'الطالب', 'الجنسية', 'المرحلة', 'التاريخ', ...data.qs.map(q => `"${(q.q_text || 'سؤال').replace(/"/g, '""')}"`)]
     const rows = data.responses.map((r, idx) => {
-      const cells = [idx + 1, new Date(r.created_at).toLocaleDateString('ar')]
+      const who = respondent(r)
+      const cells = [idx + 1, `"${who.name}"`, `"${who.nationality}"`, `"${who.degree}"`, new Date(r.created_at).toLocaleDateString('ar')]
       data.qs.forEach(q => {
         const a = data.answers.find(x => x.response_id === r.id && x.question_id === q.id)
         let v = a?.answer?.value
@@ -668,8 +691,63 @@ function SurveyResults({ survey, onBack }) {
         <div className="srv-stat"><div className="srv-stat-n">{logicCount}</div><div className="srv-stat-l">أسئلة شرطية</div></div>
       </div>
 
+      {/* تبويبا العرض */}
+      {data.count > 0 && (
+        <div className="srv-view-tabs">
+          <button className={'srv-view-tab' + (view === 'summary' ? ' on' : '')} onClick={() => setView('summary')}>
+            <Icon name="chart" size={15} /> ملخّص الإجابات
+          </button>
+          <button className={'srv-view-tab' + (view === 'respondents' ? ' on' : '')} onClick={() => setView('respondents')}>
+            <Icon name="users" size={15} /> المجيبون ({data.count})
+          </button>
+        </div>
+      )}
+
+      {survey.is_anonymous && (
+        <div className="srv-anon-note"><Icon name="alert" size={15} /> هذه استبانة مجهولة — لا تُحفظ هوية المجيبين.</div>
+      )}
+
+      {/* عرض المجيبين فرداً فرداً */}
+      {view === 'respondents' && data.count > 0 && (
+        <div className="srv-respondents">
+          {data.responses.map((r, idx) => {
+            const who = respondent(r)
+            return (
+              <div className="srv-resp-card" key={r.id}>
+                <div className="srv-resp-head">
+                  <div className="srv-resp-av">{(who.name || '؟').charAt(0)}</div>
+                  <div className="srv-resp-info">
+                    <div className="srv-resp-name">{who.name}</div>
+                    <div className="srv-resp-meta">
+                      {who.nationality && <span>{who.nationality}</span>}
+                      {who.degree && <span>· {who.degree}</span>}
+                      <span>· {new Date(r.created_at).toLocaleDateString('ar')}</span>
+                    </div>
+                  </div>
+                  <span className="srv-resp-num">#{idx + 1}</span>
+                </div>
+                <div className="srv-resp-answers">
+                  {data.qs.map(q => {
+                    const a = data.answers.find(x => x.response_id === r.id && x.question_id === q.id)
+                    let v = a?.answer?.value
+                    if (Array.isArray(v)) v = v.join(' / ')
+                    if (v == null || v === '') return null
+                    return (
+                      <div className="srv-resp-qa" key={q.id}>
+                        <div className="srv-resp-q">{q.q_text}</div>
+                        <div className="srv-resp-a">{String(v)}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {data.count === 0 && <div className="panel muted">لا توجد ردود بعد.</div>}
-      {data.qs.map((q, i) => {
+      {view === 'summary' && data.qs.map((q, i) => {
         const raw = data.answers.filter(a => a.question_id === q.id).map(a => a.answer?.value)
         const isText = ['text', 'short_text', 'long_text'].includes(q.q_type)
         const isNum = ['rating', 'scale', 'number'].includes(q.q_type)
@@ -687,8 +765,20 @@ function SurveyResults({ survey, onBack }) {
             <strong>{i + 1}. {q.q_text}</strong>
             {isText ? (
               <div className="text-answers">
-                {flat.filter(Boolean).slice(0, 50).map((t, j) => <div key={j} className="list-line">"{t}"</div>)}
-                {flat.filter(Boolean).length === 0 && <div className="muted">لا إجابات</div>}
+                {data.answers.filter(a => a.question_id === q.id).slice(0, 50).map((a, j) => {
+                  let v = a.answer?.value
+                  if (Array.isArray(v)) v = v.join(' / ')
+                  if (v == null || v === '') return null
+                  const r = data.responses.find(x => x.id === a.response_id)
+                  const who = r ? respondent(r) : { name: '' }
+                  return (
+                    <div key={j} className="srv-text-answer">
+                      <span className="srv-text-who">{who.name}</span>
+                      <span className="srv-text-val">{String(v)}</span>
+                    </div>
+                  )
+                })}
+                {data.answers.filter(a => a.question_id === q.id && a.answer?.value).length === 0 && <div className="muted">لا إجابات</div>}
               </div>
             ) : (
               <>
