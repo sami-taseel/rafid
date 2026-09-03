@@ -29,10 +29,9 @@ export default function Students() {
   const [bulkNotice, setBulkNotice] = useState('')
   const [showBulkEval, setShowBulkEval] = useState(false)
 
-  useEffect(() => {
-    async function load() {
+  async function load() {
       const { data: st } = await supabase.from('students')
-        .select('id, degree_level, profile_reviewed, persons(full_name, nationality, residency_no, phone)')
+        .select('id, degree_level, profile_reviewed, is_monitor, persons(full_name, nationality, residency_no, phone)')
       setStudents(st || [])
       // نحمّل الفئات وأعضاءها
       const { data: cats } = await supabase.from('categories').select('id, name').eq('member_type', 'student')
@@ -47,9 +46,8 @@ export default function Students() {
       }
       setCatMap(map)
       setLoading(false)
-    }
-    load()
-  }, [])
+  }
+  useEffect(() => { load() }, [])
 
   async function purgeLegacy() {
     const ok = await confirmDialog({
@@ -65,6 +63,18 @@ export default function Students() {
   useEffect(() => {
     supabase.from('form_templates').select('id, title').eq('category', 'notice').eq('is_active', true).then(({ data }) => setNoticeTemplates(data || []))
   }, [])
+
+  // تعيين/إلغاء مشرفي التحضير دفعة واحدة
+  async function bulkMonitor(value) {
+    if (!selected.length) return
+    const { error } = await supabase.from('students')
+      .update({ is_monitor: value }).in('id', selected)
+    if (error) { toast('تعذّر التنفيذ: ' + error.message, 'error'); return }
+    toast(value
+      ? `تم تعيين ${selected.length} طالباً مشرفي تحضير`
+      : `تم إلغاء صلاحية ${selected.length} طالباً`, value ? 'success' : 'info')
+    setSelected([]); load()
+  }
 
   async function bulkAssign() {
     if (!bulkCat) return
@@ -207,6 +217,12 @@ export default function Students() {
             {allCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <button className="mini" onClick={bulkAssign} disabled={!bulkCat}>إسناد</button>
+          <button className="mini monitor-btn" onClick={() => bulkMonitor(true)} title="يظهر لهم باركود التحضير في جلسات اليوم والأيام السابقة">
+            ▦ تعيين مشرفي تحضير
+          </button>
+          <button className="mini" onClick={() => bulkMonitor(false)} title="إلغاء صلاحية مشرف التحضير">
+            إلغاء الإشراف
+          </button>
           <button className="mini" onClick={bulkNotify}>إشعار سريع</button>
           {noticeTemplates.length > 0 && <>
             <select value={bulkNotice} onChange={e => setBulkNotice(e.target.value)}>
@@ -234,7 +250,10 @@ export default function Students() {
                 <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selected.includes(s.id)}
                   onChange={() => setSelected(selected.includes(s.id) ? selected.filter(x => x !== s.id) : [...selected, s.id])} /></td>
                 <td className="muted clickable" onClick={() => setSel(s.id)}>{i+1}</td>
-                <td className="clickable" onClick={() => setSel(s.id)}>{s.persons?.full_name || '—'}</td>
+                <td className="clickable" onClick={() => setSel(s.id)}>
+                  {s.persons?.full_name || '—'}
+                  {s.is_monitor && <span className="monitor-pill" title="مشرف تحضير">▦ مشرف</span>}
+                </td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>
                 <td>{s.degree_level || '—'}</td>
                 <td className="cats-cell">

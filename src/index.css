@@ -2958,3 +2958,9 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .up-head-text { gap: 0; }
 .up-title { line-height: 1.3; }
 .up-count { margin-top: 1px; line-height: 1.2; }
+
+/* ===== مشرفو التحضير في صفحة الطلاب ===== */
+.mini.monitor-btn { border-color: #6b3fc0 !important; color: #6b3fc0; }
+.mini.monitor-btn:hover { background: #6b3fc0; color: #fff; }
+.monitor-pill { display: inline-flex; align-items: center; gap: 3px; margin-inline-start: 8px; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #f1ebfb; color: #6b3fc0; white-space: nowrap; }
+:root[data-theme="dark"] .monitor-pill { background: #241a3a; color: #b39ae0; }
