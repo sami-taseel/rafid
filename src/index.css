@@ -2886,3 +2886,65 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .na-scope { width: 100%; }
   .na-scope-btn { flex: 1; padding: 8px 10px; }
 }
+
+/* ============================================================
+   شارة إلزامي / اختياري — واضحة بجوار نوع النشاط
+   ============================================================ */
+.req-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 8px; white-space: nowrap; letter-spacing: .2px; }
+.req-tag.required { background: #1f3864; color: #fff; }
+.req-tag.optional { background: #0f766e; color: #fff; }
+.fc-top .req-tag { font-size: 11.5px; padding: 4px 11px; }
+
+/* تمييز البطاقة المختصرة حسب النوع */
+.cc-card.cc-optional { border-color: #7fc9c0; background: linear-gradient(180deg, #f2fbfa, var(--surface)); }
+.cc-card.cc-optional .cc-stripe { background: #0f766e !important; }
+:root[data-theme="dark"] .cc-card.cc-optional { background: linear-gradient(180deg, #10312e, var(--surface)); border-color: #1d5a54; }
+
+/* تمييز البطاقة البارزة الاختيارية */
+.fc-card.fc-optional { border-right-color: #0f766e; }
+
+/* تمييز أيام التقويم الاختيارية */
+.st-cal-cell.opt.has { background: #f2fbfa; border-color: #a8ddd6; }
+.st-cal-dot.opt { background: #0f766e; }
+:root[data-theme="dark"] .st-cal-cell.opt.has { background: #10312e; border-color: #1d5a54; }
+
+/* دليل ألوان التقويم */
+.cal-legend { display: flex; gap: 16px; justify-content: center; margin-top: 12px; font-size: 12px; color: var(--text-soft); flex-wrap: wrap; }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend b { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.cal-legend b.req { background: #2e5496; }
+.cal-legend b.opt { background: #0f766e; }
+
+/* ============================================================
+   ترويسة المواعيد القادمة — تصميم مُعاد
+   ============================================================ */
+.up-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; margin-bottom: 16px; background: linear-gradient(135deg, #f2f6fc, var(--surface)); border: 1px solid var(--border); border-radius: 14px; flex-wrap: wrap; }
+.up-head-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.up-head-ic { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #1f3864, #3a5da0); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.up-head-text { display: flex; flex-direction: column; gap: 2px; }
+.up-title { margin: 0; font-size: 17px; font-weight: 800; }
+.up-count { font-size: 12.5px; color: var(--text-soft); }
+.up-head-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.up-all { display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; background: var(--surface); border: 1.5px solid var(--border); color: var(--text); border-radius: 10px; font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.up-all:hover { border-color: #2e5496; color: #2e5496; }
+:root[data-theme="dark"] .up-head { background: linear-gradient(135deg, #16233c, var(--surface)); }
+@media (max-width: 560px) {
+  .up-head { flex-direction: column; align-items: stretch; }
+  .up-head-actions { justify-content: space-between; }
+}
+
+/* شريط التقويم: الشهر والعدّاد وزر اليوم في سطر واحد */
+.st-cal-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.st-cal-title { font-size: 17px; font-weight: 800; }
+.st-cal-count { font-size: 12px; color: var(--text-soft); background: var(--bg); padding: 3px 10px; border-radius: 10px; }
+.cal-today-link { background: var(--bg); border: 1px solid var(--border); color: var(--text-soft); border-radius: 9px; padding: 5px 11px; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.cal-today-link:hover { border-color: #2e5496; color: #2e5496; }
+
+/* زر باركود مشرف التحضير */
+.cc-icon-btn.monitor { background: linear-gradient(135deg, #6b3fc0, #8a5cd8); color: #fff; border: none; }
+.cc-icon-btn.monitor:hover { filter: brightness(1.1); }
+
+/* زر تعيين مشرف تحضير لدى المدير */
+.monitor-toggle { border-color: #6b3fc0 !important; color: #6b3fc0; }
+.monitor-toggle:hover { background: #6b3fc0; color: #fff; }
+.monitor-toggle.on { background: #6b3fc0; color: #fff; }

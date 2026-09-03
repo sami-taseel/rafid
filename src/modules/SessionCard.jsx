@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import Icon from '../Icon'
 import { formatTime } from '../dateUtils'
 import ExcuseButton from './ExcuseButton'
+import QRModal from './QRModal'
 
 const TYPE_META = {
   'درس': { icon: 'book', color: '#2e5496' },
@@ -51,13 +52,17 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
   const decided = attDecided(attStatus)
   const isOptional = targetType === 'secondary'
   return (
-    <div className="fc-card" style={{ '--sc-color': meta.color }}>
+    <div className={'fc-card' + (isOptional ? ' fc-optional' : '')} style={{ '--sc-color': meta.color }}>
       <div className="fc-top">
         <span className="fc-type" style={{ background: meta.color, color: '#fff' }}>
           <Icon name={meta.icon} size={13} /> {act.activity_type || 'نشاط'}
         </span>
         {act.tracks?.name_ar && <span className="fc-track">{act.tracks.name_ar}</span>}
-        {isOptional && <span className="cc-opt-tag">اختياري</span>}
+        {targetType && (
+          <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
+            <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
+          </span>
+        )}
         {decided
           ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
           : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
@@ -85,13 +90,17 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
 }
 
 // ============ البطاقة المختصرة (بطاقتان بالصف) ============
-export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus, targetType }) {
+export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus, targetType, isMonitor = false }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const [details, setDetails] = useState(false)
+  const [qr, setQr] = useState(false)
   const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
   const decided = attDecided(attStatus)
   const isOptional = targetType === 'secondary'
+  // مشرف التحضير: الباركود متاح لجلسات اليوم والأيام السابقة
+  const todayStr = new Date().toLocaleDateString('en-CA')
+  const canShowQR = isMonitor && s.planned_date && s.planned_date <= todayStr
 
   return (
     <>
@@ -102,7 +111,11 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
             <span className="cc-type" style={{ background: meta.color + '18', color: meta.color }}>
               <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
             </span>
-            {isOptional && <span className="cc-opt-tag">اختياري</span>}
+            {targetType && (
+          <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
+            <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
+          </span>
+        )}
             {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{date.getDate()} {MON[date.getMonth()]}</span>)}
           </div>
           <h4 className="cc-title">{sessName}</h4>
@@ -113,6 +126,11 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               <button className="cc-icon-btn" onClick={() => setDetails(true)} title="التفاصيل" aria-label="التفاصيل">
                 <Icon name="eye" size={15} />
               </button>
+              {canShowQR && (
+                <button className="cc-icon-btn monitor" onClick={() => setQr(true)} title="باركود التحضير" aria-label="باركود التحضير">
+                  <Icon name="image" size={15} />
+                </button>
+              )}
               {/* زر الإذن يظهر فقط إن لم تُحسم الحالة */}
               {showExcuse && studentId && !decided && !isOptional && (
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} compact />
@@ -121,6 +139,8 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
           </div>
         </div>
       </div>
+
+      {qr && <QRModal session={s} onClose={() => setQr(false)} />}
 
       {details && createPortal(
         <div className="cc-detail-overlay" onClick={() => setDetails(false)}>

@@ -49,6 +49,15 @@ export default function StudentDetail({ studentId, onBack }) {
           {d.s?.admission_status && d.s.admission_status !== 'active' && <span className={'adm-badge adm-' + d.s.admission_status}>{statusLabel(d.s.admission_status)}</span>}
         </div>
         <button className="mini" style={{ marginRight: 'auto' }} onClick={() => setCert(true)}>إصدار شهادة</button>
+        <button className={'mini monitor-toggle' + (d.s?.is_monitor ? ' on' : '')}
+          onClick={async () => {
+            const next = !d.s?.is_monitor
+            const { error } = await supabase.rpc('set_student_monitor', { p_student: studentId, p_value: next })
+            if (!error) setD({ ...d, s: { ...d.s, is_monitor: next } })
+          }}
+          title="مشرف التحضير يظهر له باركود الحضور في جلسات اليوم والأيام السابقة">
+          {d.s?.is_monitor ? '✓ مشرف تحضير' : '＋ تعيين مشرف تحضير'}
+        </button>
       </div>
 
       <div className="detail-tabs">

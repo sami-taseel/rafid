@@ -28,6 +28,12 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       ])
       // فلترة الجلسات حسب الأنشطة المرئية للطالب (فئاته المستهدفة)
       const visSet = new Set(visible)
+      // هل الطالب مشرف تحضير؟
+      let monitor = false
+      try {
+        const { data: mv } = await supabase.rpc('am_i_monitor')
+        monitor = !!mv
+      } catch { /* العمود قد لا يكون منفّذاً بعد */ }
       // نوع الاستهداف لكل نشاط (رئيسي/ثانوي)
       const typeMap = {}
       try {
@@ -50,7 +56,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         absent: a.filter(x => x.status === 'absent').length,
         total: a.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
-        attMap, typeMap,
+        attMap, typeMap, monitor,
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
@@ -105,7 +111,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="fc-grid">
             {nextDaySessions.map(s => (
-              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]}
+              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor}
                 sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
             ))}
           </div>
@@ -122,24 +128,29 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         <div className="st-stat"><div className="st-num">{data.surveysCount}</div><div className="st-lbl">استبانات متاحة</div></div>
       </div>
 
-      {isFull && studentId && (
-        <div className="pause-section">
-          <PauseRequest studentId={studentId} />
-        </div>
-      )}
-
       {/* المواعيد القادمة — للحساب المكتمل فقط */}
       {isFull && <div className="st-section">
-        <div className="st-section-head">
-          <h3>المواعيد القادمة {data.upcoming.length > 0 && <span className="muted" style={{fontSize:13}}>({data.upcoming.length})</span>}</h3>
-          {data.upcoming.length > 0 && (
-            <button className="section-link" onClick={() => onGoTab && onGoTab('calendar')}>الكل ←</button>
-          )}
+        <div className="up-head">
+          <div className="up-head-main">
+            <div className="up-head-ic"><Icon name="calendar" size={19} /></div>
+            <div className="up-head-text">
+              <h3 className="up-title">المواعيد القادمة</h3>
+              {data.upcoming.length > 0 && <span className="up-count">{data.upcoming.length} موعد</span>}
+            </div>
+          </div>
+          <div className="up-head-actions">
+            {studentId && <PauseRequest studentId={studentId} />}
+            {data.upcoming.length > 0 && (
+              <button className="up-all" onClick={() => onGoTab && onGoTab('calendar')}>
+                الكل <Icon name="chevronLeft" size={15} />
+              </button>
+            )}
+          </div>
         </div>
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
         <div className="cc-grid">
           {shownUpcoming.map(s => (
-            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]}
+            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor}
               sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
           ))}
         </div>

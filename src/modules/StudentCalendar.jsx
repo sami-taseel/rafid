@@ -14,12 +14,13 @@ export default function StudentCalendar({ studentId }) {
   const [daySel, setDaySel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [attMap, setAttMap] = useState({})
+  const [typeMap, setTypeMap] = useState({})
 
   useEffect(() => {
     async function load() {
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
       const ids = (visIds || []).map(x => (typeof x === 'object' && x !== null) ? (x.visible_activity_ids || x.id) : x).filter(Boolean)
-      let q = supabase.from('sessions').select('id, planned_date, start_time, duration_min, title, status, recording_url, activities(title, activity_type, provider, location, tracks(name_ar, code))')
+      let q = supabase.from('sessions').select('id, planned_date, start_time, duration_min, title, status, recording_url, activity_id, activities(title, activity_type, provider, location, tracks(name_ar, code))')
       if (ids.length) q = q.in('activity_id', ids)
       const [sessRes, attRes] = await Promise.all([
         q,
@@ -27,6 +28,18 @@ export default function StudentCalendar({ studentId }) {
       ])
       const m = {}; (attRes.data || []).forEach(x => { if (x.session_id) m[x.session_id] = x.status })
       setAttMap(m)
+      // نوع الاستهداف لكل نشاط (إلزامي/اختياري)
+      try {
+        const { data: myCats } = await supabase.from('category_members').select('category_id').eq('student_id', studentId)
+        const myCatSet = new Set((myCats || []).map(x => x.category_id))
+        const { data: actCats } = await supabase.from('activity_categories').select('activity_id, category_id, target_type')
+        const tm = {}
+        ;(actCats || []).forEach(ac => {
+          if (!myCatSet.has(ac.category_id)) return
+          if (tm[ac.activity_id] !== 'primary') tm[ac.activity_id] = ac.target_type || 'primary'
+        })
+        setTypeMap(tm)
+      } catch { /* الأعمدة قد لا تكون منفّذة بعد */ }
       setSessions(sessRes.data || []); setLoading(false)
     }
     load()
@@ -56,9 +69,10 @@ export default function StudentCalendar({ studentId }) {
       {/* شريط التنقّل بين الأشهر */}
       <div className="st-cal-bar">
         <button className="cal-nav" onClick={() => setCur(new Date(year, month - 1, 1))} aria-label="السابق">‹</button>
-        <div className="st-cal-title-wrap">
-          <div className="st-cal-title">{MON[month]} {year}<span className="st-cal-count">{monthCount} نشاط</span></div>
-          <button className="cal-today-link" onClick={() => setCur(new Date())}>↺ العودة لليوم</button>
+        <div className="st-cal-title-row">
+          <div className="st-cal-title">{MON[month]} {year}</div>
+          <span className="st-cal-count">{monthCount} نشاط</span>
+          <button className="cal-today-link" onClick={() => setCur(new Date())} title="العودة لليوم">↺ اليوم</button>
         </div>
         <button className="cal-nav" onClick={() => setCur(new Date(year, month + 1, 1))} aria-label="التالي">›</button>
       </div>
@@ -68,15 +82,21 @@ export default function StudentCalendar({ studentId }) {
         {Array.from({ length: first }).map((_, i) => <div key={'e' + i} className="st-cal-cell empty"></div>)}
         {Array.from({ length: days }).map((_, i) => {
           const d = i + 1, ss = sessionsOn(d)
+          // إن كانت كل جلسات اليوم اختيارية نلوّن النقطة بلون الاختياري
+          const allOptional = ss.length > 0 && ss.every(s => typeMap[s.activity_id] === 'secondary')
           return (
-            <button key={d} className={'st-cal-cell' + (isToday(d) ? ' today' : '') + (ss.length ? ' has' : '')}
+            <button key={d} className={'st-cal-cell' + (isToday(d) ? ' today' : '') + (ss.length ? ' has' : '') + (allOptional ? ' opt' : '')}
               onClick={() => ss.length && setDaySel({ d, ss })} disabled={!ss.length && !isToday(d)}>
               {isToday(d) && <span className="st-cal-todaylbl">اليوم</span>}
               <span className="st-cal-num">{d}</span>
-              {ss.length > 0 && <span className="st-cal-dot">{ss.length}</span>}
+              {ss.length > 0 && <span className={'st-cal-dot' + (allOptional ? ' opt' : '')}>{ss.length}</span>}
             </button>
           )
         })}
+      </div>
+      <div className="cal-legend">
+        <span><b className="req"></b> نشاط إلزامي</span>
+        <span><b className="opt"></b> نشاط اختياري</span>
       </div>
 
       {/* الأنشطة القادمة — بطاقات متجاورة + تنقّل بين الأشهر */}
@@ -91,7 +111,7 @@ export default function StudentCalendar({ studentId }) {
         </div>
         {monthActivities.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة في هذا الشهر.</div>}
         <div className="cc-grid">
-          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]}
+          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]}
             sessionDate={DOW[new Date(s.planned_date).getDay()] + '، ' + s.planned_date.slice(8,10) + ' ' + MON[parseInt(s.planned_date.slice(5,7))-1]} />)}
         </div>
       </div>
@@ -101,7 +121,7 @@ export default function StudentCalendar({ studentId }) {
           <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right', maxWidth: 460 }}>
             <div className="confirm-title">{DOW[new Date(year, month, daySel.d).getDay()]} {daySel.d} {MON[month]}</div>
             <div className="cc-grid" style={{ marginTop: 12 }}>
-              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]}
+              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]}
                 sessionDate={DOW[new Date(year, month, daySel.d).getDay()] + '، ' + daySel.d + ' ' + MON[month]} />)}
             </div>
             <div className="confirm-actions"><button className="confirm-ok" onClick={() => setDaySel(null)}>إغلاق</button></div>
