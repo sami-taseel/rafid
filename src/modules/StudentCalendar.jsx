@@ -15,6 +15,7 @@ export default function StudentCalendar({ studentId }) {
   const [loading, setLoading] = useState(true)
   const [attMap, setAttMap] = useState({})
   const [typeMap, setTypeMap] = useState({})
+  const [isMonitor, setIsMonitor] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -28,6 +29,11 @@ export default function StudentCalendar({ studentId }) {
       ])
       const m = {}; (attRes.data || []).forEach(x => { if (x.session_id) m[x.session_id] = x.status })
       setAttMap(m)
+      // هل الطالب مشرف تحضير؟
+      try {
+        const { data: mv } = await supabase.rpc('am_i_monitor')
+        setIsMonitor(!!mv)
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // نوع الاستهداف لكل نشاط (إلزامي/اختياري)
       try {
         const { data: myCats } = await supabase.from('category_members').select('category_id').eq('student_id', studentId)
@@ -111,7 +117,7 @@ export default function StudentCalendar({ studentId }) {
         </div>
         {monthActivities.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة في هذا الشهر.</div>}
         <div className="cc-grid">
-          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]}
+          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor}
             sessionDate={DOW[new Date(s.planned_date).getDay()] + '، ' + s.planned_date.slice(8,10) + ' ' + MON[parseInt(s.planned_date.slice(5,7))-1]} />)}
         </div>
       </div>
@@ -121,7 +127,7 @@ export default function StudentCalendar({ studentId }) {
           <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right', maxWidth: 460 }}>
             <div className="confirm-title">{DOW[new Date(year, month, daySel.d).getDay()]} {daySel.d} {MON[month]}</div>
             <div className="cc-grid" style={{ marginTop: 12 }}>
-              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]}
+              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor}
                 sessionDate={DOW[new Date(year, month, daySel.d).getDay()] + '، ' + daySel.d + ' ' + MON[month]} />)}
             </div>
             <div className="confirm-actions"><button className="confirm-ok" onClick={() => setDaySel(null)}>إغلاق</button></div>
