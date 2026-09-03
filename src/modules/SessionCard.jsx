@@ -15,6 +15,7 @@ const TYPE_META = {
   'محاضرة': { icon: 'edit', color: '#4f46e5' },
 }
 function typeMeta(t) { return TYPE_META[t] || { icon: 'calendar', color: '#2e5496' } }
+const DOW_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
 function sessInfo(s) {
@@ -67,8 +68,8 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
           ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
           : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
       </div>
-      <h4 className="fc-title">{sessName}</h4>
-      {actTitle && <div className="fc-subtitle">{actTitle}</div>}
+      <h4 className="fc-title">{actTitle || sessName}</h4>
+      {actTitle && <div className="fc-subtitle">{sessName}</div>}
       <div className="fc-info-grid">
         {act.provider && <div className="fc-info"><Icon name="user" size={15} /><div><span className="fc-info-lbl">مقدّم الجلسة</span><span className="fc-info-val">{act.provider}</span></div></div>}
         {act.location && <div className="fc-info"><Icon name="pin" size={15} /><div><span className="fc-info-lbl">المكان</span><span className="fc-info-val">{act.location}</span></div></div>}
@@ -108,18 +109,21 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
         <div className="cc-stripe"></div>
         <div className="cc-body">
           <div className="cc-head">
-            <span className="cc-type" style={{ background: meta.color + '18', color: meta.color }}>
-              <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
-            </span>
-            {targetType && (
-          <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
-            <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
-          </span>
-        )}
-            {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{date.getDate()} {MON[date.getMonth()]}</span>)}
+            <div className="cc-head-tags">
+              <span className="cc-type" style={{ background: meta.color + '18', color: meta.color }}>
+                <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
+              </span>
+              {targetType && (
+                <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
+                  <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
+                </span>
+              )}
+            </div>
+            {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{DOW_AR[date.getDay()]} {date.getDate()} {MON[date.getMonth()]}</span>)}
           </div>
-          <h4 className="cc-title">{sessName}</h4>
-          {actTitle && <div className="cc-subtitle">{actTitle}</div>}
+          {/* اسم النشاط بارز، واسم الجلسة تحته */}
+          <h4 className="cc-title">{actTitle || sessName}</h4>
+          {actTitle && <div className="cc-subtitle">{sessName}</div>}
           <div className="cc-foot">
             {s.start_time && <span className="cc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}</span>}
             <div className="cc-actions">
@@ -148,8 +152,8 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
             <div className="cc-detail-hero" style={{ background: meta.color }}>
               <button className="cc-detail-close" onClick={() => setDetails(false)} aria-label="إغلاق"><Icon name="x" size={18} /></button>
               <span className="cc-detail-type"><Icon name={meta.icon} size={14} /> {act.activity_type || 'نشاط'}</span>
-              <h3 className="cc-detail-title">{sessName}</h3>
-              {actTitle && <p className="cc-detail-sub">{actTitle}</p>}
+              <h3 className="cc-detail-title">{actTitle || sessName}</h3>
+              {actTitle && <p className="cc-detail-sub">{sessName}</p>}
             </div>
             <div className="cc-detail-body">
               {decided && <div className="cc-detail-att"><AttBadge status={attStatus} /></div>}
@@ -159,7 +163,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                   <span>حضورك لهذا النشاط <strong>اختياري</strong>، وتُمنح <strong>نقطة</strong> عند الحضور.</span>
                 </div>
               )}
-              {date && <DetailRow icon="calendar" label="التاريخ" value={`${date.getDate()} ${MON[date.getMonth()]} ${date.getFullYear()}`} />}
+              {date && <DetailRow icon="calendar" label="التاريخ" value={`${DOW_AR[date.getDay()]} ${date.getDate()} ${MON[date.getMonth()]} ${date.getFullYear()}`} />}
               {s.start_time && <DetailRow icon="clock" label="الوقت" value={`${formatTime(s.start_time)}${s.duration_min ? ` · ${s.duration_min} دقيقة` : ''}`} />}
               {act.provider && <DetailRow icon="user" label="مقدّم الجلسة" value={act.provider} />}
               {act.location && <DetailRow icon="pin" label="المكان" value={act.location} />}

@@ -2948,3 +2948,13 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .monitor-toggle { border-color: #6b3fc0 !important; color: #6b3fc0; }
 .monitor-toggle:hover { background: #6b3fc0; color: #fff; }
 .monitor-toggle.on { background: #6b3fc0; color: #fff; }
+
+/* ===== إصلاح المسافات في رأس البطاقة ===== */
+.cc-head-tags { display: flex; align-items: center; gap: 5px; min-width: 0; flex-wrap: wrap; }
+.cc-head { align-items: flex-start; gap: 8px; }
+.cc-date { flex-shrink: 0; }
+
+/* ===== إصلاح المسافة العمودية في ترويسة المواعيد ===== */
+.up-head-text { gap: 0; }
+.up-title { line-height: 1.3; }
+.up-count { margin-top: 1px; line-height: 1.2; }

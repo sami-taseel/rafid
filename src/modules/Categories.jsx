@@ -26,8 +26,16 @@ export default function Categories() {
   async function load() {
     const { data } = await supabase.from('categories').select('*').order('created_at', { ascending: false })
     setCats(data || [])
-    const { data: cnts } = await supabase.rpc('category_counts')
-    const map = {}; (cnts || []).forEach(c => { map[c.category_id] = c.cnt }); setCounts(map)
+    // العدّ عبر الدالة (تحسب اليدوية والتلقائية)
+    const { data: cnts, error: cntErr } = await supabase.rpc('category_counts')
+    if (!cntErr && cnts) {
+      const map = {}; cnts.forEach(c => { map[c.category_id] = c.cnt }); setCounts(map)
+    } else {
+      // احتياط: عدّ الفئات اليدوية مباشرة من جدول الأعضاء
+      const { data: mem } = await supabase.from('category_members').select('category_id')
+      const map = {}; (mem || []).forEach(m => { map[m.category_id] = (map[m.category_id] || 0) + 1 })
+      setCounts(map)
+    }
     setLoading(false)
   }
   useEffect(() => { load() }, [])
