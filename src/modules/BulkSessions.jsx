@@ -123,9 +123,17 @@ export default function BulkSessions({ activity, onClose, onDone }) {
               <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
             </div>
             <div className="bs-field">
-              <label>المدة (دقيقة)</label>
-              <input type="number" min="0" value={duration} placeholder="اختياري"
-                onChange={e => setDuration(e.target.value)} />
+              <label>المدة</label>
+              <select value={duration} onChange={e => setDuration(e.target.value)}>
+                <option value="">غير محدّدة</option>
+                <option value="30">نصف ساعة</option>
+                <option value="45">٤٥ دقيقة</option>
+                <option value="60">ساعة</option>
+                <option value="90">ساعة ونصف</option>
+                <option value="120">ساعتان</option>
+                <option value="150">ساعتان ونصف</option>
+                <option value="180">٣ ساعات</option>
+              </select>
             </div>
           </div>
 

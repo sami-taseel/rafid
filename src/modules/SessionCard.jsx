@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from '../Icon'
-import { formatTime } from '../dateUtils'
+import { formatTime, formatDuration } from '../dateUtils'
 import ExcuseButton from './ExcuseButton'
 import QRModal from './QRModal'
 
@@ -66,7 +66,7 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
         )}
         {decided
           ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
-          : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${s.duration_min}د` : ''}</span>}
+          : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${formatDuration(s.duration_min)}` : ''}</span>}
       </div>
       <h4 className="fc-title">{actTitle || sessName}</h4>
       {actTitle && <div className="fc-subtitle">{sessName}</div>}
@@ -164,7 +164,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 </div>
               )}
               {date && <DetailRow icon="calendar" label="التاريخ" value={`${DOW_AR[date.getDay()]} ${date.getDate()} ${MON[date.getMonth()]} ${date.getFullYear()}`} />}
-              {s.start_time && <DetailRow icon="clock" label="الوقت" value={`${formatTime(s.start_time)}${s.duration_min ? ` · ${s.duration_min} دقيقة` : ''}`} />}
+              {s.start_time && <DetailRow icon="clock" label="الوقت" value={`${formatTime(s.start_time)}${s.duration_min ? ` · ${formatDuration(s.duration_min)}` : ''}`} />}
               {act.provider && <DetailRow icon="user" label="مقدّم الجلسة" value={act.provider} />}
               {act.location && <DetailRow icon="pin" label="المكان" value={act.location} />}
               {act.tracks?.name_ar && <DetailRow icon="tag" label="المسار" value={act.tracks.name_ar} />}

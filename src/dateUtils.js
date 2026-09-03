@@ -15,3 +15,28 @@ export function formatDate(d) {
   try { return new Date(d).toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric' }) }
   catch { return d }
 }
+
+// عرض المدة بالساعات بصيغة عربية طبيعية
+// 30→«نصف ساعة» · 60→«ساعة» · 90→«ساعة ونصف» · 120→«ساعتان» · 360→«٦ ساعات»
+export function formatDuration(min) {
+  const m = Number(min)
+  if (!m || m <= 0) return ''
+  if (m === 30) return 'نصف ساعة'
+  if (m < 60) return `${m} دقيقة`
+
+  const hours = Math.floor(m / 60)
+  const rem = m % 60
+
+  // اسم الساعات
+  let hStr
+  if (hours === 1) hStr = 'ساعة'
+  else if (hours === 2) hStr = 'ساعتان'
+  else if (hours <= 10) hStr = `${hours} ساعات`
+  else hStr = `${hours} ساعة`
+
+  if (rem === 0) return hStr
+  if (rem === 30) return hours === 1 ? 'ساعة ونصف' : `${hStr} ونصف`
+  if (rem === 15) return hours === 1 ? 'ساعة وربع' : `${hStr} وربع`
+  if (rem === 45) return hours === 1 ? 'ساعة وثلاثة أرباع' : `${hStr} و٤٥ دقيقة`
+  return `${hStr} و${rem} دقيقة`
+}

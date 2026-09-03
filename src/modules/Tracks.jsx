@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useToast } from '../Toast'
+import { formatDuration } from '../dateUtils'
 import { Spinner } from './Students'
 import { useConfirm } from '../Confirm'
 import ExcelImport from './ExcelImport'
@@ -336,7 +337,7 @@ export default function Tracks() {
             {sessions.filter(s => s.activity_id === a.id).map(s => (
               <div className="session-row" key={s.id}>
                 <span className="sess-name">{s.title || 'جلسة'}</span>
-                <span className="muted">{s.planned_date}{s.start_time ? ' · ' + s.start_time.slice(0,5) : ''}{s.duration_min ? ' · ' + s.duration_min + 'د' : ''}</span>
+                <span className="muted">{s.planned_date}{s.start_time ? ' · ' + s.start_time.slice(0,5) : ''}{s.duration_min ? ' · ' + formatDuration(s.duration_min) : ''}</span>
                 <span className={'status-' + s.status}>{statusLabel(s.status)}</span>
                 <div className="sess-actions">
                   {canGenerateQR(s) && (
@@ -375,8 +376,20 @@ export default function Tracks() {
             <div className="form-row">
               <div className="field" style={{ flex: 1 }}><label>وقت البدء</label>
                 <input type="time" value={sessForm.start_time} onChange={e => setSessForm({ ...sessForm, start_time: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label>المدة (دقيقة)</label>
-                <input type="number" value={sessForm.duration_min} onChange={e => setSessForm({ ...sessForm, duration_min: e.target.value })} placeholder="60" /></div>
+              <div className="field" style={{ flex: 1 }}><label>المدة</label>
+                <select value={sessForm.duration_min} onChange={e => setSessForm({ ...sessForm, duration_min: e.target.value })}>
+                  <option value="">غير محدّدة</option>
+                  <option value="30">نصف ساعة</option>
+                  <option value="45">٤٥ دقيقة</option>
+                  <option value="60">ساعة</option>
+                  <option value="90">ساعة ونصف</option>
+                  <option value="120">ساعتان</option>
+                  <option value="150">ساعتان ونصف</option>
+                  <option value="180">٣ ساعات</option>
+                  <option value="240">٤ ساعات</option>
+                  <option value="300">٥ ساعات</option>
+                  <option value="360">٦ ساعات</option>
+                </select></div>
             </div>
             {sessForm.id && (
               <div className="field"><label>الحالة</label>
