@@ -40,11 +40,14 @@ export default function Notifications({ studentId, onOpenTicket }) {
           <div className="notif-head">الإشعارات</div>
           {items.length === 0 && <div className="notif-empty">لا توجد إشعارات</div>}
           {items.map(n => (
-            <div key={n.id} className={'notif-item ' + n.kind + (n.ticket_id ? ' clickable' : '')}
-              onClick={() => { if (n.ticket_id && onOpenTicket) { onOpenTicket(); setOpen(false) } }}>
+            <div key={n.id} className={'notif-item ' + n.kind + ((n.ticket_id || n.link) ? ' clickable' : '')}
+              onClick={() => {
+                if (n.link) { window.location.href = n.link; setOpen(false); return }
+                if (n.ticket_id && onOpenTicket) { onOpenTicket(); setOpen(false) }
+              }}>
               <div className="notif-title">{n.kind === 'violation' ? '⚠️ ' : ''}{n.title}</div>
               {n.body && <div className="notif-body">{n.body}</div>}
-              <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}{n.ticket_id && ' · اضغط لعرض البلاغ'}</div>
+              <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}{n.ticket_id && ' · اضغط لعرض البلاغ'}{n.link && ' · اضغط للانتقال'}</div>
             </div>
           ))}
         </div>

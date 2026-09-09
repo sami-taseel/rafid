@@ -15,6 +15,8 @@ export default function Surveys() {
   const promptDialog = usePrompt()
   const [surveys, setSurveys] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [respCounts, setRespCounts] = useState({})
   const [editing, setEditing] = useState(null)
   const [results, setResults] = useState(null)
   const [editMeta, setEditMeta] = useState(null)
@@ -31,7 +33,13 @@ export default function Surveys() {
     const { data: tpls } = await supabase.from('templates').select('*').eq('type', 'survey').order('created_at', { ascending: false })
     setTemplates(tpls || [])
     const { data } = await supabase.from('surveys').select('*, survey_questions(id)').order('created_at', { ascending: false })
-    setSurveys(data || []); setLoading(false)
+    setSurveys(data || [])
+    // عدد ردود كل استبانة (لعرضه وللحذف الآمن)
+    try {
+      const { data: rc } = await supabase.rpc('survey_response_counts')
+      const m = {}; (rc || []).forEach(x => { m[x.survey_id] = x.cnt }); setRespCounts(m)
+    } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+    setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
 
@@ -71,10 +79,32 @@ export default function Surveys() {
     if (!ok) return
     await supabase.from('surveys').delete().eq('id', id); loadAll()
   }
+  // ===== الحذف الجماعي (يرفض ما تجاوز 3 ردود) =====
+  async function bulkDelete() {
+    if (!selectedIds.length) return
+    const ok = await confirmDialog({
+      title: 'حذف الاستبانات المحدّدة',
+      message: `سيتم حذف ${selectedIds.length} استبانة نهائياً. الاستبانات التي تجاوزت ٣ ردود لن تُحذف حمايةً للبيانات.`,
+      confirmText: 'نعم، احذف', danger: true,
+    })
+    if (!ok) return
+    const { data, error } = await supabase.rpc('delete_surveys_bulk', { p_ids: selectedIds })
+    if (error) { toast('تعذّر الحذف: ' + error.message, 'error'); return }
+    const r = Array.isArray(data) ? data[0] : data
+    let msg = `حُذفت ${r?.deleted || 0} استبانة`
+    if (r?.skipped > 0) msg += ` · تُخطّيت ${r.skipped} (أكثر من ٣ ردود): ${r.skipped_names}`
+    toast(msg, r?.skipped > 0 ? 'info' : 'success')
+    setSelectedIds([]); loadAll()
+  }
+  function toggleSelect(id) {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
   async function toggleActive(s) { await supabase.from('surveys').update({ is_active: !s.is_active }).eq('id', s.id); loadAll() }
   async function notifyStudents(s) {
-    const { data } = await supabase.rpc('notify_survey', { p_survey: s.id, p_title: s.title })
-    toast('تم إشعار ' + (data || 0) + ' طالب')
+    const { data, error } = await supabase.rpc('notify_survey', { p_survey: s.id })
+    if (error) { toast('تعذّر إرسال الإشعار', 'error'); return }
+    toast('تم إشعار ' + (data || 0) + ' طالباً بالاستبانة', 'success')
   }
 
   if (loading) return <Spinner />
@@ -121,14 +151,29 @@ export default function Surveys() {
         </div>
       )}
 
+      {selectedIds.length > 0 && (
+        <div className="sv-bulk-bar">
+          <span className="sv-bulk-count">{selectedIds.length} استبانة محدّدة</span>
+          <span className="sv-bulk-note">الاستبانات بأكثر من ٣ ردود محمية من الحذف</span>
+          <button className="mini" onClick={() => setSelectedIds([])}>إلغاء التحديد</button>
+          <button className="sv-bulk-del" onClick={bulkDelete}>🗑 حذف المحدّد</button>
+        </div>
+      )}
+
       {surveys.map(s => (
-        <div key={s.id} className="survey-card">
+        <div key={s.id} className={'survey-card' + (selectedIds.includes(s.id) ? ' sv-selected' : '')}>
+          <label className="sv-pick" onClick={e => e.stopPropagation()}>
+            <input type="checkbox" checked={selectedIds.includes(s.id)} onChange={() => toggleSelect(s.id)} />
+          </label>
           <div className="survey-info">
             <div className="survey-title">{s.title}</div>
             {s.description && <div className="muted">{s.description}</div>}
             <div className="survey-tags">
               <span className="pill">{categories.find(c => c.id === s.target_category_id)?.name || 'كل الطلاب'}</span>
               <span className="muted">{s.survey_questions?.length || 0} سؤال</span>
+              <span className={(respCounts[s.id] || 0) > 3 ? 'pill-locked' : 'muted'}>
+                {respCounts[s.id] || 0} رد{(respCounts[s.id] || 0) > 3 ? ' · محمية من الحذف' : ''}
+              </span>
               <span className={s.is_active ? 'pill-on' : 'pill-off'}>{s.is_active ? 'ظاهرة للطلاب' : 'مخفية'}</span>
             </div>
           </div>
@@ -331,6 +376,7 @@ function LogicEditor({ q, priorQuestions, onChange }) {
               <select value={norm.match} onChange={e => update({ ...norm, match: e.target.value })}>
                 <option value="all">كل الشروط (و)</option>
                 <option value="any">أيّ شرط (أو)</option>
+                <option value="main_and_any">شرط رئيسي + أحد الشروط التالية</option>
               </select>
             </div>
           )}
@@ -339,7 +385,9 @@ function LogicEditor({ q, priorQuestions, onChange }) {
             const depOptions = depQ && Array.isArray(depQ.options) ? depQ.options : []
             return (
               <div className="logic-row" key={i}>
-                {i === 0 ? <span className="logic-lbl">إجابة</span> : <span className="logic-conj">{norm.match === 'all' ? 'و' : 'أو'}</span>}
+                {i === 0
+                  ? <span className="logic-lbl">{norm.match === 'main_and_any' ? 'الشرط الرئيسي' : 'إجابة'}</span>
+                  : <span className="logic-conj">{norm.match === 'main_and_any' ? (i === 1 ? 'ومعه أحد' : 'أو') : (norm.match === 'all' ? 'و' : 'أو')}</span>}
                 <select value={c.questionId || ''} onChange={e => setCond(i, { ...c, questionId: e.target.value, value: '' })}>
                   <option value="">اختر سؤالاً…</option>
                   {eligible.map(p => <option key={p.id} value={p.id}>{(priorQuestions.indexOf(p) + 1)}. {p.q_text || 'سؤال'}</option>)}

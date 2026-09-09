@@ -29,7 +29,7 @@ function StudentProfileInner({ session }) {
   const [saving, setSaving] = useState(false)
   const [buildings, setBuildings] = useState([])
   const [msg, setMsg] = useState(null)
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(deepSurvey ? 'surveys' : 'home')
   const [profileSub, setProfileSub] = useState(null)   // لتوجيه الطالب لتبويب فرعي محدّد في «ملفي»
   // فحص حيّ: عدد النماذج الإلزامية الظاهرة غير الموقّعة (يحدّد اكتمال الحساب فعلياً)
   const [unsignedVisible, setUnsignedVisible] = useState(null)
@@ -300,7 +300,7 @@ function StudentProfileInner({ session }) {
         {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
         {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
-        {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} />}
+        {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} openSurveyId={deepSurvey} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
         {activeTab === 'profile' && (
           <ProfileTab studentId={student?.id} personId={student?.person_id}

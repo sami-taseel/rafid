@@ -48,6 +48,7 @@ export default function App() {
   const [recovery, setRecovery] = useState(false)
   const [checkin, setCheckin] = useState(null)
   const [checkinMode, setCheckinMode] = useState('present')
+  const [deepSurvey, setDeepSurvey] = useState(null)
   const [offline, setOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
@@ -57,6 +58,10 @@ export default function App() {
     if (ci) { setCheckin(ci[1]); setCheckinMode('present') }
     const rec = window.location.hash.match(/record=([\w-]+)/)
     if (rec) { setCheckin(rec[1]); setCheckinMode('recorded') }
+    // رابط استبانة مباشر: ?survey=ID أو #survey=ID
+    const sp = new URLSearchParams(window.location.search)
+    const sv = sp.get('survey') || (window.location.hash.match(/survey=([\w-]+)/) || [])[1]
+    if (sv) setDeepSurvey(sv)
     registerSW()  // تفعيل وضع عدم الاتصال والإشعارات
     const goOnline = () => setOffline(false), goOffline = () => setOffline(true)
     window.addEventListener('online', goOnline)
@@ -78,10 +83,10 @@ export default function App() {
   if (recovery) return <ResetPassword onDone={() => { setRecovery(false); window.location.hash = '' }} />
   if (checkin && session) return <CheckIn sessionId={checkin} mode={checkinMode} onDone={() => { setCheckin(null); window.location.hash = '' }} />
   if (!session) return <Login />
-  return <>{offlineBar}<RoleRouter session={session} /></>
+  return <>{offlineBar}<RoleRouter session={session} deepSurvey={deepSurvey} /></>
 }
 
-function RoleRouter({ session }) {
+function RoleRouter({ session, deepSurvey }) {
   const [role, setRole] = useState(null)
   const [frozen, setFrozen] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -135,7 +140,7 @@ function RoleRouter({ session }) {
   )
   if (role === 'sponsor') return <SponsorPortal session={session} />
   if (role === 'staff') return <StaffApp />
-  return <StudentProfile session={session} />
+  return <StudentProfile session={session} deepSurvey={deepSurvey} />
 }
 
 function StudentsGroup() {

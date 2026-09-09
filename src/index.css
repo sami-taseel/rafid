@@ -2994,3 +2994,17 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .srv-file-pick:hover { border-color: #2e5496; color: #2e5496; }
 .srv-files-used { font-size: 12px; color: var(--text-soft); margin-top: 8px; }
 .srv-files-err { background: #fce8e8; color: #b32d2d; border-radius: 9px; padding: 10px 12px; font-size: 13px; margin-top: 8px; }
+
+/* ===== تحديد وحذف جماعي للاستبانات ===== */
+.survey-card { position: relative; }
+.survey-card.sv-selected { border-color: #2e5496; background: #f4f8fd; }
+:root[data-theme="dark"] .survey-card.sv-selected { background: #16233c; }
+.sv-pick { display: flex; align-items: center; padding-inline-end: 12px; cursor: pointer; }
+.sv-pick input { width: 18px; height: 18px; accent-color: #2e5496; cursor: pointer; }
+.sv-bulk-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 14px; background: var(--surface); border: 1.5px solid #2e5496; border-radius: 12px; box-shadow: 0 4px 16px rgba(46,84,150,.12); }
+.sv-bulk-count { font-size: 13.5px; font-weight: 700; background: #e8f0fc; color: #1f3864; padding: 6px 13px; border-radius: 9px; }
+.sv-bulk-note { font-size: 12px; color: var(--text-soft); flex: 1; }
+.sv-bulk-del { padding: 9px 17px; background: #b32d2d; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.sv-bulk-del:hover { filter: brightness(1.1); }
+.pill-locked { font-size: 11.5px; font-weight: 600; background: #fff4e0; color: #b3730a; padding: 3px 10px; border-radius: 10px; }
+:root[data-theme="dark"] .pill-locked { background: #2e2510; color: #f0c060; }

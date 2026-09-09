@@ -5,7 +5,7 @@ import { compressImage } from '../imageCompress'
 import { useToast } from '../Toast'
 
 // الاستبانات المتاحة للطالب لتعبئتها — تدعم الأنواع التسعة
-export default function StudentSurveys({ studentId }) {
+export default function StudentSurveys({ studentId, openSurveyId }) {
   const toast = useToast()
   const [surveys, setSurveys] = useState([])
   const [active, setActive] = useState(null)
@@ -29,9 +29,14 @@ export default function StudentSurveys({ studentId }) {
         return { ...s, _responseCount: count || 0 }
       }))
       setSurveys(withCounts)
+      // فتح الاستبانة المطلوبة من الرابط مباشرة
+      if (openSurveyId) {
+        const target = withCounts.find(s => s.id === openSurveyId)
+        if (target) open(target)
+      }
     }
     load()
-  }, [])
+  }, [openSurveyId])
 
   // هل الاستبانة مغلقة؟ (انتهت أو بلغت الحد)
   function surveyClosed(s) {
@@ -61,8 +66,15 @@ export default function StudentSurveys({ studentId }) {
     // صيغة متعددة الشروط
     if (lg.conditions) {
       if (!lg.conditions.length) return true
-      const results = lg.conditions.filter(c => c.questionId).map(evalCond)
-      if (!results.length) return true
+      const valid = lg.conditions.filter(c => c.questionId)
+      if (!valid.length) return true
+      const results = valid.map(evalCond)
+      // نمط «رئيسي + أحد الثانية»: الأول إلزامي، والبقية «أو» بينها
+      if (lg.match === 'main_and_any') {
+        if (!results[0]) return false
+        const rest = results.slice(1)
+        return rest.length === 0 ? true : rest.some(Boolean)
+      }
       return lg.match === 'any' ? results.some(Boolean) : results.every(Boolean)
     }
     // صيغة قديمة (شرط واحد)
