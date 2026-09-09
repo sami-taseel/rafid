@@ -17,9 +17,11 @@ export default function Surveys() {
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState([])
   const [respCounts, setRespCounts] = useState({})
+  const [svCats, setSvCats] = useState({})   // {surveyId: [categoryName]}
   const [editing, setEditing] = useState(null)
   const [results, setResults] = useState(null)
   const [editMeta, setEditMeta] = useState(null)
+  const [metaCats, setMetaCats] = useState([])   // فئات الاستبانة قيد التعديل
   const [shareSurvey, setShareSurvey] = useState(null)
   const [categories, setCategories] = useState([])
   const [templates, setTemplates] = useState([])
@@ -39,6 +41,17 @@ export default function Surveys() {
       const { data: rc } = await supabase.rpc('survey_response_counts')
       const m = {}; (rc || []).forEach(x => { m[x.survey_id] = x.cnt }); setRespCounts(m)
     } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+    // فئات كل استبانة (للعرض على البطاقة)
+    try {
+      const { data: sc } = await supabase.from('survey_categories').select('survey_id, categories(name)')
+      const cm = {}
+      ;(sc || []).forEach(x => {
+        const nm = x.categories?.name
+        if (!nm) return
+        ;(cm[x.survey_id] = cm[x.survey_id] || []).push(nm)
+      })
+      setSvCats(cm)
+    } catch { /* الجدول قد لا يكون منفّذاً بعد */ }
     setLoading(false)
   }
   useEffect(() => { loadAll() }, [])
@@ -98,6 +111,14 @@ export default function Surveys() {
   }
   function toggleSelect(id) {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  // فتح تعديل البيانات مع تحميل فئاتها المستهدفة
+  async function openMeta(s) {
+    setEditMeta({ ...s })
+    const { data } = await supabase.from('survey_categories')
+      .select('category_id').eq('survey_id', s.id)
+    setMetaCats((data || []).map(x => x.category_id))
   }
 
   async function toggleActive(s) { await supabase.from('surveys').update({ is_active: !s.is_active }).eq('id', s.id); loadAll() }
@@ -169,7 +190,7 @@ export default function Surveys() {
             <div className="survey-title">{s.title}</div>
             {s.description && <div className="muted">{s.description}</div>}
             <div className="survey-tags">
-              <span className="pill">{categories.find(c => c.id === s.target_category_id)?.name || 'كل الطلاب'}</span>
+              {(svCats[s.id]?.length ? svCats[s.id] : ['كل الطلاب']).map(nm => <span key={nm} className="pill">{nm}</span>)}
               <span className="muted">{s.survey_questions?.length || 0} سؤال</span>
               <span className={(respCounts[s.id] || 0) > 3 ? 'pill-locked' : 'muted'}>
                 {respCounts[s.id] || 0} رد{(respCounts[s.id] || 0) > 3 ? ' · محمية من الحذف' : ''}
@@ -178,7 +199,7 @@ export default function Surveys() {
             </div>
           </div>
           <div className="survey-actions">
-            <button className="mini" onClick={() => setEditMeta({ ...s })}>تعديل البيانات</button>
+            <button className="mini" onClick={() => openMeta(s)}>تعديل البيانات</button>
             <button className="mini" onClick={() => setEditing(s)}>تحرير الأسئلة</button>
             <button className="mini" onClick={() => setResults(s)}>النتائج</button>
             <button className="mini" onClick={() => toggleActive(s)}>{s.is_active ? 'إخفاء' : 'إظهار'}</button>
@@ -200,11 +221,23 @@ export default function Surveys() {
               <input value={editMeta.title} onChange={e => setEditMeta({ ...editMeta, title: e.target.value })} /></div>
             <div className="field"><label>الوصف</label>
               <input value={editMeta.description || ''} onChange={e => setEditMeta({ ...editMeta, description: e.target.value })} /></div>
-            <div className="field"><label>الفئة المستهدفة</label>
-              <select value={editMeta.target_category_id || ''} onChange={e => setEditMeta({ ...editMeta, target_category_id: e.target.value || null })}>
-                <option value="">كل الطلاب</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select></div>
+            <div className="field"><label>الفئات المستهدفة</label>
+              <div className="sv-cat-pick">
+                {categories.filter(c => c.member_type !== 'companion').map(c => (
+                  <button type="button" key={c.id}
+                    className={'val-chip' + (metaCats.includes(c.id) ? ' on' : '')}
+                    onClick={() => setMetaCats(prev => prev.includes(c.id) ? prev.filter(x => x !== c.id) : [...prev, c.id])}>
+                    {c.name}
+                  </button>
+                ))}
+                {categories.length === 0 && <span className="muted" style={{ fontSize: 13 }}>لا فئات. أنشئها من «الفئات والتصنيفات».</span>}
+              </div>
+              <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+                {metaCats.length === 0
+                  ? 'بلا تحديد: الاستبانة تظهر لكل الطلاب.'
+                  : `تظهر لأعضاء ${metaCats.length} فئة فقط، والإشعار يصلهم هم فقط.`}
+              </p>
+            </div>
             <div className="field"><label>سمة الألوان</label>
               <ThemePicker value={editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }} onChange={th => setEditMeta({ ...editMeta, theme: th })} /></div>
             <div className="srv-publish-opts">
@@ -226,8 +259,14 @@ export default function Surveys() {
                   onChange={e => setEditMeta({ ...editMeta, thank_you_message: e.target.value })} /></div>
             </div>
             <button className="save-btn" onClick={async () => {
-              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, target_category_id: editMeta.target_category_id, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }, is_anonymous: !!editMeta.is_anonymous, max_responses: editMeta.max_responses || null, expires_at: editMeta.expires_at || null, thank_you_message: editMeta.thank_you_message || null }).eq('id', editMeta.id)
-              setEditMeta(null); toast('تم حفظ التعديل'); loadAll()
+              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }, is_anonymous: !!editMeta.is_anonymous, max_responses: editMeta.max_responses || null, expires_at: editMeta.expires_at || null, thank_you_message: editMeta.thank_you_message || null }).eq('id', editMeta.id)
+              // مزامنة الفئات المستهدفة
+              await supabase.from('survey_categories').delete().eq('survey_id', editMeta.id)
+              if (metaCats.length) {
+                await supabase.from('survey_categories').insert(
+                  metaCats.map(cid => ({ survey_id: editMeta.id, category_id: cid })))
+              }
+              setEditMeta(null); setMetaCats([]); toast('تم حفظ التعديل'); loadAll()
             }}>حفظ التعديل</button>
           </div>
         </div>
