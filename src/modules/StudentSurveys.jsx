@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { uploadTicketFile } from '../ticketUtils'
+import { compressImage } from '../imageCompress'
 import { useToast } from '../Toast'
 
 // الاستبانات المتاحة للطالب لتعبئتها — تدعم الأنواع التسعة
@@ -152,7 +154,7 @@ export default function StudentSurveys({ studentId }) {
             <div className={'srv-q' + (errors[q.id] ? ' err' : '')} key={q.id}>
               <div className="srv-q-title">{i + 1}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
               {q.help_text && <div className="srv-q-help">{q.help_text}</div>}
-              <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
+              <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} studentId={studentId} />
               {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
             </div>
           ))}
@@ -184,7 +186,7 @@ export default function StudentSurveys({ studentId }) {
                   <div className="srv-stage-q">{num}. {q.q_text}{q.required && <span className="srv-req"> *</span>}</div>
                   {q.help_text && <div className="srv-stage-help">{q.help_text}</div>}
                   <div className="srv-stage-input">
-                    <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} />
+                    <QuestionInput q={q} value={answers[q.id]} onChange={v => setAns(q.id, v)} studentId={studentId} />
                   </div>
                   {errors[q.id] && <div className="srv-q-err">هذا السؤال إجباري</div>}
                 </div>
@@ -232,9 +234,11 @@ export default function StudentSurveys({ studentId }) {
 }
 
 // حقل الإدخال حسب نوع السؤال (التسعة)
-function QuestionInput({ q, value, onChange }) {
+function QuestionInput({ q, value, onChange, studentId }) {
   const t = q.q_type
   const opts = Array.isArray(q.options) ? q.options : []
+
+  if (t === 'files') return <FilesInput q={q} value={value} onChange={onChange} studentId={studentId} />
 
   if (t === 'short_text') return <input className="srv-input" value={value || ''} onChange={e => onChange(e.target.value)} />
   if (t === 'long_text') return <textarea className="srv-input" rows={4} value={value || ''} onChange={e => onChange(e.target.value)} />
@@ -283,6 +287,7 @@ function QuestionInput({ q, value, onChange }) {
             <span className="srv-check">{arr.includes(o) ? '☑' : '☐'}</span> {o}
           </button>
         ))}
+        {q.allow_other && <MultiOther arr={arr} opts={opts} onChange={onChange} />}
       </div>
     )
   }
@@ -313,6 +318,107 @@ function SingleInput({ q, value, onChange, opts }) {
           )}
         </>
       )}
+    </div>
+  )
+}
+
+// خيارات «أخرى» المتعددة في سؤال الاختيار المتعدد
+// يمكن للطالب إضافة عدة خيارات مخصّصة، تُدمج مع الخيارات المحدّدة
+function MultiOther({ arr, opts, onChange }) {
+  const [draft, setDraft] = useState('')
+  const others = arr.filter(v => !opts.includes(v))
+
+  function add() {
+    const t = draft.trim()
+    if (!t) return
+    if (arr.includes(t)) { setDraft(''); return }
+    onChange([...arr, t]); setDraft('')
+  }
+  function removeOther(v) { onChange(arr.filter(x => x !== v)) }
+
+  return (
+    <div className="srv-multiother">
+      {others.map(v => (
+        <span key={v} className="srv-other-chip">
+          {v}
+          <button type="button" onClick={() => removeOther(v)} aria-label="إزالة">✕</button>
+        </span>
+      ))}
+      <div className="srv-other-add">
+        <input className="srv-input" placeholder="أضف خياراً آخر…" value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); add() } }} />
+        <button type="button" className="srv-other-btn" onClick={add} disabled={!draft.trim()}>إضافة</button>
+      </div>
+    </div>
+  )
+}
+
+// سؤال المرفقات: يحترم النوع والعدد والحجم الإجمالي
+function FilesInput({ q, value, onChange, studentId }) {
+  const cfg = (q.options && typeof q.options === 'object' && !Array.isArray(q.options)) ? q.options : {}
+  const maxFiles = cfg.maxFiles ?? 3
+  const maxTotalMB = cfg.maxTotalMB ?? 10
+  const accept = cfg.accept || 'image_pdf'
+  const acceptAttr = accept === 'image' ? 'image/*'
+    : accept === 'pdf' ? 'application/pdf'
+    : accept === 'image_pdf' ? 'image/*,application/pdf' : undefined
+  const files = Array.isArray(value) ? value : []
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState(null)
+
+  async function pick(e) {
+    const chosen = Array.from(e.target.files || [])
+    e.target.value = ''
+    if (!chosen.length) return
+    setErr(null)
+    if (files.length + chosen.length > maxFiles) {
+      setErr(`الحد الأقصى ${maxFiles} ملفات.`); return
+    }
+    setBusy(true)
+    try {
+      const uploaded = [...files]
+      let totalBytes = files.reduce((s, f) => s + (f.size || 0), 0)
+      for (const f of chosen) {
+        const small = await compressImage(f)
+        totalBytes += small.size
+        if (totalBytes > maxTotalMB * 1024 * 1024) {
+          setErr(`الحجم الإجمالي يتجاوز ${maxTotalMB} ميجابايت.`); break
+        }
+        const path = await uploadTicketFile('survey_' + (studentId || 'anon'), small)
+        uploaded.push({ path, name: f.name, size: small.size })
+      }
+      onChange(uploaded)
+    } catch (e2) {
+      setErr('تعذّر رفع الملف. تأكد من الاتصال وأعد المحاولة.')
+    }
+    setBusy(false)
+  }
+
+  function removeFile(p) { onChange(files.filter(f => f.path !== p)) }
+  const usedMB = (files.reduce((s, f) => s + (f.size || 0), 0) / 1048576).toFixed(1)
+
+  return (
+    <div className="srv-files">
+      <div className="srv-files-hint">
+        {accept === 'image' ? 'صور فقط' : accept === 'pdf' ? 'ملفات PDF فقط' : accept === 'any' ? 'أي نوع' : 'صور أو PDF'}
+        {' · '}حتى {maxFiles} ملفات · إجمالي {maxTotalMB} ميجابايت
+      </div>
+      {files.map(f => (
+        <div key={f.path} className="srv-file-row">
+          <span className="srv-file-name">📎 {f.name}</span>
+          <span className="srv-file-size">{((f.size || 0) / 1048576).toFixed(1)}م.ب</span>
+          <button type="button" onClick={() => removeFile(f.path)} aria-label="إزالة">✕</button>
+        </div>
+      ))}
+      {files.length < maxFiles && (
+        <label className="srv-file-pick">
+          <input type="file" multiple accept={acceptAttr} onChange={pick} disabled={busy} hidden />
+          {busy ? 'جارٍ الرفع…' : '＋ إضافة مرفق'}
+        </label>
+      )}
+      {files.length > 0 && <div className="srv-files-used">المستخدم: {usedMB} من {maxTotalMB} ميجابايت</div>}
+      {err && <div className="srv-files-err">{err}</div>}
     </div>
   )
 }

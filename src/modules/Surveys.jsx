@@ -381,6 +381,7 @@ function QTypePreview({ type }) {
   if (type === 'number') return <div style={box}>معاينة: حقل رقمي</div>
   if (type === 'date') return <div style={box}>معاينة: منتقي تاريخ</div>
   if (type === 'scale') return <div style={box}>معاينة: ١ · ٢ · ٣ … ١٠</div>
+  if (type === 'files') return <div style={box}>معاينة: 📎 رفع مرفقات</div>
   if (type === 'likert') return <div style={box}>معاينة: راضٍ جداً · راضٍ · محايد · غير راضٍ · غير راضٍ إطلاقاً</div>
   if (type === 'dropdown') return <div style={box}>معاينة: قائمة منسدلة بالخيارات أعلاه</div>
   return null
@@ -398,6 +399,7 @@ const QTYPES = [
   { v: 'date', l: 'تاريخ', icon: 'calendar', needsOptions: false },
   { v: 'scale', l: 'مقياس ١٠-١', icon: 'chart', needsOptions: false },
   { v: 'likert', l: 'مقياس رضا', icon: 'chart', needsOptions: false },
+  { v: 'files', l: 'مرفقات', icon: 'paperclip', needsOptions: false },
 ]
 function qtypeNeedsOptions(t) { return t === 'single' || t === 'multiple' || t === 'dropdown' }
 function qtypeLabel(t) { return (QTYPES.find(x => x.v === t) || {}).l || t }
@@ -439,41 +441,64 @@ function SurveyEditor({ survey, onBack }) {
 
   async function load() {
     const { data } = await supabase.from('survey_questions').select('*').eq('survey_id', survey.id).order('sort_order')
-    setQuestions(data || []); setLoading(false)
+    setQuestions((data || []).filter(q => q && q.id)); setLoading(false)
   }
   useEffect(() => { load() }, [])
 
   async function addQ() {
     const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
     const lastPage = questions.length ? (questions[questions.length - 1].page || 1) : 1
-    const { data } = await supabase.from('survey_questions')
+    const { data, error } = await supabase.from('survey_questions')
       .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false, page: lastPage }).select().single()
+    if (error || !data?.id) { toast('تعذّر إضافة السؤال، حاول مجدداً', 'error'); return }
     setQuestions([...questions, data])
   }
   // إضافة فاصل صفحة: السؤال التالي يبدأ صفحة جديدة
   async function addPageBreak() {
     const max = questions.reduce((m, q) => Math.max(m, q.sort_order), 0)
     const maxPage = questions.reduce((m, q) => Math.max(m, q.page || 1), 1)
-    const { data } = await supabase.from('survey_questions')
+    const { data, error } = await supabase.from('survey_questions')
       .insert({ survey_id: survey.id, q_text: '', q_type: 'single', sort_order: max + 1, required: false, page: maxPage + 1 }).select().single()
+    if (error || !data?.id) { toast('تعذّر إضافة فاصل الصفحة', 'error'); return }
     setQuestions([...questions, data])
   }
   function patch(id, p) { setQuestions(questions.map(q => q.id === id ? { ...q, ...p } : q)) }
   async function saveAll() {
     for (const q of questions) {
+      if (!q?.id) continue   // حماية: نتجاهل أي عنصر بلا معرّف
+      // options: مصفوفة للخيارات، وكائن إعدادات لسؤال المرفقات
+      let opts = null
+      if (q.q_type === 'files') {
+        opts = q.options && typeof q.options === 'object' && !Array.isArray(q.options)
+          ? q.options : { accept: 'image_pdf', maxFiles: 3, maxTotalMB: 10 }
+      } else if (qtypeNeedsOptions(q.q_type)) {
+        opts = Array.isArray(q.options) ? q.options
+          : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])
+      }
       await supabase.from('survey_questions').update({
         q_text: q.q_text, q_type: q.q_type, required: !!q.required,
         help_text: q.help_text || null,
         logic: q.logic || null,
         page: q.page || 1,
         allow_other: !!q.allow_other,
-        options: qtypeNeedsOptions(q.q_type)
-          ? (Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])) : null
+        options: opts,
       }).eq('id', q.id)
     }
     setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
-  async function delQ(id) { await supabase.from('survey_questions').delete().eq('id', id); load() }
+  // حماية حرجة: بلا معرّف صحيح لا نحذف إطلاقاً
+  // (تمرير undefined لـ eq يُسقط الشرط فيحذف كل الصفوف)
+  async function delQ(id) {
+    if (!id || typeof id !== 'string') {
+      // عنصر تالف في القائمة: نزيله محلياً فقط
+      setQuestions(qs => qs.filter(q => q && q.id))
+      toast('تمت إزالة عنصر غير محفوظ', 'info')
+      return
+    }
+    const { error } = await supabase.from('survey_questions').delete().eq('id', id)
+    if (error) { toast('تعذّر حذف السؤال', 'error'); return }
+    setQuestions(qs => qs.filter(q => q && q.id !== id))
+  }
 
   // تحريك سؤال لأعلى/أسفل (يبدّل sort_order مع جاره)
   async function moveQ(i, dir) {
@@ -501,6 +526,7 @@ function SurveyEditor({ survey, onBack }) {
       options: q.options, required: q.required, help_text: q.help_text,
       logic: null, page: q.page || 1, allow_other: q.allow_other, sort_order: max + 1,
     }).select().single()
+    if (!data?.id) { toast('تعذّر تكرار السؤال', 'error'); return }
     // نُدرج النسخة مباشرة بعد الأصل
     const idx = questions.findIndex(x => x.id === q.id)
     const next = [...questions]
@@ -583,11 +609,39 @@ function SurveyEditor({ survey, onBack }) {
               value={Array.isArray(q.options) ? q.options : (typeof q.options === 'string' && q.options.startsWith('[') ? JSON.parse(q.options) : [])}
               onChange={(arr) => patch(q.id, { options: arr })} />
           )}
-          {q.q_type === 'single' && (
+          {(q.q_type === 'single' || q.q_type === 'multiple') && (
             <label className="q-other-toggle">
               <input type="checkbox" checked={!!q.allow_other} onChange={e => patch(q.id, { allow_other: e.target.checked })} />
-              إضافة خيار «أخرى» (يكتب الطالب إجابته)
+              إضافة خيار «أخرى»
+              {q.q_type === 'multiple' ? ' (يمكن للطالب إضافة عدة خيارات)' : ' (يكتب الطالب إجابته)'}
             </label>
+          )}
+          {q.q_type === 'files' && (
+            <div className="q-files-cfg">
+              <div className="q-files-title"><Icon name="paperclip" size={14} /> إعدادات المرفقات</div>
+              <div className="q-files-grid">
+                <div className="q-files-field">
+                  <label>الأنواع المسموحة</label>
+                  <select value={(q.options?.accept) || 'image_pdf'}
+                    onChange={e => patch(q.id, { options: { ...(q.options || {}), accept: e.target.value } })}>
+                    <option value="image_pdf">صور و PDF</option>
+                    <option value="image">صور فقط</option>
+                    <option value="pdf">PDF فقط</option>
+                    <option value="any">أي نوع</option>
+                  </select>
+                </div>
+                <div className="q-files-field">
+                  <label>أقصى عدد ملفات</label>
+                  <input type="number" min="1" max="10" value={(q.options?.maxFiles) ?? 3}
+                    onChange={e => patch(q.id, { options: { ...(q.options || {}), maxFiles: Number(e.target.value) } })} />
+                </div>
+                <div className="q-files-field">
+                  <label>أقصى حجم إجمالي (ميجابايت)</label>
+                  <input type="number" min="1" max="50" value={(q.options?.maxTotalMB) ?? 10}
+                    onChange={e => patch(q.id, { options: { ...(q.options || {}), maxTotalMB: Number(e.target.value) } })} />
+                </div>
+              </div>
+            </div>
           )}
           <QTypePreview type={q.q_type} />
           <LogicEditor q={q} priorQuestions={questions.slice(0, i)} onChange={(lg) => patch(q.id, { logic: lg })} />
