@@ -121,7 +121,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
     setBusy(true)
     const { data, error } = await supabase.rpc('self_check_in', { p_session: s.id })
     setBusy(false)
-    if (error) { setMsg('تعذّر تسجيل الحضور'); return }
+    if (error) { setMsg('تعذّر تسجيل الحضور: ' + (error.message || '')); console.error('self_check_in:', error); return }
     const txt = String(data || '')
     setMsg(txt)
     if (txt.includes('تم')) {
@@ -135,7 +135,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
     setBusy(true)
     const { data, error } = await supabase.rpc('undo_check_in', { p_session: s.id })
     setBusy(false)
-    if (error) { setMsg('تعذّر التراجع'); return }
+    if (error) { setMsg('تعذّر التراجع: ' + (error.message || '')); console.error('undo_check_in:', error); return }
     const txt = String(data || '')
     setMsg(txt)
     if (txt.startsWith('تم')) { setLocalStatus('not_recorded'); onAttChange?.(s.id, 'not_recorded') }

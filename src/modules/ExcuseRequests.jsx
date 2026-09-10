@@ -27,7 +27,7 @@ export default function ExcuseRequests() {
       if (error) throw error
       toast('تم القبول وإشعار الطالب', 'success')
       setList(prev => prev.filter(x => x.id !== id))
-    } catch (e) { toast('تعذّر تنفيذ القرار', 'error') }
+    } catch (e) { console.error('review_excuse:', e); toast('تعذّر تنفيذ القرار: ' + (e.message || ''), 'error') }
     setBusy(null)
   }
 
@@ -42,7 +42,7 @@ export default function ExcuseRequests() {
       toast('تم الرفض وإشعار الطالب بالسبب', 'info')
       setList(prev => prev.filter(x => x.id !== id))
       setRejectFor(null); setRejectReason('')
-    } catch (e) { toast('تعذّر تنفيذ القرار', 'error') }
+    } catch (e) { console.error('review_excuse:', e); toast('تعذّر تنفيذ القرار: ' + (e.message || ''), 'error') }
     setBusy(null)
   }
 
