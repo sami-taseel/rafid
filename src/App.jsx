@@ -40,6 +40,7 @@ import ApprovalRequests, { pendingApprovalCount } from './modules/ApprovalReques
 import StudentDiagnostics from './modules/StudentDiagnostics'
 import ExcuseRequests, { pendingExcuseCount } from './modules/ExcuseRequests'
 import PauseRequests, { pendingPauseCount } from './modules/PauseRequests'
+import MonitorGroups from './modules/MonitorGroups'
 import { registerSW } from './push'
 
 export default function App() {
@@ -159,6 +160,7 @@ function StudentsGroup() {
     { key: 'approvals', label: 'طلبات الاعتماد', el: <ApprovalRequests />, badge: pending },
     { key: 'excuses', label: 'طلبات الإذن', el: <ExcuseRequests />, badge: excuses },
     { key: 'pauses', label: 'طلبات التوقّف', el: <PauseRequests />, badge: pauses },
+    { key: 'groups', label: 'مجموعات الإشراف', el: <MonitorGroups /> },
     { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },

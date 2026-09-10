@@ -8,6 +8,7 @@ import Notifications from './modules/Notifications'
 import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
 import StudentHome from './modules/StudentHome'
+import MonitorPanel from './modules/MonitorPanel'
 import StudentCalendar from './modules/StudentCalendar'
 import ProfileTab from './modules/ProfileTab'
 import StudentTickets from './modules/StudentTickets'
@@ -33,6 +34,7 @@ function StudentProfileInner({ session }) {
   const [profileSub, setProfileSub] = useState(null)   // لتوجيه الطالب لتبويب فرعي محدّد في «ملفي»
   // فحص حيّ: عدد النماذج الإلزامية الظاهرة غير الموقّعة (يحدّد اكتمال الحساب فعلياً)
   const [unsignedVisible, setUnsignedVisible] = useState(null)
+  const [isMonitor, setIsMonitor] = useState(false)
   useEffect(() => {
     async function checkVisibleForms() {
       const st = student?.account_state
@@ -46,6 +48,7 @@ function StudentProfileInner({ session }) {
       setUnsignedVisible(unsigned.length)
       // نزامن حالة الحساب في الخلفية
       supabase.rpc('refresh_account_completion', { p_student: student.id }).then(() => {}, () => {})
+      supabase.rpc('am_i_monitor').then(({ data }) => setIsMonitor(!!data), () => {})
     }
     checkVisibleForms()
   }, [student?.id, student?.account_state, tab])
@@ -255,6 +258,7 @@ function StudentProfileInner({ session }) {
   // التبويبات المتاحة حسب الحالة
   let allTabs = [['home', 'الرئيسية']]
   if (isFull) allTabs.push(['calendar', 'التقويم'], ['surveys', t('surveys')])
+  if (isFull && isMonitor) allTabs.push(['monitor', 'مجموعتي'])
   allTabs.push(['tickets', t('tickets')], ['profile', 'ملفي'])
   // إن كان التبويب الحالي غير متاح، نعود للرئيسية
   const tabKeys = allTabs.map(x => x[0])
@@ -299,6 +303,7 @@ function StudentProfileInner({ session }) {
 
         {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
         {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
+        {activeTab === 'monitor' && <MonitorPanel studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
         {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} openSurveyId={deepSurvey} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
