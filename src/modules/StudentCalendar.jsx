@@ -117,7 +117,7 @@ export default function StudentCalendar({ studentId }) {
         </div>
         {monthActivities.length === 0 && <div className="muted" style={{ fontSize: 13 }}>لا أنشطة في هذا الشهر.</div>}
         <div className="cc-grid">
-          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor}
+          {monthActivities.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor} onAttChange={(sid, st) => setAttMap(m => ({ ...m, [sid]: st }))}
             sessionDate={DOW[new Date(s.planned_date).getDay()] + '، ' + s.planned_date.slice(8,10) + ' ' + MON[parseInt(s.planned_date.slice(5,7))-1]} />)}
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function StudentCalendar({ studentId }) {
           <div className="confirm-box" onClick={e => e.stopPropagation()} style={{ textAlign: 'right', maxWidth: 460 }}>
             <div className="confirm-title">{DOW[new Date(year, month, daySel.d).getDay()]} {daySel.d} {MON[month]}</div>
             <div className="cc-grid" style={{ marginTop: 12 }}>
-              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor}
+              {daySel.ss.map(s => <CompactCard key={s.id} session={s} studentId={studentId} attStatus={attMap[s.id]} targetType={typeMap[s.activity_id]} isMonitor={isMonitor} onAttChange={(sid, st) => setAttMap(m => ({ ...m, [sid]: st }))}
                 sessionDate={DOW[new Date(year, month, daySel.d).getDay()] + '، ' + daySel.d + ' ' + MON[month]} />)}
             </div>
             <div className="confirm-actions"><button className="confirm-ok" onClick={() => setDaySel(null)}>إغلاق</button></div>

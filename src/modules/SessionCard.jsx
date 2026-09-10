@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from '../Icon'
 import { supabase } from '../supabaseClient'
@@ -93,7 +93,7 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
 }
 
 // ============ البطاقة المختصرة (بطاقتان بالصف) ============
-export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus, targetType, isMonitor = false }) {
+export function CompactCard({ session, studentId, sessionDate, showExcuse = true, attStatus, targetType, isMonitor = false, onAttChange }) {
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const [details, setDetails] = useState(false)
@@ -108,6 +108,8 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
   const [localStatus, setLocalStatus] = useState(null)
   const [msg, setMsg] = useState(null)
   const eff = localStatus ?? attStatus
+  // إن تغيّرت الحالة من الأعلى (إعادة تحميل) نُسقط الحالة المحلية
+  useEffect(() => { setLocalStatus(null) }, [attStatus])
   // متاح يوم الجلسة فأحدث، ما لم تُحسم الحالة اعتماداً (حاضر/مستأذن/استماع/بانتظار)
   // الغياب التلقائي قابل للتصحيح ذاتياً
   const canSelfCheck = s.planned_date && s.planned_date <= todayStr
@@ -123,7 +125,9 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
     const txt = String(data || '')
     setMsg(txt)
     if (txt.includes('تم')) {
-      setLocalStatus(txt.includes('تأكيد المشرف') ? 'pending' : 'present')
+      const next = txt.includes('تأكيد المشرف') ? 'pending' : 'present'
+      setLocalStatus(next)
+      onAttChange?.(s.id, next)
     }
     setTimeout(() => setMsg(null), 4000)
   }
@@ -134,7 +138,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
     if (error) { setMsg('تعذّر التراجع'); return }
     const txt = String(data || '')
     setMsg(txt)
-    if (txt.startsWith('تم')) setLocalStatus('not_recorded')
+    if (txt.startsWith('تم')) { setLocalStatus('not_recorded'); onAttChange?.(s.id, 'not_recorded') }
     setTimeout(() => setMsg(null), 4000)
   }
 
@@ -165,11 +169,6 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               <button className="cc-icon-btn" onClick={() => setDetails(true)} title="التفاصيل" aria-label="التفاصيل">
                 <Icon name="eye" size={15} />
               </button>
-              {canShowQR && (
-                <button className="cc-icon-btn monitor" onClick={() => setQr(true)} title="باركود التحضير" aria-label="باركود التحضير">
-                  <Icon name="image" size={15} />
-                </button>
-              )}
               {/* تحضير ذاتي: متاح يوم الجلسة وما بعده إن لم تُحسم الحالة */}
               {studentId && canSelfCheck && !selfDone && (
                 <button className={'cc-icon-btn checkin' + (eff === 'absent' ? ' fix' : '')}
@@ -187,7 +186,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 </button>
               )}
               {/* زر الإذن يظهر فقط إن لم تُحسم الحالة */}
-              {showExcuse && studentId && !decided && !isOptional && (
+              {showExcuse && studentId && !isOptional && !['present','pending','excused','recorded'].includes(eff) && (
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} compact />
               )}
             </div>
@@ -231,6 +230,13 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 </div>
               </div>
             </div>
+            {canShowQR && (
+              <div className="cc-detail-foot">
+                <button className="cc-detail-qr" onClick={() => { setDetails(false); setQr(true) }}>
+                  <Icon name="image" size={16} /> باركود التحضير
+                </button>
+              </div>
+            )}
             {showExcuse && studentId && !decided && !isOptional && (
               <div className="cc-detail-foot">
                 <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />

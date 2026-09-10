@@ -3107,3 +3107,12 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* رسالة نتيجة التحضير على البطاقة */
 .cc-msg { margin-top: 8px; font-size: 12px; background: var(--bg); color: var(--text-soft); border-radius: 8px; padding: 7px 10px; line-height: 1.6; }
 .cc-icon-btn.checkin.fix { background: linear-gradient(135deg, #b3730a, #d4941f); }
+
+/* بطاقة أوسع: عمود واحد على الشاشات المتوسطة لتسع الأيقونات */
+@media (max-width: 900px) { .cc-grid { grid-template-columns: 1fr; } }
+.cc-actions { flex-wrap: wrap; justify-content: flex-end; }
+.cc-foot { flex-wrap: wrap; row-gap: 8px; }
+
+/* زر الباركود داخل نافذة التفاصيل */
+.cc-detail-qr { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 12px; background: linear-gradient(135deg, #6b3fc0, #8a5cd8); color: #fff; border: none; border-radius: 11px; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.cc-detail-qr:hover { filter: brightness(1.1); }

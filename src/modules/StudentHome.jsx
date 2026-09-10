@@ -111,7 +111,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           <div className="next-head"><Icon name="pin" size={16} /> أقرب موعد قادم — {dayName(nextDay)}، {formatDate(nextDay)}</div>
           <div className="fc-grid">
             {nextDaySessions.map(s => (
-              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor}
+              <FeatureCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor} onAttChange={(sid, st) => setData(d => ({ ...d, attMap: { ...d.attMap, [sid]: st } }))}
                 sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
             ))}
           </div>
@@ -150,7 +150,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         {data.upcoming.length === 0 && <div className="muted">لا توجد مواعيد مجدولة.</div>}
         <div className="cc-grid">
           {shownUpcoming.map(s => (
-            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor}
+            <CompactCard key={s.id} session={s} studentId={studentId} attStatus={data.attMap[s.id]} targetType={data.typeMap?.[s.activity_id]} isMonitor={data.monitor} onAttChange={(sid, st) => setData(d => ({ ...d, attMap: { ...d.attMap, [sid]: st } }))}
               sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
           ))}
         </div>
