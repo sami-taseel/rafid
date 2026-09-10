@@ -58,6 +58,9 @@ export default function Tracks() {
   }
   async function addActivity() {
     if (!newAct.title || !newAct.track_code) { flash('اكتب اسم النشاط واختر المسار', 'error'); return }
+    if (Object.keys(newActCats).length === 0) {
+      flash('حدّد فئة مستهدفة واحدة على الأقل — إلزامي لضمان صحة النقاط والدرجات', 'error'); return
+    }
     const track = tracks.find(t => t.code === newAct.track_code)
     const { data: created } = await supabase.from('activities').insert({
       title: newAct.title, activity_type: newAct.activity_type,
@@ -245,7 +248,7 @@ export default function Tracks() {
 
         {/* الفئات المستهدفة */}
         <div className="na-section">
-          <div className="na-section-label"><span className="na-step">2</span> الفئات المستهدفة</div>
+          <div className="na-section-label"><span className="na-step">2</span> الفئات المستهدفة <span style={{ color: '#b32d2d' }}>*</span></div>
           <div className="na-scope">
             <button type="button" className={'na-scope-btn' + (newScope === 'students' ? ' on' : '')} onClick={() => setNewScope('students')}>الطلاب</button>
             <button type="button" className={'na-scope-btn' + (newScope === 'companions' ? ' on' : '')} onClick={() => setNewScope('companions')}>المرافقون</button>
@@ -278,9 +281,9 @@ export default function Tracks() {
           <div className="na-summary">
             {Object.keys(newActCats).length > 0
               ? <>محدّد: <strong>{Object.values(newActCats).filter(v => v === 'primary').length}</strong> إلزامية · <strong>{Object.values(newActCats).filter(v => v === 'secondary').length}</strong> اختيارية</>
-              : 'لم تُحدَّد فئات — سيكون النشاط عاماً'}
+              : <span style={{ color: '#b32d2d', fontWeight: 600 }}>⚠ حدّد فئة مستهدفة واحدة على الأقل (إلزامي)</span>}
           </div>
-          <button className="na-submit" onClick={addActivity} disabled={!newAct.title || !newAct.track_code}>
+          <button className="na-submit" onClick={addActivity} disabled={!newAct.title || !newAct.track_code || Object.keys(newActCats).length === 0}>
             <Icon name="plus" size={16} /> إضافة النشاط
           </button>
         </div>
