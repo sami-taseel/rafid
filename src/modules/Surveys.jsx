@@ -243,6 +243,11 @@ export default function Surveys() {
             <div className="srv-publish-opts">
               <div className="srv-pub-title">خيارات النشر</div>
               <label className="srv-pub-row">
+                <input type="checkbox" checked={editMeta.one_response_per_student !== false}
+                  onChange={e => setEditMeta({ ...editMeta, one_response_per_student: e.target.checked })} />
+                <span>رد واحد لكل طالب <small>(يستطيع تعديل رده لاحقاً)</small></span>
+              </label>
+              <label className="srv-pub-row">
                 <input type="checkbox" checked={!!editMeta.is_anonymous} onChange={e => setEditMeta({ ...editMeta, is_anonymous: e.target.checked })} />
                 <span>استبانة مجهولة (لا تُربط الإجابة بالطالب)</span>
               </label>
@@ -259,7 +264,7 @@ export default function Surveys() {
                   onChange={e => setEditMeta({ ...editMeta, thank_you_message: e.target.value })} /></div>
             </div>
             <button className="save-btn" onClick={async () => {
-              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }, is_anonymous: !!editMeta.is_anonymous, max_responses: editMeta.max_responses || null, expires_at: editMeta.expires_at || null, thank_you_message: editMeta.thank_you_message || null }).eq('id', editMeta.id)
+              await supabase.from('surveys').update({ title: editMeta.title, description: editMeta.description, theme: editMeta.theme || { primary: '#534AB7', accent: '#D4537E' }, is_anonymous: !!editMeta.is_anonymous, one_response_per_student: editMeta.one_response_per_student !== false, max_responses: editMeta.max_responses || null, expires_at: editMeta.expires_at || null, thank_you_message: editMeta.thank_you_message || null }).eq('id', editMeta.id)
               // مزامنة الفئات المستهدفة
               await supabase.from('survey_categories').delete().eq('survey_id', editMeta.id)
               if (metaCats.length) {

@@ -3337,3 +3337,68 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
   .tl-act { font-size: 15px; }
   .tl-body { padding: 14px 14px 14px 44px; }
 }
+
+/* ============================================================
+   رأس صفحة الطالب — البطاقة الشخصية
+   ============================================================ */
+.sph { position: relative; background: linear-gradient(135deg, #1f3864, #3a5da0); border-radius: 18px; padding: 18px; color: #fff; overflow: hidden; margin-bottom: 14px; }
+.sph-watermark { position: absolute; left: -18px; bottom: -26px; width: 130px; height: 130px; object-fit: contain; opacity: .09; pointer-events: none; }
+.sph-inner { position: relative; }
+
+.sph-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sph-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.sph-logo { width: 48px; height: 48px; border-radius: 13px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 5px; }
+.sph-logo img { width: 100%; height: 100%; object-fit: contain; }
+.sph-who { min-width: 0; }
+.sph-name { font-size: 16.5px; font-weight: 800; line-height: 1.3; }
+.sph-sub { font-size: 11.5px; opacity: .85; margin-top: 2px; }
+
+.sph-tools { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.sph-tools > * { flex-shrink: 0; }
+.sph-logout { width: 29px; height: 29px; border-radius: 8px; border: none; background: rgba(255,255,255,.18); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s; }
+.sph-logout:hover { background: rgba(255,255,255,.32); }
+
+/* المؤشّرات الأربعة */
+.sph-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+.sph-m { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 10px 6px; text-align: center; }
+.sph-m-ic { font-size: 15px; margin-bottom: 2px; line-height: 1; }
+.sph-m-num { font-size: 17px; font-weight: 800; line-height: 1; }
+.sph-m-lbl { font-size: 9.5px; opacity: .85; margin-top: 3px; }
+
+/* توحيد مظهر الأدوات داخل الرأس الكحلي */
+.sph-tools .notif-bell, .sph-tools .lang-btn, .sph-tools .push-btn {
+  width: 29px; height: 29px; border-radius: 8px; background: rgba(255,255,255,.18);
+  border: none; color: #fff; display: flex; align-items: center; justify-content: center;
+}
+.sph-tools .notif-bell:hover, .sph-tools .lang-btn:hover, .sph-tools .push-btn:hover { background: rgba(255,255,255,.32); }
+
+@media (max-width: 480px) {
+  .sph { padding: 15px; }
+  .sph-name { font-size: 15px; }
+  .sph-logo { width: 42px; height: 42px; }
+  .sph-metrics { gap: 6px; }
+  .sph-m { padding: 9px 4px; }
+  .sph-m-num { font-size: 16px; }
+}
+
+/* ===== بطاقات الإحصاءات الجديدة ===== */
+.sts-card.tickets::before { background: #0f766e; }
+.sts-card.tickets .sts-ic { background: #e0f5f2; color: #0f766e; }
+.sts-card.tickets .sts-num { color: #0f766e; }
+.sts-card.tickets.clickable:hover { border-color: #0f766e; box-shadow: 0 6px 20px rgba(15,118,110,.15); }
+.sts-cta.tickets-cta { color: #0f5f58; background: #e0f5f2; }
+.sts-card.surveys.clickable:hover { border-color: #6b3fc0; box-shadow: 0 6px 20px rgba(107,63,192,.15); }
+.sts-cta.surveys-cta { color: #6b3fc0; background: #f1ebfb; }
+:root[data-theme="dark"] .sts-card.tickets .sts-ic,
+:root[data-theme="dark"] .sts-cta.tickets-cta { background: #10312e; color: #6fd4c8; }
+:root[data-theme="dark"] .sts-cta.surveys-cta { background: #241a3a; color: #b39ae0; }
+
+/* ===== قائمة البلاغات في النافذة ===== */
+.tk-list { display: flex; flex-direction: column; gap: 9px; }
+.tk-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; flex-wrap: wrap; }
+.tk-info { flex: 1; min-width: 0; }
+.tk-subject { font-size: 14.5px; font-weight: 700; }
+.tk-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--text-soft); margin-top: 3px; }
+.tk-status { background: var(--bg); padding: 2px 9px; border-radius: 8px; }
+.tk-close { display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; background: #0f766e; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tk-close:hover { filter: brightness(1.1); }

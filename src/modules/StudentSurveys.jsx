@@ -26,7 +26,15 @@ export default function StudentSurveys({ studentId, openSurveyId }) {
       // عدد الردود لكل استبانة (لفحص الحد الأقصى)
       const withCounts = await Promise.all((data || []).map(async s => {
         const { count } = await supabase.from('survey_responses').select('id', { count: 'exact', head: true }).eq('survey_id', s.id)
-        return { ...s, _responseCount: count || 0 }
+        // هل أجاب هذا الطالب؟ (لعرض «تعديل الرد»)
+        let mine = false
+        try {
+          const { count: mc } = await supabase.from('survey_responses')
+            .select('id', { count: 'exact', head: true })
+            .eq('survey_id', s.id).eq('student_id', studentId)
+          mine = (mc || 0) > 0
+        } catch { /* تجاهل */ }
+        return { ...s, _responseCount: count || 0, _answered: mine }
       }))
       setSurveys(withCounts)
       // فتح الاستبانة المطلوبة من الرابط مباشرة
@@ -101,13 +109,30 @@ export default function StudentSurveys({ studentId, openSurveyId }) {
     if (!validate()) { toast('يرجى الإجابة على الأسئلة الإجبارية', 'error'); return }
     setSubmitting(true)
     try {
-      const { data: resp } = await supabase.from('survey_responses')
-        .insert({ survey_id: active.id, student_id: active.is_anonymous ? null : studentId }).select().single()
+      // رد واحد لكل طالب: نُحدّث الرد السابق إن وُجد بدل إنشاء رد جديد
+      let respId = null
+      const oneOnly = active.one_response_per_student !== false
+      if (oneOnly && !active.is_anonymous && studentId) {
+        const { data: prev } = await supabase.from('survey_responses')
+          .select('id').eq('survey_id', active.id).eq('student_id', studentId).maybeSingle()
+          .then(r => r, () => ({ data: null }))
+        if (prev?.id) {
+          respId = prev.id
+          // نحذف الإجابات القديمة ثم نكتب الجديدة
+          await supabase.from('survey_answers').delete().eq('response_id', respId)
+        }
+      }
+      if (!respId) {
+        const { data: resp } = await supabase.from('survey_responses')
+          .insert({ survey_id: active.id, student_id: active.is_anonymous ? null : studentId }).select().single()
+        respId = resp.id
+        // النقاط تُمنح على أول تعبئة فقط
+        const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
+        await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).then(() => {}, () => {})
+      }
       // نحفظ إجابات الأسئلة الظاهرة فقط (المخفية لا تُرسل)
-      const rows = visibleQuestions.map(q => ({ response_id: resp.id, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
+      const rows = visibleQuestions.map(q => ({ response_id: respId, question_id: q.id, answer: { value: answers[q.id] ?? '' } }))
       await supabase.from('survey_answers').insert(rows)
-      const { data: pts } = await supabase.from('app_settings').select('value').eq('key', 'points_survey').maybeSingle()
-      await supabase.from('points_log').insert({ student_id: studentId, reason: 'survey', points: Number(pts?.value || 15), note: 'تعبئة استبانة' }).then(() => {}, () => {})
       setDone(true)
     } catch (e) { toast('تعذّر الإرسال، حاول مجدداً', 'error') }
     setSubmitting(false)
@@ -237,7 +262,9 @@ export default function StudentSurveys({ studentId, openSurveyId }) {
             </div>
             {closed
               ? <button className="srv-fill-btn" style={{ background: '#9aa3b2', cursor: 'default' }} disabled>مغلقة</button>
-              : <button className="srv-fill-btn" style={{ background: theme.primary }} onClick={() => open(s)}>تعبئة</button>}
+              : <button className="srv-fill-btn" style={{ background: s._answered ? '#0f766e' : theme.primary }} onClick={() => open(s)}>
+                  {s._answered ? '✎ تعديل الرد' : 'تعبئة'}
+                </button>}
           </div>
         )
       })}

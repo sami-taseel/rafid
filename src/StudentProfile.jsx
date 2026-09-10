@@ -7,6 +7,7 @@ import { PolicyAcceptance } from './modules/Policy'
 import Notifications from './modules/Notifications'
 import { LangProvider, useLang } from './i18n/LangContext'
 import LangPicker from './i18n/LangPicker'
+import Icon from './Icon'
 import StudentHome from './modules/StudentHome'
 import MonitorPanel from './modules/MonitorPanel'
 import StudentCalendar from './modules/StudentCalendar'
@@ -35,6 +36,9 @@ function StudentProfileInner({ session, deepSurvey }) {
   // فحص حيّ: عدد النماذج الإلزامية الظاهرة غير الموقّعة (يحدّد اكتمال الحساب فعلياً)
   const [unsignedVisible, setUnsignedVisible] = useState(null)
   const [isMonitor, setIsMonitor] = useState(false)
+  const [points, setPoints] = useState(0)
+  const [totalGrade, setTotalGrade] = useState(0)
+  const [nextCount, setNextCount] = useState(0)
   useEffect(() => {
     async function checkVisibleForms() {
       const st = student?.account_state
@@ -49,6 +53,12 @@ function StudentProfileInner({ session, deepSurvey }) {
       // نزامن حالة الحساب في الخلفية
       supabase.rpc('refresh_account_completion', { p_student: student.id }).then(() => {}, () => {})
       supabase.rpc('am_i_monitor').then(({ data }) => setIsMonitor(!!data), () => {})
+      supabase.rpc('student_points', { p_student: student.id }).then(({ data }) => setPoints(data || 0), () => {})
+      supabase.rpc('my_total_grade').then(({ data }) => setTotalGrade(Number(data || 0)), () => {})
+      // عدد المواعيد القادمة
+      supabase.from('sessions').select('id', { count: 'exact', head: true })
+        .gte('planned_date', new Date().toLocaleDateString('en-CA'))
+        .then(({ count }) => setNextCount(count || 0), () => {})
     }
     checkVisibleForms()
   }, [student?.id, student?.account_state, tab])
@@ -268,23 +278,49 @@ function StudentProfileInner({ session, deepSurvey }) {
     <div className="sp-app" dir={isRtl ? "rtl" : "ltr"}>
       <div className="sp-container">
         {/* ترويسة الترحيب */}
-        <div className="sp-hero">
-          <div className="sp-hero-actions">
-            <PushToggle />
-            <Notifications studentId={student?.id} onOpenTicket={() => setTab('tickets')} />
-            <LangPicker />
-            <button className="sp-logout" onClick={handleLogout}>{t('logout')}</button>
-          </div>
-          <div className="sp-hero-top">
-            <div className="sp-avatar">{name.trim().charAt(0) || '؟'}</div>
-            <div>
-              <div className="sp-greet">{t('welcome')}، {name.split(' ')[0]}</div>
-              <div className="sp-sub">{[deg, nat].filter(Boolean).join(' · ') || 'أكمل بياناتك'}</div>
+        <div className="sph">
+          <img className="sph-watermark" src="/logo-white.png" alt="" aria-hidden="true" />
+          <div className="sph-inner">
+            <div className="sph-top">
+              <div className="sph-id">
+                <div className="sph-logo"><img src="/logo.png" alt="جمعية تأصيل التعليمية" /></div>
+                <div className="sph-who">
+                  <div className="sph-name">{name || 'طالب'}</div>
+                  <div className="sph-sub">{[deg, nat].filter(Boolean).join(' · ') || 'أكمل بياناتك'}</div>
+                </div>
+              </div>
+              <div className="sph-tools">
+                <PushToggle />
+                <Notifications studentId={student?.id} onOpenTicket={() => setTab('tickets')} />
+                <LangPicker />
+                <button className="sph-logout" onClick={handleLogout} title={t('logout')} aria-label={t('logout')}>
+                  <Icon name="logout" size={15} />
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="sp-progress">
-            <div className="sp-progress-head"><span>{t('profileComplete')}</span><span>{pct}%</span></div>
-            <div className="sp-bar"><div className="sp-fill" style={{ width: pct + '%' }}></div></div>
+
+            <div className="sph-metrics">
+              <div className="sph-m">
+                <div className="sph-m-ic">⭐</div>
+                <div className="sph-m-num">{points || 0}</div>
+                <div className="sph-m-lbl">نقطة</div>
+              </div>
+              <div className="sph-m">
+                <div className="sph-m-ic">📊</div>
+                <div className="sph-m-num">{totalGrade}</div>
+                <div className="sph-m-lbl">درجة</div>
+              </div>
+              <div className="sph-m">
+                <div className="sph-m-ic">📅</div>
+                <div className="sph-m-num">{nextCount}</div>
+                <div className="sph-m-lbl">موعد قادم</div>
+              </div>
+              <div className="sph-m">
+                <div className="sph-m-ic">📋</div>
+                <div className="sph-m-num">{pct}%</div>
+                <div className="sph-m-lbl">نسبة الملف</div>
+              </div>
+            </div>
           </div>
         </div>
 

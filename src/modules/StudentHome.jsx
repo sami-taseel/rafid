@@ -9,6 +9,7 @@ import { FeatureCard, CompactCard } from './SessionCard'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [showAbsent, setShowAbsent] = useState(false)
+  const [showTickets, setShowTickets] = useState(false)
   const [points, setPoints] = useState(0)
   const [pending, setPending] = useState([])
   const [data, setData] = useState(null)
@@ -47,6 +48,17 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         const { data: mv } = await supabase.rpc('am_i_monitor')
         monitor = !!mv
       } catch { /* العمود قد لا يكون منفّذاً بعد */ }
+      // البلاغات المفتوحة والاستبانات المعلّقة
+      let openTickets = [], pendingSurveys = []
+      try {
+        const { data: tk } = await supabase.rpc('my_open_tickets')
+        openTickets = tk || []
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+      try {
+        const { data: sv } = await supabase.rpc('my_pending_surveys')
+        pendingSurveys = (sv || []).filter(x => !x.answered)
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+
       // نوع الاستهداف لكل نشاط (يحسب الفئات اليدوية والتلقائية خادمياً)
       const typeMap = {}
       try {
@@ -64,8 +76,8 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         recorded: a.filter(x => x.status === 'recorded').length,
         total: a.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
-        attMap, typeMap, monitor, absentSessions,
-        surveysCount: (surveys.data || []).length,
+        attMap, typeMap, monitor, absentSessions, openTickets, pendingSurveys,
+        surveysCount: pendingSurveys.length,
         notifs: notifs.data || [],
       })
      } catch (err) {
@@ -166,15 +178,27 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
             <div className="sts-cta">تدارَكها الآن <Icon name="chevronLeft" size={12} /></div>
           )}
         </div>
-        <div className="sts-card upcoming">
-          <div className="sts-ic"><Icon name="calendar" size={18} /></div>
-          <div className="sts-num">{data.upcoming.length}</div>
-          <div className="sts-lbl">المواعيد القادمة</div>
+        <div className={'sts-card tickets' + ((data.openTickets || []).length > 0 ? ' clickable' : '')}
+          onClick={() => (data.openTickets || []).length > 0 && setShowTickets(true)}
+          role={(data.openTickets || []).length > 0 ? 'button' : undefined}
+          title={(data.openTickets || []).length > 0 ? 'اضغط لعرض بلاغاتك المفتوحة' : undefined}>
+          <div className="sts-ic"><Icon name="inbox" size={18} /></div>
+          <div className="sts-num">{(data.openTickets || []).length}</div>
+          <div className="sts-lbl">بلاغات مفتوحة</div>
+          {(data.openTickets || []).length > 0 && (
+            <div className="sts-cta tickets-cta">أغلِقها الآن <Icon name="chevronLeft" size={12} /></div>
+          )}
         </div>
-        <div className="sts-card surveys">
+        <div className={'sts-card surveys' + (data.surveysCount > 0 ? ' clickable' : '')}
+          onClick={() => data.surveysCount > 0 && onGoTab && onGoTab('surveys')}
+          role={data.surveysCount > 0 ? 'button' : undefined}
+          title={data.surveysCount > 0 ? 'اضغط للإجابة على الاستبانات' : undefined}>
           <div className="sts-ic"><Icon name="clipboard" size={18} /></div>
           <div className="sts-num">{data.surveysCount}</div>
-          <div className="sts-lbl">الاستبانات المتاحة</div>
+          <div className="sts-lbl">استبانات متاحة</div>
+          {data.surveysCount > 0 && (
+            <div className="sts-cta surveys-cta">شارِك الآن <Icon name="chevronLeft" size={12} /></div>
+          )}
         </div>
       </div>
 
@@ -239,6 +263,50 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
                         absentSessions: (d.absentSessions || []).filter(x => x.id !== sid),
                       }))}
                       sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* نافذة البلاغات المفتوحة — لإغلاقها بسهولة */}
+      {showTickets && createPortal(
+        <div className="abs-overlay" onClick={() => setShowTickets(false)}>
+          <div className="abs-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="abs-hero" style={{ background: 'linear-gradient(135deg,#0f766e,#14a89a)' }}>
+              <button className="abs-close" onClick={() => setShowTickets(false)} aria-label="إغلاق">
+                <Icon name="x" size={18} />
+              </button>
+              <div className="abs-hero-ic"><Icon name="inbox" size={22} /></div>
+              <h3 className="abs-title">بلاغاتي المفتوحة</h3>
+              <p className="abs-sub">إن حُلّت مشكلتك، أغلِق البلاغ ليتفرّغ المشرفون لغيرك.</p>
+            </div>
+            <div className="abs-body">
+              {(data.openTickets || []).length === 0 ? (
+                <div className="muted" style={{ textAlign: 'center', padding: 20 }}>لا بلاغات مفتوحة.</div>
+              ) : (
+                <div className="tk-list">
+                  {(data.openTickets || []).map(tk => (
+                    <div className="tk-item" key={tk.id}>
+                      <div className="tk-info">
+                        <div className="tk-subject">{tk.subject || 'بلاغ'}</div>
+                        <div className="tk-meta">
+                          <span className="tk-status">{tk.status}</span>
+                          <span>{formatDate(String(tk.created_at).slice(0, 10))}</span>
+                        </div>
+                      </div>
+                      <button className="tk-close" onClick={async () => {
+                        const { data: r } = await supabase.rpc('close_my_ticket', { p_ticket: tk.id })
+                        if (String(r || '').startsWith('تم')) {
+                          setData(d => ({ ...d, openTickets: (d.openTickets || []).filter(x => x.id !== tk.id) }))
+                        }
+                      }}>
+                        <Icon name="check" size={14} /> إغلاق
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
