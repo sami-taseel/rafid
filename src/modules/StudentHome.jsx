@@ -17,6 +17,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
 
   useEffect(() => {
     async function load() {
+     try {
       const today = new Date().toISOString().slice(0, 10)
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
@@ -28,7 +29,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         supabase.from('notifications').select('id, title, body, kind, created_at, is_read')
           .eq('student_id', studentId).order('created_at', { ascending: false }).limit(3),
       ])
-      // فلترة الجلسات حسب الأنشطة المرئية للطالب (فئاته المستهدفة)
+      const a = att.data || []
       // جلسات الغياب: نجلب تفاصيلها لعرضها عند الضغط على نسبة الغياب
       const absentIds = a.filter(x => x.status === 'absent').map(x => x.session_id).filter(Boolean)
       let absentSessions = []
@@ -59,7 +60,6 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         })
       } catch { /* الأعمدة قد لا تكون منفّذة بعد */ }
       const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
-      const a = att.data || []
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
       const attMap = {}
       a.forEach(x => { if (x.session_id) attMap[x.session_id] = x.status })
@@ -74,6 +74,13 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
+     } catch (err) {
+      console.error('تحميل صفحة الطالب:', err)
+      // نعرض الصفحة بحد أدنى بدل دائرة معلّقة
+      setData({ present: 0, absent: 0, excused: 0, recorded: 0, total: 0,
+        upcoming: [], attMap: {}, typeMap: {}, monitor: false,
+        absentSessions: [], surveysCount: 0, notifs: [], loadError: true })
+     }
     }
     if (studentId) load()
   }, [studentId])

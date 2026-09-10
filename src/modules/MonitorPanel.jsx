@@ -136,18 +136,28 @@ export default function MonitorPanel({ studentId }) {
             <div className="mon-row-info">
               <span className="mon-name">{r.full_name}</span>
               <span className="mon-state">
-                {r.status === 'pending' && <span className="mon-tag pending">بانتظار التأكيد</span>}
-                {r.status === 'present' && <span className="mon-tag present">حاضر</span>}
-                {r.status === 'absent' && <span className="mon-tag absent">غائب{r.absence_reason ? ` · ${r.absence_reason}` : ' · بلا عذر'}</span>}
+                {/* نعرض فقط ما لا تُغنيه الأزرار: الانتظار، الإذن، سبب الغياب */}
+                {r.status === 'pending' && <span className="mon-tag pending">سجّل حضوره — بانتظار تأكيدك</span>}
                 {r.status === 'excused' && <span className="mon-tag excused">مستأذن</span>}
+                {r.status === 'absent' && (
+                  <span className="mon-tag absent">
+                    {r.absence_reason ? `العذر: ${r.absence_reason}` : 'بلا عذر'}
+                  </span>
+                )}
                 {r.status === 'not_recorded' && <span className="mon-tag none">لم يسجّل</span>}
               </span>
             </div>
             <div className="mon-actions">
-              <button className="mon-btn ok" disabled={busy === r.student_id}
-                onClick={() => setStatus(r.student_id, 'present')}>حاضر</button>
-              <button className="mon-btn no" disabled={busy === r.student_id}
-                onClick={() => { setReasonFor(r); setReasonVal('') }}>غائب</button>
+              <button className={'mon-btn ok' + (r.status === 'present' ? ' on' : '')}
+                disabled={busy === r.student_id}
+                onClick={() => setStatus(r.student_id, 'present')}>
+                {r.status === 'present' && '✓ '}حاضر
+              </button>
+              <button className={'mon-btn no' + (r.status === 'absent' ? ' on' : '')}
+                disabled={busy === r.student_id}
+                onClick={() => { setReasonFor(r); setReasonVal('') }}>
+                {r.status === 'absent' && '✓ '}غائب
+              </button>
               {r.unexcused_count >= 3 && (
                 <button className="mon-btn esc" onClick={() => setEscalateFor(r)}
                   title={`${r.unexcused_count} غياب بلا عذر`}>
