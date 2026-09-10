@@ -47,18 +47,12 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         const { data: mv } = await supabase.rpc('am_i_monitor')
         monitor = !!mv
       } catch { /* العمود قد لا يكون منفّذاً بعد */ }
-      // نوع الاستهداف لكل نشاط (رئيسي/ثانوي)
+      // نوع الاستهداف لكل نشاط (يحسب الفئات اليدوية والتلقائية خادمياً)
       const typeMap = {}
       try {
-        const { data: myCats } = await supabase.from('category_members').select('category_id').eq('student_id', studentId)
-        const myCatSet = new Set((myCats || []).map(x => x.category_id))
-        const { data: actCats } = await supabase.from('activity_categories').select('activity_id, category_id, target_type')
-        ;(actCats || []).forEach(ac => {
-          if (!myCatSet.has(ac.category_id)) return
-          // الرئيسي يغلب الثانوي
-          if (typeMap[ac.activity_id] !== 'primary') typeMap[ac.activity_id] = ac.target_type || 'primary'
-        })
-      } catch { /* الأعمدة قد لا تكون منفّذة بعد */ }
+        const { data: tt } = await supabase.rpc('my_target_types')
+        ;(tt || []).forEach(x => { typeMap[x.activity_id] = x.target_type })
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
       const attMap = {}

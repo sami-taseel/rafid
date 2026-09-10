@@ -3311,7 +3311,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .tl-sess { font-size: 13px; font-weight: 600; color: var(--text-soft); background: var(--bg); border: 1px solid var(--border); padding: 5px 11px; border-radius: 9px; line-height: 1.3; }
 
 /* المقدّم والمكان */
-.tl-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 13px; }
+.tl-meta { display: grid; grid-template-columns: 1.7fr 1fr; gap: 9px; margin-top: 13px; }
 .tl-meta-item { display: flex; align-items: center; gap: 9px; border-radius: 11px; padding: 9px 11px; min-width: 0; }
 .tl-meta-item.provider { background: #eef4fc; }
 .tl-meta-item.place { background: #f0f7f4; }
@@ -3320,7 +3320,9 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .tl-meta-item.place .tl-meta-ic { background: #0f766e; color: #fff; }
 .tl-meta-text { display: flex; flex-direction: column; min-width: 0; }
 .tl-meta-lbl { font-size: 10.5px; color: var(--text-soft); }
-.tl-meta-val { font-size: 13.5px; font-weight: 700; color: var(--text); word-break: break-word; }
+.tl-meta-val { font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.35; }
+.tl-meta-item.provider .tl-meta-val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-meta-item.place .tl-meta-val { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* الإجراء في الزاوية العلوية اليسرى */
 .tl-action { position: absolute; top: 12px; left: 12px; }

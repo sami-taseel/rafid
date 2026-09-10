@@ -36,16 +36,11 @@ export default function StudentCalendar({ studentId }) {
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // نوع الاستهداف لكل نشاط (إلزامي/اختياري)
       try {
-        const { data: myCats } = await supabase.from('category_members').select('category_id').eq('student_id', studentId)
-        const myCatSet = new Set((myCats || []).map(x => x.category_id))
-        const { data: actCats } = await supabase.from('activity_categories').select('activity_id, category_id, target_type')
+        const { data: tt } = await supabase.rpc('my_target_types')
         const tm = {}
-        ;(actCats || []).forEach(ac => {
-          if (!myCatSet.has(ac.category_id)) return
-          if (tm[ac.activity_id] !== 'primary') tm[ac.activity_id] = ac.target_type || 'primary'
-        })
+        ;(tt || []).forEach(x => { tm[x.activity_id] = x.target_type })
         setTypeMap(tm)
-      } catch { /* الأعمدة قد لا تكون منفّذة بعد */ }
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       setSessions(sessRes.data || []); setLoading(false)
     }
     load()
