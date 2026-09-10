@@ -31,7 +31,7 @@ export default function Students() {
 
   async function load() {
       const { data: st } = await supabase.from('students')
-        .select('id, degree_level, profile_reviewed, is_monitor, persons(full_name, nationality, residency_no, phone)')
+        .select('id, degree_level, profile_reviewed, is_monitor, is_test, persons(full_name, nationality, residency_no, phone)')
       setStudents(st || [])
       // نحمّل الفئات وأعضاءها
       const { data: cats } = await supabase.from('categories').select('id, name').eq('member_type', 'student')
@@ -73,6 +73,17 @@ export default function Students() {
     toast(value
       ? `تم تعيين ${selected.length} طالباً مشرفي تحضير`
       : `تم إلغاء صلاحية ${selected.length} طالباً`, value ? 'success' : 'info')
+    setSelected([]); load()
+  }
+
+  // وسم/إلغاء الحسابات التجريبية دفعة واحدة
+  async function bulkTest(value) {
+    if (!selected.length) return
+    const { data, error } = await supabase.rpc('set_test_accounts', { p_ids: selected, p_value: value })
+    if (error) { toast('تعذّر التنفيذ: ' + error.message, 'error'); return }
+    toast(value
+      ? `وُسم ${data || 0} حساباً كتجريبي (مستثنى من الإحصاءات)`
+      : `أُلغي الوسم عن ${data || 0} حساباً`, 'success')
     setSelected([]); load()
   }
 
@@ -223,6 +234,10 @@ export default function Students() {
           <button className="mini" onClick={() => bulkMonitor(false)} title="إلغاء صلاحية مشرف التحضير">
             إلغاء الإشراف
           </button>
+          <button className="mini test-btn" onClick={() => bulkTest(true)} title="يُستثنى من الإحصاءات ونسب الحضور">
+            🧪 وسم كتجريبي
+          </button>
+          <button className="mini" onClick={() => bulkTest(false)}>إلغاء الوسم</button>
           <button className="mini" onClick={bulkNotify}>إشعار سريع</button>
           {noticeTemplates.length > 0 && <>
             <select value={bulkNotice} onChange={e => setBulkNotice(e.target.value)}>
@@ -253,6 +268,7 @@ export default function Students() {
                 <td className="clickable" onClick={() => setSel(s.id)}>
                   {s.persons?.full_name || '—'}
                   {s.is_monitor && <span className="monitor-pill" title="مشرف تحضير">▦ مشرف</span>}
+                  {s.is_test && <span className="test-pill" title="حساب تجريبي — مستثنى من الإحصاءات">🧪 تجريبي</span>}
                 </td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>
                 <td>{s.degree_level || '—'}</td>

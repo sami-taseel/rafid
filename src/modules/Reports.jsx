@@ -356,11 +356,11 @@ export default function Reports() {
 async function fetchReportData(scope, from, to, sessFilter = null) {
   const d = {}
   if (scope === 'comprehensive' || scope === 'students_data' || scope === 'achievements') {
-    const { data: students } = await supabase.from('students').select('id, degree_level, profile_reviewed, admission_status, unit_id, persons(nationality, full_name)')
+    const { data: students } = await supabase.from('students').select('id, degree_level, profile_reviewed, admission_status, unit_id, persons(nationality, full_name)').or('is_test.is.null,is_test.eq.false')
     d.students = students || []
   }
   if (scope === 'comprehensive' || scope === 'activities') {
-    const { data: att } = await supabase.from('attendance').select('status, session_id, sessions(planned_date)')
+    const { data: att } = await supabase.from('attendance').select('status, session_id, sessions(planned_date), students!inner(is_test)').or('is_test.is.null,is_test.eq.false', { foreignTable: 'students' })
     const sessSet = sessFilter ? new Set(sessFilter) : null
     d.attendance = (att || []).filter(a => {
       if (sessSet) return sessSet.has(a.session_id)   // جلسات محدّدة (تتجاوز فلتر الفترة)
@@ -389,7 +389,7 @@ async function fetchReportData(scope, from, to, sessFilter = null) {
     d.points = points || []
     const { data: evals } = await supabase.from('evaluations').select('student_id, total_score, max_total')
     d.evals = evals || []
-    const { data: att2 } = await supabase.from('attendance').select('student_id, status')
+    const { data: att2 } = await supabase.from('attendance').select('student_id, status, students!inner(is_test)').or('is_test.is.null,is_test.eq.false', { foreignTable: 'students' })
     d.allAttendance = att2 || []
   }
   if (scope === 'students_data') {
