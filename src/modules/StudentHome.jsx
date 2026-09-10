@@ -7,6 +7,9 @@ import Icon from '../Icon'
 import PauseRequest from './PauseRequest'
 import { FeatureCard, CompactCard } from './SessionCard'
 
+// تسميات حالات البلاغ
+const TK_LABEL = { open: 'مفتوح', in_progress: 'قيد المعالجة', resolved: 'تمت المعالجة — أغلِقه', failed: 'تعذّرت المعالجة' }
+
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   const [showAbsent, setShowAbsent] = useState(false)
   const [showTickets, setShowTickets] = useState(false)
@@ -294,7 +297,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
                       <div className="tk-info">
                         <div className="tk-subject">{tk.subject || 'بلاغ'}</div>
                         <div className="tk-meta">
-                          <span className="tk-status">{tk.status}</span>
+                          <span className="tk-status">{tk.status_code === 'resolved' ? 'تمت المعالجة — بانتظار إغلاقك' : tk.status_code === 'failed' ? 'تعذّرت المعالجة' : 'مفتوح'}</span>
                           <span>{formatDate(String(tk.created_at).slice(0, 10))}</span>
                         </div>
                       </div>

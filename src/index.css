@@ -3341,9 +3341,12 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* ============================================================
    رأس صفحة الطالب — البطاقة الشخصية
    ============================================================ */
-.sph { position: relative; background: linear-gradient(135deg, #1f3864, #3a5da0); border-radius: 18px; padding: 18px; color: #fff; overflow: hidden; margin-bottom: 14px; }
-.sph-watermark { position: absolute; left: -18px; bottom: -26px; width: 130px; height: 130px; object-fit: contain; opacity: .09; pointer-events: none; }
+.sph { position: relative; background: linear-gradient(135deg, #1f3864, #3a5da0); border-radius: 18px; padding: 18px; color: #fff; margin-bottom: 14px; overflow: visible; }
 .sph-inner { position: relative; }
+/* الأدوات فوق كل شيء لتظهر قوائمها كاملة */
+.sph-top { position: relative; z-index: 60; }
+.sph-tools { position: relative; z-index: 70; }
+.sph-tools .notif-panel, .sph-tools .lang-menu { z-index: 200; }
 
 .sph-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .sph-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
@@ -3402,3 +3405,13 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .tk-status { background: var(--bg); padding: 2px 9px; border-radius: 8px; }
 .tk-close { display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; background: #0f766e; color: #fff; border: none; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .tk-close:hover { filter: brightness(1.1); }
+
+/* القوائم المنسدلة داخل الرأس تظهر فوق المحتوى */
+.sph-tools { position: relative; z-index: 60; }
+.sph-tools .notif-panel, .sph-tools .lang-menu { z-index: 200; }
+
+/* لوحة الإشعارات عبر Portal — لا تُقصّ أبداً */
+.notif-panel.notif-fixed { position: fixed; z-index: 3000; width: 320px; max-width: calc(100vw - 24px); }
+
+/* قائمة اللغات عبر Portal */
+.langpick-menu.langpick-fixed { position: fixed; z-index: 3000; }

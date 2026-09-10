@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import Icon from '../Icon'
 
@@ -7,6 +8,8 @@ export default function Notifications({ studentId, onOpenTicket }) {
   const [items, setItems] = useState([])
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const btnRef = useRef(null)
+  const [pos, setPos] = useState({ top: 60, left: 12 })
 
   async function load() {
     if (!studentId) return
@@ -18,7 +21,10 @@ export default function Notifications({ studentId, onOpenTicket }) {
 
   // إغلاق اللوحة عند النقر خارجها (كقائمة اللغة)
   useEffect(() => {
-    function onClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    function onClick(e) {
+      if (e.target.closest && e.target.closest('.notif-panel')) return
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [])
@@ -32,11 +38,16 @@ export default function Notifications({ studentId, onOpenTicket }) {
 
   return (
     <div className="notif-wrap" ref={ref}>
-      <button className="notif-bell" onClick={() => { setOpen(!open); if (!open && unread) markAll() }}>
+      <button className="notif-bell" ref={btnRef}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect()
+          setPos({ top: r.bottom + 8, left: Math.max(8, r.left) })
+          setOpen(!open); if (!open && unread) markAll()
+        }}>
         <Icon name="bell" />{unread > 0 && <span className="notif-badge">{unread}</span>}
       </button>
-      {open && (
-        <div className="notif-panel">
+      {open && createPortal(
+        <div className="notif-panel notif-fixed" style={{ top: pos.top, left: pos.left }}>
           <div className="notif-head">الإشعارات</div>
           {items.length === 0 && <div className="notif-empty">لا توجد إشعارات</div>}
           {items.map(n => (
@@ -50,7 +61,8 @@ export default function Notifications({ studentId, onOpenTicket }) {
               <div className="notif-date">{new Date(n.created_at).toLocaleDateString('ar')}{n.ticket_id && ' · اضغط لعرض البلاغ'}{n.link && ' · اضغط للانتقال'}</div>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

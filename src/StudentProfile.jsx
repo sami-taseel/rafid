@@ -279,7 +279,6 @@ function StudentProfileInner({ session, deepSurvey }) {
       <div className="sp-container">
         {/* ترويسة الترحيب */}
         <div className="sph">
-          <img className="sph-watermark" src="/logo-white.png" alt="" aria-hidden="true" />
           <div className="sph-inner">
             <div className="sph-top">
               <div className="sph-id">
