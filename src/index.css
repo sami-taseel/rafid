@@ -3261,3 +3261,77 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .mon-btn.ok.on { background: #15784e; color: #fff; border-color: #15784e; font-weight: 700; box-shadow: 0 2px 8px rgba(21,120,78,.28); }
 .mon-btn.no.on { background: #b32d2d; color: #fff; border-color: #b32d2d; font-weight: 700; box-shadow: 0 2px 8px rgba(179,45,45,.28); }
 .mon-btn.ok.on:hover, .mon-btn.no.on:hover { filter: brightness(1.08); }
+
+/* ============================================================
+   بطاقة أقرب موعد — تنظيم جديد
+   ============================================================ */
+/* اسم النشاط واسم الجلسة في صف واحد بخلفيتين مميّزتين */
+.fc-names { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; }
+.fc-act-chip { font-size: 16px; font-weight: 800; padding: 7px 14px; border-radius: 11px; border: 1.5px solid; line-height: 1.35; }
+.fc-sess-chip { font-size: 13.5px; font-weight: 600; color: var(--text-soft); background: var(--bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 10px; line-height: 1.35; }
+
+/* صف الوقت وزر الإذن */
+.fc-timerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.fc-timerow .fc-time { margin-inline-start: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--sc-color); }
+.fc-timerow-end { display: flex; align-items: center; gap: 8px; margin-inline-start: auto; }
+/* زر الإذن المختصر داخل الصف: أصغر قليلاً */
+.fc-timerow-end .cc-icon-btn { width: 30px; height: 30px; border-radius: 9px; }
+.fc-timerow-end .exc-mini { width: 30px; height: 30px; }
+
+@media (max-width: 480px) {
+  .fc-act-chip { font-size: 15px; padding: 6px 12px; }
+  .fc-sess-chip { font-size: 12.5px; }
+}
+
+/* ============================================================
+   بطاقة أقرب موعد — تصميم العمود الزمني
+   ============================================================ */
+.tl-card { --sc-color: #2e5496; position: relative; display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,.07); }
+.tl-card.tl-optional { border-color: #7fc9c0; }
+
+/* العمود الزمني */
+.tl-when { background: linear-gradient(160deg, var(--sc-color), #1f3864); color: #fff; padding: 16px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 100px; text-align: center; flex-shrink: 0; }
+.tl-countdown { font-size: 10.5px; font-weight: 800; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.3); padding: 3px 10px; border-radius: 20px; margin-bottom: 9px; white-space: nowrap; }
+.tl-dow { font-size: 11px; opacity: .88; }
+.tl-day { font-size: 30px; font-weight: 800; line-height: 1.08; }
+.tl-mon { font-size: 11px; opacity: .88; }
+.tl-sep { width: 28px; height: 1px; background: rgba(255,255,255,.32); margin: 9px 0; }
+.tl-time { font-size: 14.5px; font-weight: 700; }
+.tl-dur { font-size: 10px; opacity: .85; margin-top: 1px; }
+
+/* المحتوى */
+.tl-body { flex: 1; padding: 15px 17px; min-width: 0; }
+.tl-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.tl-track { font-size: 11px; font-weight: 600; color: var(--text-soft); background: var(--bg); border: 1px solid var(--border); padding: 3px 10px; border-radius: 9px; }
+.tl-type { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 9px; }
+
+/* الاسمان جنباً إلى جنب */
+.tl-names { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tl-act { font-size: 16px; font-weight: 800; padding: 6px 13px; border-radius: 10px; border: 1.5px solid; line-height: 1.3; }
+.tl-sess { font-size: 13px; font-weight: 600; color: var(--text-soft); background: var(--bg); border: 1px solid var(--border); padding: 5px 11px; border-radius: 9px; line-height: 1.3; }
+
+/* المقدّم والمكان */
+.tl-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 13px; }
+.tl-meta-item { display: flex; align-items: center; gap: 9px; border-radius: 11px; padding: 9px 11px; min-width: 0; }
+.tl-meta-item.provider { background: #eef4fc; }
+.tl-meta-item.place { background: #f0f7f4; }
+.tl-meta-ic { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tl-meta-item.provider .tl-meta-ic { background: #2e5496; color: #fff; }
+.tl-meta-item.place .tl-meta-ic { background: #0f766e; color: #fff; }
+.tl-meta-text { display: flex; flex-direction: column; min-width: 0; }
+.tl-meta-lbl { font-size: 10.5px; color: var(--text-soft); }
+.tl-meta-val { font-size: 13.5px; font-weight: 700; color: var(--text); word-break: break-word; }
+
+/* الإجراء في الزاوية العلوية اليسرى */
+.tl-action { position: absolute; top: 12px; left: 12px; }
+
+:root[data-theme="dark"] .tl-meta-item.provider { background: #16233c; }
+:root[data-theme="dark"] .tl-meta-item.place { background: #10312e; }
+
+@media (max-width: 620px) {
+  .tl-meta { grid-template-columns: 1fr; }
+  .tl-when { min-width: 88px; padding: 14px 10px; }
+  .tl-day { font-size: 26px; }
+  .tl-act { font-size: 15px; }
+  .tl-body { padding: 14px 14px 14px 44px; }
+}

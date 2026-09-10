@@ -54,40 +54,99 @@ export function FeatureCard({ session, studentId, sessionDate, attStatus, target
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const decided = attDecided(attStatus)
   const isOptional = targetType === 'secondary'
+  const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
+
+  // العدّاد التنازلي: كم يوماً حتى الموعد
+  function countdown() {
+    if (!s.planned_date) return null
+    const today = new Date(new Date().toLocaleDateString('en-CA') + 'T00:00:00')
+    const diff = Math.round((new Date(s.planned_date + 'T00:00:00') - today) / 86400000)
+    if (diff < 0) return 'فات الموعد'
+    if (diff === 0) return 'اليوم'
+    if (diff === 1) return 'غداً'
+    if (diff === 2) return 'بعد يومين'
+    if (diff <= 10) return `بعد ${diff} أيام`
+    return `بعد ${diff} يوماً`
+  }
+  const cd = countdown()
+
   return (
-    <div className={'fc-card' + (isOptional ? ' fc-optional' : '')} style={{ '--sc-color': meta.color }}>
-      <div className="fc-top">
-        <span className="fc-type" style={{ background: meta.color, color: '#fff' }}>
-          <Icon name={meta.icon} size={13} /> {act.activity_type || 'نشاط'}
-        </span>
-        {act.tracks?.name_ar && <span className="fc-track">{act.tracks.name_ar}</span>}
-        {targetType && (
-          <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
-            <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
+    <div className={'tl-card' + (isOptional ? ' tl-optional' : '')} style={{ '--sc-color': meta.color }}>
+      {/* العمود الزمني */}
+      <div className="tl-when">
+        {cd && <div className="tl-countdown">{cd}</div>}
+        {date && <>
+          <div className="tl-dow">{DOW_AR[date.getDay()]}</div>
+          <div className="tl-day">{date.getDate()}</div>
+          <div className="tl-mon">{MON[date.getMonth()]}</div>
+        </>}
+        {s.start_time && <>
+          <div className="tl-sep"></div>
+          <div className="tl-time">{formatTime(s.start_time).replace('مساءً', 'م').replace('صباحاً', 'ص')}</div>
+          {s.duration_min ? <div className="tl-dur">لمدة {formatDuration(s.duration_min)}</div> : null}
+        </>}
+      </div>
+
+      {/* المحتوى */}
+      <div className="tl-body">
+        <div className="tl-tags">
+          {act.tracks?.name_ar && <span className="tl-track">{act.tracks.name_ar}</span>}
+          <span className="tl-type" style={{ background: meta.color + '18', color: meta.color }}>
+            <Icon name={meta.icon} size={11} /> {act.activity_type || 'نشاط'}
           </span>
+          {targetType && (
+            <span className={'req-tag ' + (isOptional ? 'optional' : 'required')}>
+              <Icon name={isOptional ? 'star' : 'alert'} size={10} /> {isOptional ? 'اختياري' : 'إلزامي'}
+            </span>
+          )}
+        </div>
+
+        {/* اسم النشاط بجوار اسم الجلسة، كل بتمييزه */}
+        <div className="tl-names">
+          <span className="tl-act" style={{ background: meta.color + '1a', color: meta.color, borderColor: meta.color + '3d' }}>
+            {actTitle || sessName}
+          </span>
+          {actTitle && <span className="tl-sess">{sessName}</span>}
+        </div>
+
+        {/* المقدّم والمكان — كاملان ومميّزان */}
+        <div className="tl-meta">
+          {act.provider && (
+            <div className="tl-meta-item provider">
+              <span className="tl-meta-ic"><Icon name="user" size={14} /></span>
+              <div className="tl-meta-text">
+                <span className="tl-meta-lbl">مقدّم الجلسة</span>
+                <span className="tl-meta-val">{act.provider}</span>
+              </div>
+            </div>
+          )}
+          {act.location && (
+            <div className="tl-meta-item place">
+              <span className="tl-meta-ic"><Icon name="pin" size={14} /></span>
+              <div className="tl-meta-text">
+                <span className="tl-meta-lbl">المكان</span>
+                <span className="tl-meta-val">{act.location}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {isOptional && (
+          <div className="cc-opt-note" style={{ marginTop: 12 }}>
+            <Icon name="star" size={15} />
+            <span>حضورك لهذا النشاط <strong>اختياري</strong>، وتُمنح <strong>نقطة</strong> عند الحضور.</span>
+          </div>
         )}
+      </div>
+
+      {/* الإجراء في الزاوية */}
+      <div className="tl-action">
         {decided
-          ? <span className="fc-att-slot"><AttBadge status={attStatus} /></span>
-          : s.start_time && <span className="fc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}{s.duration_min ? ` · ${formatDuration(s.duration_min)}` : ''}</span>}
+          ? <AttBadge status={attStatus} size="mini" />
+          : studentId && !isOptional && (
+            <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} compact />
+          )}
       </div>
-      <h4 className="fc-title">{actTitle || sessName}</h4>
-      {actTitle && <div className="fc-subtitle">{sessName}</div>}
-      <div className="fc-info-grid">
-        {act.provider && <div className="fc-info"><Icon name="user" size={15} /><div><span className="fc-info-lbl">مقدّم الجلسة</span><span className="fc-info-val">{act.provider}</span></div></div>}
-        {act.location && <div className="fc-info"><Icon name="pin" size={15} /><div><span className="fc-info-lbl">المكان</span><span className="fc-info-val">{act.location}</span></div></div>}
-      </div>
-      {/* زر الإذن يظهر فقط إن لم تُحسم الحالة بعد */}
-      {isOptional && (
-        <div className="cc-opt-note" style={{ marginTop: 14 }}>
-          <Icon name="star" size={15} />
-          <span>حضورك لهذا النشاط <strong>اختياري</strong>، وتُمنح <strong>نقطة</strong> عند الحضور.</span>
-        </div>
-      )}
-      {studentId && !decided && !isOptional && (
-        <div className="fc-action">
-          <ExcuseButton studentId={studentId} sessionId={s.id} sessionTitle={sessName} sessionDate={sessionDate} />
-        </div>
-      )}
     </div>
   )
 }
