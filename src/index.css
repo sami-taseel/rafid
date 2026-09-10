@@ -3421,3 +3421,6 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .mg-pick.on { background: #1f3864; color: #fff; border-color: #1f3864; }
 .mg-pick .mg-taken-tag { background: #fff4e0; color: #b3730a; }
 :root[data-theme="dark"] .mg-scope-tag { background: #10312e; color: #6fd4c8; }
+
+/* توضيح أن النسب للأنشطة الإلزامية */
+.sts-note { font-size: 9px; opacity: .75; font-weight: 400; }

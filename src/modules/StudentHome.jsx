@@ -26,7 +26,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       const { data: visIds } = await supabase.rpc('visible_activity_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
-        supabase.from('attendance').select('status, session_id').eq('student_id', studentId),
+        supabase.from('attendance').select('status, session_id, sessions(activity_id)').eq('student_id', studentId),
         supabase.from('sessions').select('id, planned_date, status, activity_id, title, start_time, duration_min, recording_url, activities(title, activity_type, provider, location, tracks(name_ar))')
           .gte('planned_date', today).order('planned_date').limit(40),
         supabase.from('surveys').select('id').eq('is_active', true),
@@ -73,12 +73,14 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
       const attMap = {}
       a.forEach(x => { if (x.session_id) attMap[x.session_id] = x.status })
+      // النسب تُحسب من الأنشطة الإلزامية فقط (الاختيارية لا تُحاسب)
+      const prim = a.filter(x => typeMap[x.sessions?.activity_id] === 'primary')
       setData({
-        present: a.filter(x => x.status === 'present').length,
-        absent: a.filter(x => x.status === 'absent').length,
-        excused: a.filter(x => x.status === 'excused').length,
-        recorded: a.filter(x => x.status === 'recorded').length,
-        total: a.length,
+        present: prim.filter(x => x.status === 'present').length,
+        absent: prim.filter(x => x.status === 'absent').length,
+        excused: prim.filter(x => x.status === 'excused').length,
+        recorded: prim.filter(x => x.status === 'recorded').length,
+        total: prim.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
         attMap, typeMap, monitor, absentSessions, openTickets, pendingSurveys,
         surveysCount: pendingSurveys.length,
@@ -161,13 +163,13 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         <div className="sts-card present">
           <div className="sts-ic"><Icon name="check" size={18} /></div>
           <div className="sts-num">{attRate !== null ? attRate + '%' : '—'}</div>
-          <div className="sts-lbl">نسبة الحضور</div>
+          <div className="sts-lbl">نسبة الحضور<small className="sts-note"> (الإلزامية)</small></div>
           {decidedTotal > 0 && <div className="sts-sub">{(data.present || 0) + (data.recorded || 0)} من {decidedTotal}</div>}
         </div>
         <div className="sts-card excused">
           <div className="sts-ic"><Icon name="hand" size={18} /></div>
           <div className="sts-num">{excRate !== null ? excRate + '%' : '—'}</div>
-          <div className="sts-lbl">نسبة الاستئذان</div>
+          <div className="sts-lbl">نسبة الاستئذان<small className="sts-note"> (الإلزامية)</small></div>
           {decidedTotal > 0 && <div className="sts-sub">{data.excused || 0} من {decidedTotal}</div>}
         </div>
         <div className={'sts-card absent' + ((data.absent || 0) > 0 ? ' clickable' : '')}
@@ -176,7 +178,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           title={(data.absent || 0) > 0 ? 'اضغط لعرض الأنشطة التي غبت عنها' : undefined}>
           <div className="sts-ic"><Icon name="x" size={18} /></div>
           <div className="sts-num">{absRate !== null ? absRate + '%' : '—'}</div>
-          <div className="sts-lbl">نسبة الغياب</div>
+          <div className="sts-lbl">نسبة الغياب<small className="sts-note"> (الإلزامية)</small></div>
           {decidedTotal > 0 && <div className="sts-sub">{data.absent || 0} من {decidedTotal}</div>}
           {(data.absent || 0) > 0 && (
             <div className="sts-cta">تدارَكها الآن <Icon name="chevronLeft" size={12} /></div>
@@ -245,7 +247,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
               <div className="abs-hero-ic"><Icon name="alert" size={22} /></div>
               <h3 className="abs-title">أنشطة غبت عنها</h3>
               <p className="abs-sub">
-                يمكنك تدارُك الأمر: أكّد حضورك إن كنت حاضراً فعلاً، أو اطلب إذناً بعذرك.
+                يمكنك تدارُك الأمر: أكّد حضورك إن كنت حاضراً فعلاً، أو اطلب إذناً بعذرك. (تشمل القائمة الأنشطة الاختيارية أيضاً)
               </p>
             </div>
             <div className="abs-body">
