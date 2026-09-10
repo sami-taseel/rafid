@@ -41,6 +41,7 @@ import StudentDiagnostics from './modules/StudentDiagnostics'
 import ExcuseRequests, { pendingExcuseCount } from './modules/ExcuseRequests'
 import PauseRequests, { pendingPauseCount } from './modules/PauseRequests'
 import MonitorGroups from './modules/MonitorGroups'
+import Escalations, { pendingEscalationCount } from './modules/Escalations'
 import { registerSW } from './push'
 
 export default function App() {
@@ -148,11 +149,13 @@ function StudentsGroup() {
   const [pending, setPending] = useState(0)
   const [excuses, setExcuses] = useState(0)
   const [pauses, setPauses] = useState(0)
+  const [escs, setEscs] = useState(0)
   useEffect(() => {
     pendingApprovalCount().then(setPending)
     pendingExcuseCount().then(setExcuses)
     pendingPauseCount().then(setPauses)
-    const t = setInterval(() => { pendingApprovalCount().then(setPending); pendingExcuseCount().then(setExcuses); pendingPauseCount().then(setPauses) }, 60000)
+    pendingEscalationCount().then(setEscs)
+    const t = setInterval(() => { pendingApprovalCount().then(setPending); pendingExcuseCount().then(setExcuses); pendingPauseCount().then(setPauses); pendingEscalationCount().then(setEscs) }, 60000)
     return () => clearInterval(t)
   }, [])
   return <TabGroup tabs={[
@@ -161,6 +164,7 @@ function StudentsGroup() {
     { key: 'excuses', label: 'طلبات الإذن', el: <ExcuseRequests />, badge: excuses },
     { key: 'pauses', label: 'طلبات التوقّف', el: <PauseRequests />, badge: pauses },
     { key: 'groups', label: 'مجموعات الإشراف', el: <MonitorGroups /> },
+    { key: 'escalations', label: 'بلاغات المشرفين', el: <Escalations />, badge: escs },
     { key: 'help', label: 'مساعدة الطلاب', el: <StudentDiagnostics /> },
     { key: 'fields', label: 'حقول النموذج', el: <Fields /> },
     { key: 'attachments', label: 'المرفقات المطلوبة', el: <AttachmentTypes /> },
