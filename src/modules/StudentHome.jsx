@@ -54,9 +54,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // البلاغات المفتوحة والاستبانات المعلّقة
       let openTickets = [], pendingSurveys = []
       try {
-        const { data: tk } = await supabase.rpc('my_open_tickets')
+        const { data: tk, error: tkErr } = await supabase.rpc('my_open_tickets')
+        if (tkErr) console.error('my_open_tickets:', tkErr)
         openTickets = tk || []
-      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+      } catch (e) { console.error('my_open_tickets:', e) }
       try {
         const { data: sv } = await supabase.rpc('my_pending_surveys')
         pendingSurveys = (sv || []).filter(x => !x.answered)
@@ -295,7 +296,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
                   {(data.openTickets || []).map(tk => (
                     <div className="tk-item" key={tk.id}>
                       <div className="tk-info">
-                        <div className="tk-subject">{tk.subject || 'بلاغ'}</div>
+                        <div className="tk-subject">{tk.title || 'بلاغ'}</div>
                         <div className="tk-meta">
                           <span className="tk-status">{tk.status_code === 'resolved' ? 'تمت المعالجة — بانتظار إغلاقك' : tk.status_code === 'failed' ? 'تعذّرت المعالجة' : 'مفتوح'}</span>
                           <span>{formatDate(String(tk.created_at).slice(0, 10))}</span>

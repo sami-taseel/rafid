@@ -53,8 +53,8 @@ function StudentProfileInner({ session, deepSurvey }) {
       // نزامن حالة الحساب في الخلفية
       supabase.rpc('refresh_account_completion', { p_student: student.id }).then(() => {}, () => {})
       supabase.rpc('am_i_monitor').then(({ data }) => setIsMonitor(!!data), () => {})
-      supabase.rpc('student_points', { p_student: student.id }).then(({ data }) => setPoints(data || 0), () => {})
-      supabase.rpc('my_total_grade').then(({ data }) => setTotalGrade(Number(data || 0)), () => {})
+      supabase.rpc('student_points', { p_student: student.id }).then(({ data, error }) => { if (error) console.error('student_points:', error); setPoints(data || 0) }, e => console.error('student_points:', e))
+      supabase.rpc('my_total_grade').then(({ data, error }) => { if (error) console.error('my_total_grade:', error); setTotalGrade(Number(data || 0)) }, e => console.error('my_total_grade:', e))
       // عدد المواعيد القادمة
       supabase.from('sessions').select('id', { count: 'exact', head: true })
         .gte('planned_date', new Date().toLocaleDateString('en-CA'))
