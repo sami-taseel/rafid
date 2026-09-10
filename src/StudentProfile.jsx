@@ -21,7 +21,7 @@ export default function StudentProfile(props) {
   return <LangProvider><StudentProfileInner {...props} /></LangProvider>
 }
 
-function StudentProfileInner({ session }) {
+function StudentProfileInner({ session, deepSurvey }) {
   const { t, lang, setLang, available, isRtl } = useLang()
   const [student, setStudent] = useState(null)
   const [fields, setFields] = useState([])
