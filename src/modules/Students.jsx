@@ -8,6 +8,9 @@ import BulkEval from './BulkEval'
 export function Spinner() { return <div className="state"><div className="spinner"></div>جارٍ التحميل…</div> }
 export function Stat({ num, label }) { return <div className="stat-card"><div className="num">{num}</div><div className="label">{label}</div></div> }
 
+// تصنيف لوني للنسبة
+function rateClass(r) { return r >= 80 ? 'good' : r >= 60 ? 'mid' : 'low' }
+
 export default function Students() {
   const confirmDialog = useConfirm()
   const promptDialog = usePrompt()
@@ -20,7 +23,8 @@ export default function Students() {
   const [fFile, setFFile] = useState('')
   const [sel, setSel] = useState(null)
 
-  const [catMap, setCatMap] = useState({})   // student_id -> [أسماء الفئات]
+  const [catMap, setCatMap] = useState({})
+  const [attRates, setAttRates] = useState({})   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
   const [allCats, setAllCats] = useState([])
   const [fCat, setFCat] = useState('')
   const [selected, setSelected] = useState([])
@@ -45,6 +49,11 @@ export default function Students() {
         }
       }
       setCatMap(map)
+      // نسب الحضور
+      try {
+        const { data: rates } = await supabase.rpc('student_attendance_rates')
+        const rm = {}; (rates || []).forEach(x => { rm[x.student_id] = x }); setAttRates(rm)
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       setLoading(false)
   }
   useEffect(() => { load() }, [])
@@ -257,7 +266,7 @@ export default function Students() {
             <th style={{ width: 36 }}><input type="checkbox"
               checked={filtered.length > 0 && selected.length === filtered.length}
               onChange={e => setSelected(e.target.checked ? filtered.map(s => s.id) : [])} /></th>
-            <th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الفئات</th><th>الملف</th>
+            <th>#</th><th>الاسم</th><th>الجنسية</th><th>المرحلة</th><th>الفئات</th><th>نسبة الحضور</th><th>الملف</th>
           </tr></thead>
           <tbody>
             {filtered.map((s, i) => (
@@ -274,6 +283,18 @@ export default function Students() {
                 <td>{s.degree_level || '—'}</td>
                 <td className="cats-cell">
                   {(catMap[s.id] || []).length ? (catMap[s.id].map(cn => <span key={cn} className="cat-tag">{cn}</span>)) : <span className="muted">—</span>}
+                </td>
+                <td className="att-rate-cell">
+                  {attRates[s.id]?.required > 0 ? (
+                    <div className="ar-wrap">
+                      <div className="ar-bar"><div className={'ar-fill ' + rateClass(attRates[s.id].rate)}
+                        style={{ width: attRates[s.id].rate + '%' }}></div></div>
+                      <span className={'ar-num ' + rateClass(attRates[s.id].rate)}>
+                        {attRates[s.id].rate}%
+                        <small>{attRates[s.id].attended}/{attRates[s.id].required}</small>
+                      </span>
+                    </div>
+                  ) : <span className="muted" style={{ fontSize: 12 }}>—</span>}
                 </td>
                 <td>{s.profile_reviewed ? <span className="pill-on">مكتمل</span> : <span className="pill-off">ناقص</span>}</td>
               </tr>

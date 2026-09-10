@@ -11,7 +11,8 @@ export default function Attendance() {
   const [students, setStudents] = useState([])
   const [sel, setSel] = useState(null)
   const [marks, setMarks] = useState({})
-  const [sessStudents, setSessStudents] = useState(null)  // [{student_id, full_name, target_type}]
+  const [sessStudents, setSessStudents] = useState(null)
+  const [sessStats, setSessStats] = useState({})   // {sessionId: {present, absent, rate…}}  // [{student_id, full_name, target_type}]
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
   const [qrSession, setQrSession] = useState(null)
@@ -55,6 +56,12 @@ export default function Attendance() {
     setTimeout(() => setMsg(null), 4000)
   }
 
+  async function loadStats() {
+    try {
+      const { data } = await supabase.rpc('session_attendance_stats')
+      const m = {}; (data || []).forEach(x => { m[x.session_id] = x }); setSessStats(m)
+    } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+  }
   async function loadSessions() {
     const { data } = await supabase.from('sessions').select('id, title, planned_date, start_time, status, activities(title, tracks(name_ar))').order('planned_date', { ascending: false })
     setSessions(data || [])
@@ -63,7 +70,7 @@ export default function Attendance() {
     Promise.all([
       supabase.from('sessions').select('id, title, planned_date, start_time, status, activities(title, tracks(name_ar))').order('planned_date', { ascending: false }),
       supabase.from('students').select('id, persons(full_name)'),
-    ]).then(([s, st]) => { setSessions(s.data || []); setStudents(st.data || []); setLoading(false) })
+    ]).then(([s, st]) => { setSessions(s.data || []); setStudents(st.data || []); setLoading(false); loadStats() })
   }, [])
 
   async function openSession(sess) {
@@ -231,6 +238,24 @@ export default function Attendance() {
                 <div className="sc-meta">{s.activities?.tracks?.name_ar}</div>
                 <div className="sc-date">📅 {s.planned_date || 'بلا تاريخ'}</div>
                 {isFuture && <div className="sc-locked-note">🔒 يُتاح التحضير يوم الجلسة</div>}
+                {/* إحصاءات الحضور — تظهر دون فتح الجلسة */}
+                {sessStats[s.id]?.total > 0 && (
+                  <div className="sc-stats">
+                    <div className="sc-rate-bar">
+                      <div className="sc-rate-fill" style={{ width: sessStats[s.id].rate + '%' }}></div>
+                    </div>
+                    <div className="sc-stat-row">
+                      <span className="sc-rate">{sessStats[s.id].rate}% حضور</span>
+                      <span className="sc-counts">
+                        <span className="sc-c present">{sessStats[s.id].present}</span>
+                        {sessStats[s.id].excused > 0 && <span className="sc-c excused">{sessStats[s.id].excused}</span>}
+                        {sessStats[s.id].recorded > 0 && <span className="sc-c recorded">{sessStats[s.id].recorded}</span>}
+                        <span className="sc-c absent">{sessStats[s.id].absent}</span>
+                        {sessStats[s.id].pending > 0 && <span className="sc-c pending">{sessStats[s.id].pending}</span>}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <span className={'sc-status status-' + s.status}>{statusLabel(s.status)}</span>
               </div>
               {/* شريط الأيقونات الثلاث */}
