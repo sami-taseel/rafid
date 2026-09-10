@@ -17,6 +17,7 @@ export default function MonitorPanel({ studentId }) {
   const [sel, setSel] = useState(null)
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState(null)
   const [busy, setBusy] = useState(null)
   const [reasonFor, setReasonFor] = useState(null)
   const [reasonVal, setReasonVal] = useState('')
@@ -26,10 +27,11 @@ export default function MonitorPanel({ studentId }) {
   useEffect(() => {
     async function load() {
       const today = new Date().toLocaleDateString('en-CA')
-      const { data } = await supabase.from('sessions')
+      const { data, error } = await supabase.from('sessions')
         .select('id, title, planned_date, start_time, activities(title)')
         .lte('planned_date', today)
-        .order('planned_date', { ascending: false }).limit(20)
+        .order('planned_date', { ascending: false }).limit(30)
+      if (error) { setLoadErr(error.message) }
       setSessions(data || []); setLoading(false)
     }
     load()
@@ -90,7 +92,13 @@ export default function MonitorPanel({ studentId }) {
             <p className="mon-sub">اختر جلسة لتأكيد حضور طلابك وتسجيل أسباب الغياب</p>
           </div>
         </div>
-        {sessions.length === 0 && <div className="muted" style={{ padding: 20 }}>لا جلسات سابقة.</div>}
+        {loadErr && <div className="attach-error">⚠ تعذّر تحميل الجلسات: {loadErr}</div>}
+        {!loadErr && sessions.length === 0 && (
+          <div className="muted" style={{ padding: 20, textAlign: 'center' }}>
+            لا توجد جلسات سابقة ظاهرة لك.<br />
+            <span style={{ fontSize: 12 }}>تأكد أن أنشطة مجموعتك تشملك ضمن فئاتها المستهدفة.</span>
+          </div>
+        )}
         <div className="mon-sessions">
           {sessions.map(s => (
             <button key={s.id} className="mon-sess" onClick={() => openSession(s)}>

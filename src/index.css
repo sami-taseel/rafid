@@ -3096,3 +3096,10 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .mg-unassigned { background: #fff8ed !important; border-color: #f5dba8 !important; }
 :root[data-theme="dark"] .mg-unassigned { background: #2a2410 !important; border-color: #5a4420 !important; }
 :root[data-theme="dark"] .mg-chip.is-monitor { background: #1a2a44; color: #a8c4ea; }
+
+/* أزرار التحضير الذاتي والتراجع */
+.cc-icon-btn.checkin { background: linear-gradient(135deg, #15784e, #1d9e75); color: #fff; border: none; }
+.cc-icon-btn.checkin:hover { filter: brightness(1.1); }
+.cc-icon-btn.undo { background: #fff4e0; color: #b3730a; border-color: #f5dba8; }
+.cc-icon-btn.undo:hover { background: #b3730a; color: #fff; }
+.cc-card.cc-pending .cc-stripe { background: #b3730a !important; }

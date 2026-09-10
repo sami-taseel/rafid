@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import Icon from '../Icon'
+import { supabase } from '../supabaseClient'
 import { formatTime, formatDuration } from '../dateUtils'
 import ExcuseButton from './ExcuseButton'
 import QRModal from './QRModal'
@@ -32,6 +33,7 @@ const ATT_META = {
   excused: { label: 'مستأذن', icon: 'hand', color: '#b3730a', bg: '#fff4e0' },
   recorded: { label: 'استماع مسجّل', icon: 'clock', color: '#6b3fc0', bg: '#f1ebfb' },
   absent: { label: 'غياب', icon: 'x', color: '#b32d2d', bg: '#fce8e8' },
+  pending: { label: 'بانتظار التأكيد', icon: 'clock', color: '#b3730a', bg: '#fff4e0' },
 }
 function attDecided(status) { return status === 'present' || status === 'absent' || status === 'excused' || status === 'recorded' }
 
@@ -97,15 +99,39 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
   const [details, setDetails] = useState(false)
   const [qr, setQr] = useState(false)
   const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
-  const decided = attDecided(attStatus)
   const isOptional = targetType === 'secondary'
   // مشرف التحضير: الباركود متاح لجلسات اليوم والأيام السابقة
   const todayStr = new Date().toLocaleDateString('en-CA')
   const canShowQR = isMonitor && s.planned_date && s.planned_date <= todayStr
+  // التحضير الذاتي: يوم الجلسة فأحدث، وما لم تُحسم الحالة إدارياً
+  const [busy, setBusy] = useState(false)
+  const [localStatus, setLocalStatus] = useState(null)
+  const eff = localStatus ?? attStatus
+  const canSelfCheck = s.planned_date && s.planned_date <= todayStr
+    && !['present', 'pending', 'absent', 'excused', 'recorded'].includes(eff)
+  const selfDone = eff === 'present' || eff === 'pending'
+  const decided = attDecided(eff)
+
+  async function selfCheckIn() {
+    setBusy(true)
+    const { data, error } = await supabase.rpc('self_check_in', { p_session: s.id })
+    setBusy(false)
+    if (error) { window.alert('تعذّر تسجيل الحضور'); return }
+    // الخادم يعيد نصاً يوضّح النتيجة
+    setLocalStatus(String(data || '').includes('تأكيد المشرف') ? 'pending' : 'present')
+  }
+  async function undoCheckIn() {
+    setBusy(true)
+    const { data, error } = await supabase.rpc('undo_check_in', { p_session: s.id })
+    setBusy(false)
+    if (error) { window.alert('تعذّر التراجع'); return }
+    if (String(data || '').startsWith('تم')) setLocalStatus('not_recorded')
+    else window.alert(data)
+  }
 
   return (
     <>
-      <div className={'cc-card' + (decided ? ' cc-decided cc-' + attStatus : '') + (isOptional ? ' cc-optional' : '')} style={{ '--sc-color': meta.color }}>
+      <div className={'cc-card' + (decided ? ' cc-decided cc-' + eff : '') + (isOptional ? ' cc-optional' : '')} style={{ '--sc-color': meta.color }}>
         <div className="cc-stripe"></div>
         <div className="cc-body">
           <div className="cc-head">
@@ -119,7 +145,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
                 </span>
               )}
             </div>
-            {decided ? <AttBadge status={attStatus} size="mini" /> : (date && <span className="cc-date">{DOW_AR[date.getDay()]} {date.getDate()} {MON[date.getMonth()]}</span>)}
+            {decided ? <AttBadge status={eff} size="mini" /> : (date && <span className="cc-date">{DOW_AR[date.getDay()]} {date.getDate()} {MON[date.getMonth()]}</span>)}
           </div>
           {/* اسم النشاط بارز، واسم الجلسة تحته */}
           <h4 className="cc-title">{actTitle || sessName}</h4>
@@ -133,6 +159,20 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               {canShowQR && (
                 <button className="cc-icon-btn monitor" onClick={() => setQr(true)} title="باركود التحضير" aria-label="باركود التحضير">
                   <Icon name="image" size={15} />
+                </button>
+              )}
+              {/* تحضير ذاتي: متاح يوم الجلسة وما بعده إن لم تُحسم الحالة */}
+              {studentId && canSelfCheck && !selfDone && (
+                <button className="cc-icon-btn checkin" onClick={selfCheckIn} disabled={busy}
+                  title="تسجيل حضوري" aria-label="تسجيل حضوري">
+                  <Icon name="check" size={15} />
+                </button>
+              )}
+              {/* تراجع عن التحضير الذاتي */}
+              {studentId && selfDone && (
+                <button className="cc-icon-btn undo" onClick={undoCheckIn} disabled={busy}
+                  title="التراجع عن التحضير" aria-label="التراجع عن التحضير">
+                  <Icon name="refresh" size={15} />
                 </button>
               )}
               {/* زر الإذن يظهر فقط إن لم تُحسم الحالة */}
@@ -156,7 +196,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               {actTitle && <p className="cc-detail-sub">{sessName}</p>}
             </div>
             <div className="cc-detail-body">
-              {decided && <div className="cc-detail-att"><AttBadge status={attStatus} /></div>}
+              {decided && <div className="cc-detail-att"><AttBadge status={eff} /></div>}
               {isOptional && (
                 <div className="cc-opt-note">
                   <Icon name="star" size={15} />
