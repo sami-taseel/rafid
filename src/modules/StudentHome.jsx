@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import { formatTime, formatDate } from '../dateUtils'
 import { useLang } from '../i18n/LangContext'
@@ -7,6 +8,7 @@ import PauseRequest from './PauseRequest'
 import { FeatureCard, CompactCard } from './SessionCard'
 
 export default function StudentHome({ studentId, onGoTab, isFull = true }) {
+  const [showAbsent, setShowAbsent] = useState(false)
   const [points, setPoints] = useState(0)
   const [pending, setPending] = useState([])
   const [data, setData] = useState(null)
@@ -27,6 +29,16 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           .eq('student_id', studentId).order('created_at', { ascending: false }).limit(3),
       ])
       // فلترة الجلسات حسب الأنشطة المرئية للطالب (فئاته المستهدفة)
+      // جلسات الغياب: نجلب تفاصيلها لعرضها عند الضغط على نسبة الغياب
+      const absentIds = a.filter(x => x.status === 'absent').map(x => x.session_id).filter(Boolean)
+      let absentSessions = []
+      if (absentIds.length) {
+        const { data: abs } = await supabase.from('sessions')
+          .select('id, planned_date, status, activity_id, title, start_time, duration_min, recording_url, activities(title, activity_type, provider, location, tracks(name_ar))')
+          .in('id', absentIds).order('planned_date', { ascending: false })
+        absentSessions = abs || []
+      }
+
       const visSet = new Set(visible)
       // هل الطالب مشرف تحضير؟
       let monitor = false
@@ -54,9 +66,11 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       setData({
         present: a.filter(x => x.status === 'present').length,
         absent: a.filter(x => x.status === 'absent').length,
+        excused: a.filter(x => x.status === 'excused').length,
+        recorded: a.filter(x => x.status === 'recorded').length,
         total: a.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
-        attMap, typeMap, monitor,
+        attMap, typeMap, monitor, absentSessions,
         surveysCount: (surveys.data || []).length,
         notifs: notifs.data || [],
       })
@@ -74,7 +88,12 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
 
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
 
-  const attRate = data.total ? Math.round(data.present / (data.present + data.absent || 1) * 100) : null
+  // الإجمالي المحسوم = حاضر + مستأذن + استماع + غائب
+  const decidedTotal = (data.present || 0) + (data.excused || 0) + (data.recorded || 0) + (data.absent || 0)
+  const pct = n => decidedTotal ? Math.round((n || 0) / decidedTotal * 100) : null
+  const attRate = pct((data.present || 0) + (data.recorded || 0))
+  const excRate = pct(data.excused)
+  const absRate = pct(data.absent)
   const dayName = (d) => ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][new Date(d).getDay()]
   // أقرب موعد = كل جلسات أقرب يوم فيه مواعيد
   const nextDay = data.upcoming.length ? data.upcoming[0].planned_date : null
@@ -121,11 +140,41 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       )}
 
       {/* إحصاءات الطالب */}
-      <div className="st-stats">
-        <div className="st-stat"><div className="st-num">{attRate !== null ? attRate + '%' : '—'}</div><div className="st-lbl">نسبة حضوري</div></div>
-        <div className="st-stat"><div className="st-num">{data.present}</div><div className="st-lbl">مرات الحضور</div></div>
-        <div className="st-stat"><div className="st-num">{data.upcoming.length}</div><div className="st-lbl">مواعيد قادمة</div></div>
-        <div className="st-stat"><div className="st-num">{data.surveysCount}</div><div className="st-lbl">استبانات متاحة</div></div>
+      <div className="sts-grid">
+        <div className="sts-card present">
+          <div className="sts-ic"><Icon name="check" size={18} /></div>
+          <div className="sts-num">{attRate !== null ? attRate + '%' : '—'}</div>
+          <div className="sts-lbl">نسبة الحضور</div>
+          {decidedTotal > 0 && <div className="sts-sub">{(data.present || 0) + (data.recorded || 0)} من {decidedTotal}</div>}
+        </div>
+        <div className="sts-card excused">
+          <div className="sts-ic"><Icon name="hand" size={18} /></div>
+          <div className="sts-num">{excRate !== null ? excRate + '%' : '—'}</div>
+          <div className="sts-lbl">نسبة الاستئذان</div>
+          {decidedTotal > 0 && <div className="sts-sub">{data.excused || 0} من {decidedTotal}</div>}
+        </div>
+        <div className={'sts-card absent' + ((data.absent || 0) > 0 ? ' clickable' : '')}
+          onClick={() => (data.absent || 0) > 0 && setShowAbsent(true)}
+          role={(data.absent || 0) > 0 ? 'button' : undefined}
+          title={(data.absent || 0) > 0 ? 'اضغط لعرض الأنشطة التي غبت عنها' : undefined}>
+          <div className="sts-ic"><Icon name="x" size={18} /></div>
+          <div className="sts-num">{absRate !== null ? absRate + '%' : '—'}</div>
+          <div className="sts-lbl">نسبة الغياب</div>
+          {decidedTotal > 0 && <div className="sts-sub">{data.absent || 0} من {decidedTotal}</div>}
+          {(data.absent || 0) > 0 && (
+            <div className="sts-cta">تدارَكها الآن <Icon name="chevronLeft" size={12} /></div>
+          )}
+        </div>
+        <div className="sts-card upcoming">
+          <div className="sts-ic"><Icon name="calendar" size={18} /></div>
+          <div className="sts-num">{data.upcoming.length}</div>
+          <div className="sts-lbl">المواعيد القادمة</div>
+        </div>
+        <div className="sts-card surveys">
+          <div className="sts-ic"><Icon name="clipboard" size={18} /></div>
+          <div className="sts-num">{data.surveysCount}</div>
+          <div className="sts-lbl">الاستبانات المتاحة</div>
+        </div>
       </div>
 
       {/* المواعيد القادمة — للحساب المكتمل فقط */}
@@ -155,6 +204,48 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           ))}
         </div>
       </div>}
+
+      {/* نافذة الأنشطة التي غاب عنها — لتداركها */}
+      {showAbsent && createPortal(
+        <div className="abs-overlay" onClick={() => setShowAbsent(false)}>
+          <div className="abs-dialog" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div className="abs-hero">
+              <button className="abs-close" onClick={() => setShowAbsent(false)} aria-label="إغلاق">
+                <Icon name="x" size={18} />
+              </button>
+              <div className="abs-hero-ic"><Icon name="alert" size={22} /></div>
+              <h3 className="abs-title">أنشطة غبت عنها</h3>
+              <p className="abs-sub">
+                يمكنك تدارُك الأمر: أكّد حضورك إن كنت حاضراً فعلاً، أو اطلب إذناً بعذرك.
+              </p>
+            </div>
+            <div className="abs-body">
+              {(data.absentSessions || []).length === 0 ? (
+                <div className="muted" style={{ textAlign: 'center', padding: 20 }}>لا أنشطة غياب.</div>
+              ) : (
+                <div className="cc-grid">
+                  {(data.absentSessions || []).map(s => (
+                    <CompactCard key={s.id} session={s} studentId={studentId}
+                      attStatus={data.attMap[s.id]}
+                      targetType={data.typeMap?.[s.activity_id]}
+                      isMonitor={data.monitor}
+                      onAttChange={(sid, st) => setData(d => ({
+                        ...d,
+                        attMap: { ...d.attMap, [sid]: st },
+                        // تحديث العدّاد: خرج من الغياب
+                        absent: Math.max(0, (d.absent || 0) - 1),
+                        present: st === 'present' ? (d.present || 0) + 1 : (d.present || 0),
+                        absentSessions: (d.absentSessions || []).filter(x => x.id !== sid),
+                      }))}
+                      sessionDate={dayName(s.planned_date) + '، ' + formatDate(s.planned_date)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
