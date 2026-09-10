@@ -3103,3 +3103,7 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .cc-icon-btn.undo { background: #fff4e0; color: #b3730a; border-color: #f5dba8; }
 .cc-icon-btn.undo:hover { background: #b3730a; color: #fff; }
 .cc-card.cc-pending .cc-stripe { background: #b3730a !important; }
+
+/* رسالة نتيجة التحضير على البطاقة */
+.cc-msg { margin-top: 8px; font-size: 12px; background: var(--bg); color: var(--text-soft); border-radius: 8px; padding: 7px 10px; line-height: 1.6; }
+.cc-icon-btn.checkin.fix { background: linear-gradient(135deg, #b3730a, #d4941f); }

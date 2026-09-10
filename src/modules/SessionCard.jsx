@@ -106,9 +106,12 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
   // التحضير الذاتي: يوم الجلسة فأحدث، وما لم تُحسم الحالة إدارياً
   const [busy, setBusy] = useState(false)
   const [localStatus, setLocalStatus] = useState(null)
+  const [msg, setMsg] = useState(null)
   const eff = localStatus ?? attStatus
+  // متاح يوم الجلسة فأحدث، ما لم تُحسم الحالة اعتماداً (حاضر/مستأذن/استماع/بانتظار)
+  // الغياب التلقائي قابل للتصحيح ذاتياً
   const canSelfCheck = s.planned_date && s.planned_date <= todayStr
-    && !['present', 'pending', 'absent', 'excused', 'recorded'].includes(eff)
+    && !['present', 'pending', 'excused', 'recorded'].includes(eff)
   const selfDone = eff === 'present' || eff === 'pending'
   const decided = attDecided(eff)
 
@@ -116,17 +119,23 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
     setBusy(true)
     const { data, error } = await supabase.rpc('self_check_in', { p_session: s.id })
     setBusy(false)
-    if (error) { window.alert('تعذّر تسجيل الحضور'); return }
-    // الخادم يعيد نصاً يوضّح النتيجة
-    setLocalStatus(String(data || '').includes('تأكيد المشرف') ? 'pending' : 'present')
+    if (error) { setMsg('تعذّر تسجيل الحضور'); return }
+    const txt = String(data || '')
+    setMsg(txt)
+    if (txt.includes('تم')) {
+      setLocalStatus(txt.includes('تأكيد المشرف') ? 'pending' : 'present')
+    }
+    setTimeout(() => setMsg(null), 4000)
   }
   async function undoCheckIn() {
     setBusy(true)
     const { data, error } = await supabase.rpc('undo_check_in', { p_session: s.id })
     setBusy(false)
-    if (error) { window.alert('تعذّر التراجع'); return }
-    if (String(data || '').startsWith('تم')) setLocalStatus('not_recorded')
-    else window.alert(data)
+    if (error) { setMsg('تعذّر التراجع'); return }
+    const txt = String(data || '')
+    setMsg(txt)
+    if (txt.startsWith('تم')) setLocalStatus('not_recorded')
+    setTimeout(() => setMsg(null), 4000)
   }
 
   return (
@@ -163,8 +172,10 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               )}
               {/* تحضير ذاتي: متاح يوم الجلسة وما بعده إن لم تُحسم الحالة */}
               {studentId && canSelfCheck && !selfDone && (
-                <button className="cc-icon-btn checkin" onClick={selfCheckIn} disabled={busy}
-                  title="تسجيل حضوري" aria-label="تسجيل حضوري">
+                <button className={'cc-icon-btn checkin' + (eff === 'absent' ? ' fix' : '')}
+                  onClick={selfCheckIn} disabled={busy}
+                  title={eff === 'absent' ? 'تصحيح الغياب وتسجيل حضوري' : 'تسجيل حضوري'}
+                  aria-label="تسجيل حضوري">
                   <Icon name="check" size={15} />
                 </button>
               )}
@@ -181,6 +192,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
               )}
             </div>
           </div>
+          {msg && <div className="cc-msg">{msg}</div>}
         </div>
       </div>
 
