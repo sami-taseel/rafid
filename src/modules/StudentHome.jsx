@@ -73,14 +73,21 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
       const attMap = {}
       a.forEach(x => { if (x.session_id) attMap[x.session_id] = x.status })
-      // النسب تُحسب من الأنشطة الإلزامية فقط (الاختيارية لا تُحاسب)
+      // الإحصاءات من الخادم: كل الجلسات الإلزامية الماضية (ما لا سجل له = غياب)
+      let st = null
+      try {
+        const { data: sd } = await supabase.rpc('my_attendance_stats')
+        st = Array.isArray(sd) ? sd[0] : sd
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
+      // احتياط: الحساب المحلي إن تعذّرت الدالة
       const prim = a.filter(x => typeMap[x.sessions?.activity_id] === 'primary')
       setData({
-        present: prim.filter(x => x.status === 'present').length,
-        absent: prim.filter(x => x.status === 'absent').length,
-        excused: prim.filter(x => x.status === 'excused').length,
-        recorded: prim.filter(x => x.status === 'recorded').length,
-        total: prim.length,
+        present: st ? st.present : prim.filter(x => x.status === 'present').length,
+        absent: st ? st.absent : prim.filter(x => x.status === 'absent').length,
+        excused: st ? st.excused : prim.filter(x => x.status === 'excused').length,
+        recorded: 0,
+        required: st ? st.required : prim.length,
+        total: st ? st.required : prim.length,
         upcoming: filteredSessions.filter(s => s.status === 'scheduled' || s.status === 'held'),
         attMap, typeMap, monitor, absentSessions, openTickets, pendingSurveys,
         surveysCount: pendingSurveys.length,
@@ -108,9 +115,10 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
 
   // الإجمالي المحسوم = حاضر + مستأذن + استماع + غائب
-  const decidedTotal = (data.present || 0) + (data.excused || 0) + (data.recorded || 0) + (data.absent || 0)
+  // المقام: كل الجلسات الإلزامية الماضية (فما لم يُرصد يُحتسب غياباً)
+  const decidedTotal = data.required || ((data.present || 0) + (data.excused || 0) + (data.absent || 0))
   const pct = n => decidedTotal ? Math.round((n || 0) / decidedTotal * 100) : null
-  const attRate = pct((data.present || 0) + (data.recorded || 0))
+  const attRate = pct(data.present)
   const excRate = pct(data.excused)
   const absRate = pct(data.absent)
   const dayName = (d) => ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'][new Date(d).getDay()]
@@ -164,7 +172,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           <div className="sts-ic"><Icon name="check" size={18} /></div>
           <div className="sts-num">{attRate !== null ? attRate + '%' : '—'}</div>
           <div className="sts-lbl">نسبة الحضور<small className="sts-note"> (الإلزامية)</small></div>
-          {decidedTotal > 0 && <div className="sts-sub">{(data.present || 0) + (data.recorded || 0)} من {decidedTotal}</div>}
+          {decidedTotal > 0 && <div className="sts-sub">{data.present || 0} من {decidedTotal}</div>}
         </div>
         <div className="sts-card excused">
           <div className="sts-ic"><Icon name="hand" size={18} /></div>
