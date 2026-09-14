@@ -21,6 +21,11 @@ export default function BulkSessions({ activity, onClose, onDone }) {
   const toast = useToast()
   const [mode, setMode] = useState('numbered')   // numbered | titled
   const [dow, setDow] = useState('0')
+  const [dows, setDows] = useState([0])          // أيام الأسبوع للوضع اليومي
+  const [breaks, setBreaks] = useState([])       // فترات التوقّف
+  const [brTitle, setBrTitle] = useState('')
+  const [brFrom, setBrFrom] = useState('')
+  const [brTo, setBrTo] = useState('')
   const [startDate, setStartDate] = useState(new Date().toLocaleDateString('en-CA'))
   const [startTime, setStartTime] = useState('')
   const [duration, setDuration] = useState('')
@@ -31,7 +36,7 @@ export default function BulkSessions({ activity, onClose, onDone }) {
 
   const baseLabel = activity?.activity_type || 'الدرس'
   const titles = titlesText.split('\n').map(t => t.trim()).filter(Boolean)
-  const total = mode === 'numbered' ? Number(count) || 0 : titles.length
+  const total = (mode === 'numbered' || mode === 'daily') ? Number(count) || 0 : titles.length
 
   // أول موعد يوافق اليوم المختار ابتداءً من startDate
   function firstDate() {
@@ -43,8 +48,28 @@ export default function BulkSessions({ activity, onClose, onDone }) {
   }
 
   // معاينة التواريخ والعناوين
+  // هل هذا اليوم ضمن فترة توقّف؟
+  function inBreak(ds) {
+    return breaks.some(b => ds >= b.from && ds <= b.to)
+  }
+
   function preview() {
     const out = []
+    if (mode === 'daily') {
+      if (!dows.length) return out
+      let d = new Date(startDate + 'T00:00:00')
+      let made = 0, guard = 0, no = Number(startNum) || 1
+      while (made < total && guard < 2000) {
+        guard++
+        const ds = d.toLocaleDateString('en-CA')
+        if (dows.includes(d.getDay()) && !inBreak(ds)) {
+          out.push({ date: ds, title: `${baseLabel} ${ordinal(no)}` })
+          made++; no++
+        }
+        d.setDate(d.getDate() + 1)
+      }
+      return out
+    }
     const d0 = firstDate()
     for (let i = 0; i < Math.min(total, 60); i++) {
       const d = new Date(d0); d.setDate(d0.getDate() + i * 7)
@@ -68,9 +93,15 @@ export default function BulkSessions({ activity, onClose, onDone }) {
         start_time: startTime || null,
         duration_min: duration ? Number(duration) : null,
         status: 'scheduled',
-        seq_no: mode === 'numbered' ? Number(startNum) + i : null,
-        chain_shift: mode === 'numbered',   // المرقّمة: التأجيل يزحزح ما بعدها
+        seq_no: (mode === 'numbered' || mode === 'daily') ? Number(startNum) + i : null,
+        chain_shift: (mode === 'numbered' || mode === 'daily'),   // المرقّمة: التأجيل يزحزح ما بعدها
       }))
+      // نحفظ فترات التوقّف أولاً (للوضع اليومي)
+      if (mode === 'daily' && breaks.length) {
+        await supabase.from('study_breaks').insert(
+          breaks.map(b => ({ title: b.title, start_date: b.from, end_date: b.to, activity_id: activity.id })))
+          .then(r => r, () => {})
+      }
       const { error } = await supabase.from('sessions').insert(payload)
       if (error) throw error
       toast(`أُضيفت ${rows.length} جلسة بنجاح`, 'success')
@@ -104,16 +135,35 @@ export default function BulkSessions({ activity, onClose, onDone }) {
               <strong>عناوين مختلفة</strong>
               <small>عنوان لكل أسبوع</small>
             </button>
+            <button className={'bs-mode' + (mode === 'daily' ? ' on' : '')} onClick={() => setMode('daily')}>
+              <strong>جلسات يومية</strong>
+              <small>أيام محدّدة + فترات توقّف</small>
+            </button>
           </div>
 
           {/* الإعدادات المشتركة */}
           <div className="bs-grid">
-            <div className="bs-field">
-              <label>يوم الأسبوع</label>
-              <select value={dow} onChange={e => setDow(e.target.value)}>
-                {DOW.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            </div>
+            {mode === 'daily' ? (
+              <div className="bs-field" style={{ gridColumn: '1 / -1' }}>
+                <label>أيام الأسبوع <span className="bs-hint">(اختر يوماً أو أكثر)</span></label>
+                <div className="bs-dows">
+                  {DOW.map(([v, l]) => (
+                    <button type="button" key={v}
+                      className={'bs-dow' + (dows.includes(Number(v)) ? ' on' : '')}
+                      onClick={() => setDows(p => p.includes(Number(v)) ? p.filter(x => x !== Number(v)) : [...p, Number(v)])}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bs-field">
+                <label>يوم الأسبوع</label>
+                <select value={dow} onChange={e => setDow(e.target.value)}>
+                  {DOW.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </div>
+            )}
             <div className="bs-field">
               <label>يبدأ من تاريخ</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
@@ -138,7 +188,7 @@ export default function BulkSessions({ activity, onClose, onDone }) {
           </div>
 
           {/* حقول حسب النوع */}
-          {mode === 'numbered' ? (
+          {(mode === 'numbered' || mode === 'daily') ? (
             <div className="bs-grid">
               <div className="bs-field">
                 <label>عدد الجلسات</label>
@@ -158,12 +208,38 @@ export default function BulkSessions({ activity, onClose, onDone }) {
             </div>
           )}
 
+          {mode === 'daily' && (
+            <div className="bs-breaks">
+              <div className="bs-breaks-head">
+                <Icon name="calendar" size={14} /> فترات التوقّف
+                <span className="bs-hint">(إجازات أو اختبارات تُتخطّى عند التوليد)</span>
+              </div>
+              {breaks.map((b, i) => (
+                <div className="bs-break" key={i}>
+                  <span className="bs-break-t">{b.title}</span>
+                  <span className="bs-break-d">{b.from} ← {b.to}</span>
+                  <button onClick={() => setBreaks(breaks.filter((_, j) => j !== i))} aria-label="حذف">✕</button>
+                </div>
+              ))}
+              <div className="bs-break-add">
+                <input placeholder="عنوان الفترة" value={brTitle} onChange={e => setBrTitle(e.target.value)} />
+                <input type="date" value={brFrom} onChange={e => setBrFrom(e.target.value)} />
+                <input type="date" value={brTo} onChange={e => setBrTo(e.target.value)} />
+                <button onClick={() => {
+                  if (!brTitle.trim() || !brFrom || !brTo) return
+                  setBreaks([...breaks, { title: brTitle.trim(), from: brFrom, to: brTo }])
+                  setBrTitle(''); setBrFrom(''); setBrTo('')
+                }} disabled={!brTitle.trim() || !brFrom || !brTo}>＋</button>
+              </div>
+            </div>
+          )}
+
           {/* ملاحظة سلوك التأجيل */}
-          <div className={'bs-note ' + mode}>
+          <div className={'bs-note ' + (mode === 'titled' ? 'titled' : 'numbered')}>
             <Icon name="alert" size={15} />
-            <span>{mode === 'numbered'
-              ? 'الجلسات مرقّمة ومترابطة: عند تأجيل جلسة، تُزحزح الجلسات التالية أسبوعاً تلقائياً.'
-              : 'الجلسات مستقلة: تأجيل جلسة لا يؤثّر على مواعيد بقية الجلسات.'}</span>
+            <span>{mode === 'titled'
+              ? 'الجلسات مستقلة: تأجيل جلسة لا يؤثّر على مواعيد بقية الجلسات.'
+              : 'الجلسات مرقّمة ومترابطة: عند تأجيل جلسة، تُزحزح الجلسات التالية تلقائياً.'}</span>
           </div>
 
           {/* المعاينة */}

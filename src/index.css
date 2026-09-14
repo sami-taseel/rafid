@@ -3457,3 +3457,62 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .sc-c.absent-opt { background: #eef0f3; color: #475569; }
 :root[data-theme="dark"] .sc-c.present-opt { background: #0c2b3d; color: #7dd3fc; }
 :root[data-theme="dark"] .sc-c.absent-opt { background: #1e2531; color: #94a3b8; }
+
+/* ===== أيقونة عرض حساب الطالب ===== */
+.spv-eye { margin-inline-start: 8px; width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg); color: var(--text-soft); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; vertical-align: middle; transition: all .12s; }
+.spv-eye:hover { background: #1f3864; color: #fff; border-color: #1f3864; }
+
+/* ===== نافذة معاينة حساب الطالب ===== */
+.spv-overlay { position: fixed; inset: 0; background: rgba(20,28,46,.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 2000; animation: excFadeIn .2s ease; }
+.spv-box { background: var(--surface); border-radius: 20px; width: 100%; max-width: 620px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.35); animation: excPop .26s cubic-bezier(.2,.9,.3,1.2); }
+.spv-head { position: relative; display: flex; align-items: center; gap: 12px; padding: 18px; background: linear-gradient(135deg, #1f3864, #3a5da0); color: #fff; }
+.spv-close { position: absolute; top: 13px; left: 13px; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.spv-av { width: 46px; height: 46px; border-radius: 13px; background: rgba(255,255,255,.2); border: 1.5px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0; }
+.spv-who { flex: 1; min-width: 0; }
+.spv-name { font-size: 17px; font-weight: 800; }
+.spv-sub { font-size: 12px; opacity: .85; margin-top: 2px; }
+.spv-readonly { font-size: 11px; font-weight: 700; background: rgba(255,255,255,.22); padding: 4px 10px; border-radius: 9px; white-space: nowrap; }
+.spv-tabs { display: flex; gap: 6px; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.spv-tab { padding: 7px 14px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-soft); border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.spv-tab.on { background: #1f3864; border-color: #1f3864; color: #fff; }
+.spv-body { padding: 16px; overflow-y: auto; flex: 1; }
+.spv-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.spv-m { background: var(--bg); border-radius: 12px; padding: 12px 8px; text-align: center; }
+.spv-m-n { font-size: 20px; font-weight: 800; }
+.spv-m-l { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
+.spv-info { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.spv-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+.spv-row:last-child { border-bottom: none; }
+.spv-k { color: var(--text-soft); }
+.spv-v { font-weight: 600; }
+.spv-list { display: flex; flex-direction: column; gap: 8px; }
+.spv-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--bg); border-radius: 11px; padding: 11px 13px; }
+.spv-item-main { min-width: 0; }
+.spv-item-t { font-size: 14px; font-weight: 700; }
+.spv-item-s { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+.spv-badge { font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 9px; background: var(--surface); white-space: nowrap; }
+.spv-badge.present, .spv-badge.recorded, .spv-badge.approved { background: #e6f6ee; color: #15784e; }
+.spv-badge.absent, .spv-badge.rejected { background: #fcecec; color: #b32d2d; }
+.spv-badge.excused, .spv-badge.pending { background: #fff4e0; color: #b3730a; }
+@media (max-width: 560px) { .spv-metrics { grid-template-columns: repeat(2, 1fr); } }
+
+/* ===== الجلسات اليومية: أيام الأسبوع وفترات التوقّف ===== */
+.bs-modes { grid-template-columns: repeat(3, 1fr); }
+.bs-dows { display: flex; flex-wrap: wrap; gap: 6px; }
+.bs-dow { padding: 8px 13px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text-soft); border-radius: 9px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .12s; }
+.bs-dow:hover { border-color: #2e5496; color: #2e5496; }
+.bs-dow.on { background: #1f3864; border-color: #1f3864; color: #fff; }
+
+.bs-breaks { border: 1px solid var(--border); border-radius: 12px; padding: 13px; margin: 14px 0; }
+.bs-breaks-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; margin-bottom: 10px; flex-wrap: wrap; }
+.bs-break { display: flex; align-items: center; gap: 10px; background: #fff4e0; color: #8a5a08; border-radius: 9px; padding: 8px 11px; margin-bottom: 6px; font-size: 12.5px; }
+.bs-break-t { font-weight: 700; }
+.bs-break-d { margin-inline-start: auto; opacity: .85; }
+.bs-break button { background: none; border: none; color: inherit; cursor: pointer; opacity: .7; }
+.bs-break button:hover { opacity: 1; color: #b32d2d; }
+.bs-break-add { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 7px; margin-top: 8px; }
+.bs-break-add input { padding: 9px 11px; border: 1.5px solid var(--border); border-radius: 9px; font-family: inherit; font-size: 13px; background: var(--bg); color: var(--text); min-width: 0; }
+.bs-break-add button { padding: 9px 15px; background: #1f3864; color: #fff; border: none; border-radius: 9px; font-size: 15px; font-weight: 800; cursor: pointer; }
+.bs-break-add button:disabled { opacity: .4; cursor: default; }
+:root[data-theme="dark"] .bs-break { background: #2a2410; color: #f0c060; }
+@media (max-width: 620px) { .bs-break-add { grid-template-columns: 1fr 1fr; } .bs-modes { grid-template-columns: 1fr; } }

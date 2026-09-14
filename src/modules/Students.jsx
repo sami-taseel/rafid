@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import StudentDetail from './StudentDetail'
 import { useConfirm, usePrompt } from '../Confirm'
+import StudentPreview from './StudentPreview'
+import Icon from '../Icon'
 import { useToast } from '../Toast'
 import BulkEval from './BulkEval'
 
@@ -24,7 +26,8 @@ export default function Students() {
   const [sel, setSel] = useState(null)
 
   const [catMap, setCatMap] = useState({})
-  const [attRates, setAttRates] = useState({})   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
+  const [attRates, setAttRates] = useState({})
+  const [preview, setPreview] = useState(null)   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
   const [allCats, setAllCats] = useState([])
   const [fCat, setFCat] = useState('')
   const [selected, setSelected] = useState([])
@@ -229,6 +232,7 @@ export default function Students() {
           onClose={(done) => { setShowBulkEval(false); if (done) setSelected([]) }}
         />
       )}
+      {preview && <StudentPreview studentId={preview} onClose={() => setPreview(null)} />}
       {selected.length > 0 && (
         <div className="bulk-action-bar">
           <span className="bulk-count">{selected.length} محدّد</span>
@@ -278,6 +282,10 @@ export default function Students() {
                   {s.persons?.full_name || '—'}
                   {s.is_monitor && <span className="monitor-pill" title="مشرف تحضير">▦ مشرف</span>}
                   {s.is_test && <span className="test-pill" title="حساب تجريبي — مستثنى من الإحصاءات">🧪 تجريبي</span>}
+                  <button className="spv-eye" title="عرض حساب الطالب (قراءة فقط)"
+                    onClick={e => { e.stopPropagation(); setPreview(s.id) }}>
+                    <Icon name="eye" size={14} />
+                  </button>
                 </td>
                 <td>{s.persons?.nationality ? <span className="pill">{s.persons.nationality}</span> : '—'}</td>
                 <td>{s.degree_level || '—'}</td>
