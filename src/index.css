@@ -3451,3 +3451,9 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .exh-status.rejected { background: #fcecec; color: #b32d2d; }
 .exh-reject { margin-top: 8px; padding: 10px 12px; background: #fcecec; color: #8a2020; border-radius: 10px; font-size: 13px; }
 :root[data-theme="dark"] .exh-reject { background: #2a1414; color: #f08080; }
+
+/* عدّادات الحضور المفصولة: إلزامي / اختياري */
+.sc-c.present-opt { background: #d9f2ff; color: #0369a1; }
+.sc-c.absent-opt { background: #eef0f3; color: #475569; }
+:root[data-theme="dark"] .sc-c.present-opt { background: #0c2b3d; color: #7dd3fc; }
+:root[data-theme="dark"] .sc-c.absent-opt { background: #1e2531; color: #94a3b8; }

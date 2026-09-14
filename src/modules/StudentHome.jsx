@@ -34,6 +34,12 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
           .eq('student_id', studentId).order('created_at', { ascending: false }).limit(3),
       ])
       const a = att.data || []
+      // نوع الاستهداف لكل نشاط (يحسب الفئات اليدوية والتلقائية خادمياً)
+      const typeMap = {}
+      try {
+        const { data: tt } = await supabase.rpc('my_target_types')
+        ;(tt || []).forEach(x => { typeMap[x.activity_id] = x.target_type })
+      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // جلسات الغياب: نجلب تفاصيلها لعرضها عند الضغط على نسبة الغياب
       const absentIds = a.filter(x => x.status === 'absent').map(x => x.session_id).filter(Boolean)
       let absentSessions = []
@@ -41,7 +47,8 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         const { data: abs } = await supabase.from('sessions')
           .select('id, planned_date, status, activity_id, title, start_time, duration_min, recording_url, activities(title, activity_type, provider, location, tracks(name_ar))')
           .in('id', absentIds).order('planned_date', { ascending: false })
-        absentSessions = abs || []
+        // نعرض فقط ما هو مستهدف (إلزامي أو اختياري)
+        absentSessions = (abs || []).filter(s => typeMap[s.activity_id])
       }
 
       const visSet = new Set(visible)
@@ -63,12 +70,6 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
         pendingSurveys = (sv || []).filter(x => !x.answered)
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
 
-      // نوع الاستهداف لكل نشاط (يحسب الفئات اليدوية والتلقائية خادمياً)
-      const typeMap = {}
-      try {
-        const { data: tt } = await supabase.rpc('my_target_types')
-        ;(tt || []).forEach(x => { typeMap[x.activity_id] = x.target_type })
-      } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       const filteredSessions = (sessions.data || []).filter(s => visSet.has(s.activity_id))
       // خريطة: معرّف الجلسة → حالة حضور الطالب فيها
       const attMap = {}

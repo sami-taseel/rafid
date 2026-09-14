@@ -263,16 +263,18 @@ export default function Attendance() {
                     <div className="sc-stat-row">
                       <span className="sc-rate">{sessStats[s.id].rate}% حضور</span>
                       <span className="sc-counts">
-                        <span className="sc-c present">{sessStats[s.id].present}</span>
-                        {sessStats[s.id].excused > 0 && <span className="sc-c excused">{sessStats[s.id].excused}</span>}
-                        {sessStats[s.id].recorded > 0 && <span className="sc-c recorded">{sessStats[s.id].recorded}</span>}
-                        <span className="sc-c absent">{sessStats[s.id].absent}</span>
-                        {sessStats[s.id].pending > 0 && <span className="sc-c pending">{sessStats[s.id].pending}</span>}
+                        <span className="sc-c present" title="حضور إلزامي">{sessStats[s.id].present}</span>
+                        {sessStats[s.id].present_opt > 0 &&
+                          <span className="sc-c present-opt" title="حضور اختياري">{sessStats[s.id].present_opt}</span>}
+                        {sessStats[s.id].excused > 0 && <span className="sc-c excused" title="مستأذن">{sessStats[s.id].excused}</span>}
+                        <span className="sc-c absent" title="غياب إلزامي">{sessStats[s.id].absent}</span>
+                        {sessStats[s.id].absent_opt > 0 &&
+                          <span className="sc-c absent-opt" title="غياب اختياري">{sessStats[s.id].absent_opt}</span>}
+                        {sessStats[s.id].pending > 0 && <span className="sc-c pending" title="بانتظار التأكيد">{sessStats[s.id].pending}</span>}
                       </span>
                     </div>
                   </div>
                 )}
-                <span className={'sc-status status-' + s.status}>{statusLabel(s.status)}</span>
               </div>
               {/* شريط الأيقونات الثلاث */}
               <div className="sc-icons">
