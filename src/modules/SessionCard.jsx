@@ -16,6 +16,20 @@ const TYPE_META = {
   'محاضرة': { icon: 'edit', color: '#4f46e5' },
 }
 function typeMeta(t) { return TYPE_META[t] || { icon: 'calendar', color: '#2e5496' } }
+// منذ متى مضى هذا التاريخ
+function agoLabel(d) {
+  if (!d) return ''
+  const today = new Date(new Date().toLocaleDateString('en-CA') + 'T00:00:00')
+  const diff = Math.round((today - new Date(d + 'T00:00:00')) / 86400000)
+  if (diff <= 0) return 'اليوم'
+  if (diff === 1) return 'أمس'
+  if (diff === 2) return 'قبل يومين'
+  if (diff <= 10) return `قبل ${diff} أيام`
+  if (diff <= 30) return `قبل ${diff} يوماً`
+  const w = Math.floor(diff / 7)
+  if (diff <= 60) return `قبل ${w} أسابيع`
+  return `قبل ${Math.floor(diff / 30)} أشهر`
+}
 const DOW_AR = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
 const MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
@@ -171,6 +185,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
   useEffect(() => { setLocalStatus(null) }, [attStatus])
   // متاح يوم الجلسة فأحدث، ما لم تُحسم الحالة اعتماداً (حاضر/مستأذن/استماع/بانتظار)
   // الغياب التلقائي قابل للتصحيح ذاتياً
+  const isPast = s.planned_date && s.planned_date < todayStr
   const canSelfCheck = s.planned_date && s.planned_date <= todayStr
     && !['present', 'pending', 'excused', 'recorded'].includes(eff)
   const selfDone = eff === 'present' || eff === 'pending'
@@ -223,7 +238,12 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
           <h4 className="cc-title">{actTitle || sessName}</h4>
           {actTitle && <div className="cc-subtitle">{sessName}</div>}
           <div className="cc-foot">
-            {s.start_time && <span className="cc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}</span>}
+            {isPast
+              ? <span className="cc-time cc-past-date">
+                  <Icon name="calendar" size={13} /> {date ? `${DOW_AR[date.getDay()]} ${date.getDate()} ${MON[date.getMonth()]}` : ''}
+                  <span className="cc-ago">{agoLabel(s.planned_date)}</span>
+                </span>
+              : s.start_time && <span className="cc-time"><Icon name="clock" size={13} /> {formatTime(s.start_time)}</span>}
             <div className="cc-actions">
               <button className="cc-icon-btn" onClick={() => setDetails(true)} title="التفاصيل" aria-label="التفاصيل">
                 <Icon name="eye" size={15} />

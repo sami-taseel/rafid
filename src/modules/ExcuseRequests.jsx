@@ -13,12 +13,19 @@ export default function ExcuseRequests() {
   const [busy, setBusy] = useState(null)
   const [rejectFor, setRejectFor] = useState(null)  // الطلب الجاري رفضه
   const [rejectReason, setRejectReason] = useState('')
+  const [view, setView] = useState('pending')
+  const [history, setHistory] = useState([])
 
   async function load() {
     const { data } = await supabase.rpc('pending_excuses')
     setList(data || [])
   }
+  async function loadHistory(st) {
+    const { data } = await supabase.rpc('excuse_history', { p_status: st })
+    setHistory(data || [])
+  }
   useEffect(() => { load() }, [])
+  useEffect(() => { if (view !== 'pending') loadHistory(view) }, [view])
 
   async function approve(id) {
     setBusy(id)
@@ -51,18 +58,58 @@ export default function ExcuseRequests() {
   return (
     <div>
       <h2 className="section-title">طلبات الإذن</h2>
+      <div className="exh-tabs">
+        {[['pending','قيد المراجعة'],['approved','المقبولة'],['rejected','المرفوضة'],['all','الكل']].map(([v,l]) => (
+          <button key={v} className={'exh-tab' + (view === v ? ' on' : '')} onClick={() => setView(v)}>{l}</button>
+        ))}
+      </div>
       <p className="muted" style={{ fontSize: 13, marginBottom: 16 }}>
         راجع طلبات إذن الطلاب عن الجلسات. القبول يسجّل الطالب «مستأذناً»، والرفض يسجّله «غائباً»، ويُشعر الطالب في الحالتين.
       </p>
 
-      {list.length === 0 && (
+      {view !== 'pending' && (
+        <div className="excuse-list">
+          {history.length === 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+              <Icon name="inbox" size={34} /><div style={{ marginTop: 8 }}>لا سجلّات</div>
+            </div>
+          )}
+          {history.map(h => (
+            <div className="exh-card" key={h.id}>
+              <div className="exh-top">
+                <div className="excuse-req-av">{(h.student_name || '؟').charAt(0)}</div>
+                <div className="exh-info">
+                  <div className="excuse-req-name">{h.student_name}</div>
+                  <div className="exh-meta">
+                    <span>{h.activity_title} · {h.session_title}</span>
+                    <span>{h.planned_date}</span>
+                  </div>
+                </div>
+                <span className={'exh-status ' + h.status}>
+                  {h.status === 'approved' ? '✓ مقبول' : '✕ مرفوض'}
+                </span>
+              </div>
+              <div className="excuse-req-reason">
+                <span className="excuse-req-label">سبب الطالب:</span> {h.reason}
+              </div>
+              {h.reject_reason && (
+                <div className="exh-reject">
+                  <span className="excuse-req-label">سبب الرفض:</span> {h.reject_reason}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {view === 'pending' && list.length === 0 && (
         <div className="card" style={{ textAlign: 'center', padding: 40 }}>
           <Icon name="check" size={34} />
           <div style={{ marginTop: 8 }}>لا طلبات إذن معلّقة</div>
         </div>
       )}
 
-      <div className="excuse-list">
+      {view === 'pending' && <div className="excuse-list">
         {list.map(e => (
           <div key={e.id} className="excuse-req-card">
             <div className="excuse-req-top">
@@ -87,7 +134,7 @@ export default function ExcuseRequests() {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* مربع سبب الرفض */}
       {rejectFor && createPortal(

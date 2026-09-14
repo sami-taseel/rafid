@@ -6,13 +6,17 @@ import QRModal, { canGenerateQR } from './QRModal'
 import RescheduleModal from './RescheduleModal'
 import Icon from '../Icon'
 
+const DOW_AR = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت']
+function dayName(d) { return d ? DOW_AR[new Date(d + 'T00:00:00').getDay()] : '' }
+
 export default function Attendance() {
   const [sessions, setSessions] = useState([])
   const [students, setStudents] = useState([])
   const [sel, setSel] = useState(null)
   const [marks, setMarks] = useState({})
   const [sessStudents, setSessStudents] = useState(null)
-  const [sessStats, setSessStats] = useState({})   // {sessionId: {present, absent, rate…}}  // [{student_id, full_name, target_type}]
+  const [sessStats, setSessStats] = useState({})
+  const [sortBy, setSortBy] = useState('date_desc')   // {sessionId: {present, absent, rate…}}  // [{student_id, full_name, target_type}]
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState(null)
   const [qrSession, setQrSession] = useState(null)
@@ -224,8 +228,20 @@ export default function Attendance() {
         }}>⚡ رصد الغياب للجلسات المنتهية</button>
       </h3>
       {sessions.length === 0 && <div className="panel muted">لا توجد جلسات بعد. أضِفها من وحدة المسارات والأنشطة.</div>}
+      <div className="att-sort-bar">
+        <span className="att-sort-lbl">ترتيب حسب:</span>
+        {[['date_desc','الأحدث'],['date_asc','الأقدم'],['rate_desc','الأعلى حضوراً'],['rate_asc','الأقل حضوراً']].map(([v,l]) => (
+          <button key={v} className={'att-sort-btn' + (sortBy === v ? ' on' : '')} onClick={() => setSortBy(v)}>{l}</button>
+        ))}
+      </div>
       <div className="session-cards">
-        {sessions.map(s => {
+        {[...sessions].sort((x, y) => {
+          const rx = sessStats[x.id]?.rate ?? -1, ry = sessStats[y.id]?.rate ?? -1
+          if (sortBy === 'rate_desc') return ry - rx
+          if (sortBy === 'rate_asc')  return rx - ry
+          if (sortBy === 'date_asc')  return (x.planned_date || '').localeCompare(y.planned_date || '')
+          return (y.planned_date || '').localeCompare(x.planned_date || '')
+        }).map(s => {
           const sessName = s.title || s.activities?.title || 'جلسة'
           const actTitle = s.activities?.title && s.activities.title !== sessName ? s.activities.title : null
           const todayStr = new Date().toLocaleDateString('en-CA')
@@ -236,7 +252,7 @@ export default function Attendance() {
                 <div className="sc-title">{sessName}</div>
                 {actTitle && <div className="sc-act-name">{actTitle}</div>}
                 <div className="sc-meta">{s.activities?.tracks?.name_ar}</div>
-                <div className="sc-date">📅 {s.planned_date || 'بلا تاريخ'}</div>
+                <div className="sc-date">📅 {s.planned_date ? `${dayName(s.planned_date)} · ${s.planned_date}` : 'بلا تاريخ'}</div>
                 {isFuture && <div className="sc-locked-note">🔒 يُتاح التحضير يوم الجلسة</div>}
                 {/* إحصاءات الحضور — تظهر دون فتح الجلسة */}
                 {sessStats[s.id]?.total > 0 && (

@@ -10,7 +10,7 @@ import QRModal, { canGenerateQR } from './QRModal'
 import RescheduleModal from './RescheduleModal'
 import BulkSessions from './BulkSessions'
 
-const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة']
+const ACT_TYPES = ['درس','دورة','يوم علمي','مناقشة','رحلة','لقاء','محاضرة', 'قراءة', 'سماع']
 
 export default function Tracks() {
   const toast = useToast()
