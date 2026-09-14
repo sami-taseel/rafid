@@ -170,6 +170,7 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
   const s = session
   const { act, sessName, actTitle, meta } = sessInfo(s)
   const [details, setDetails] = useState(false)
+  const [plan, setPlan] = useState(null)   // خطة القراءة لهذه الجلسة
   const [qr, setQr] = useState(false)
   const date = s.planned_date ? new Date(s.planned_date + 'T00:00:00') : null
   const isOptional = targetType === 'secondary'
@@ -276,6 +277,14 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
 
       {qr && <QRModal session={s} onClose={() => setQr(false)} />}
 
+      {details && !plan && (() => {
+        supabase.from('reading_plan')
+          .select('lesson_no, page_from, page_to, content')
+          .eq('session_id', s.id).maybeSingle()
+          .then(({ data }) => setPlan(data || { none: true }), () => setPlan({ none: true }))
+        return null
+      })()}
+
       {details && createPortal(
         <div className="cc-detail-overlay" onClick={() => setDetails(false)}>
           <div className="cc-detail-card" onClick={e => e.stopPropagation()}>
@@ -287,6 +296,16 @@ export function CompactCard({ session, studentId, sessionDate, showExcuse = true
             </div>
             <div className="cc-detail-body">
               {decided && <div className="cc-detail-att"><AttBadge status={eff} /></div>}
+              {plan && !plan.none && (
+                <div className="rp-box">
+                  <div className="rp-head">
+                    <span className="rp-lesson">الدرس {plan.lesson_no}</span>
+                    <span className="rp-pages">ص {plan.page_from} — {plan.page_to}</span>
+                    <span className="rp-count">{plan.page_to - plan.page_from + 1} صفحات</span>
+                  </div>
+                  {plan.content && <div className="rp-content">{plan.content}</div>}
+                </div>
+              )}
               {isOptional && (
                 <div className="cc-opt-note">
                   <Icon name="star" size={15} />
