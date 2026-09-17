@@ -5,7 +5,7 @@ import { compressImage } from '../imageCompress'
 import { useToast } from '../Toast'
 
 // الاستبانات المتاحة للطالب لتعبئتها — تدعم الأنواع التسعة
-export default function StudentSurveys({ studentId, openSurveyId }) {
+export default function StudentSurveys({ studentId, openSurveyId, viewAs = false }) {
   const toast = useToast()
   const [surveys, setSurveys] = useState([])
   const [active, setActive] = useState(null)
@@ -19,7 +19,9 @@ export default function StudentSurveys({ studentId, openSurveyId }) {
 
   useEffect(() => {
     async function load() {
-      const { data: visIds } = await supabase.rpc('visible_survey_ids')
+      const { data: visIds } = viewAs
+        ? await supabase.rpc('visible_survey_ids_of', { p_student: studentId })
+        : await supabase.rpc('visible_survey_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_survey_ids : x)
       if (!visible.length) { setSurveys([]); return }
       const { data } = await supabase.from('surveys').select('*').in('id', visible)

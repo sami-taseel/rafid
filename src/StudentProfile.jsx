@@ -52,7 +52,7 @@ function StudentProfileInner({ session, deepSurvey, viewStudentId = null, viewOn
       setUnsignedVisible(unsigned.length)
       // نزامن حالة الحساب في الخلفية
       supabase.rpc('refresh_account_completion', { p_student: student.id }).then(() => {}, () => {})
-      supabase.rpc('am_i_monitor').then(({ data }) => setIsMonitor(!!data), () => {})
+      (viewStudentId ? supabase.rpc('is_monitor_of', { p_student: student.id }) : supabase.rpc('am_i_monitor')).then(({ data }) => setIsMonitor(!!data), () => {})
       supabase.rpc('student_points', { p_student: student.id }).then(({ data, error }) => { if (error) console.error('student_points:', error); setPoints(data || 0) }, e => console.error('student_points:', e))
       supabase.rpc('my_total_grade').then(({ data, error }) => { if (error) console.error('my_total_grade:', error); setTotalGrade(Number(data || 0)) }, e => console.error('my_total_grade:', e))
       // عدد المواعيد القادمة
@@ -354,11 +354,11 @@ function StudentProfileInner({ session, deepSurvey, viewStudentId = null, viewOn
           ))}
         </div>
 
-        {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} />}
-        {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} />}
+        {activeTab === 'home' && <StudentHome studentId={student?.id} onGoTab={setTab} isFull={isFull} viewAs={!!viewStudentId} />}
+        {activeTab === 'calendar' && <StudentCalendar studentId={student?.id} viewAs={!!viewStudentId} />}
         {activeTab === 'monitor' && <MonitorPanel studentId={student?.id} />}
         {activeTab === 'tickets' && <StudentTickets studentId={student?.id} personId={student?.person_id} />}
-        {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} openSurveyId={deepSurvey} />}
+        {activeTab === 'surveys' && <StudentSurveys studentId={student?.id} openSurveyId={deepSurvey} viewAs={!!viewStudentId} />}
         {tab === 'policy' && <PolicyAcceptance studentId={student?.id} />}
         {activeTab === 'profile' && (
           <ProfileTab studentId={student?.id} personId={student?.person_id}

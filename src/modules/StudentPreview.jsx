@@ -40,8 +40,7 @@ export default function StudentPreview({ studentId, studentName, onClose }) {
         </div>
 
         {/* حساب الطالب كما هو، مع درع يمنع التفاعل */}
-        <div className="spv-frame">
-          <div className="spv-shield" title="وضع العرض — التفاعل معطّل"></div>
+        <div className="spv-frame spv-noaction">
           <PreviewBoundary>
             <StudentProfile viewStudentId={studentId} viewOnly session={{ user: { id: null, email: null } }} />
           </PreviewBoundary>

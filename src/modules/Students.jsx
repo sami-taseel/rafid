@@ -32,6 +32,7 @@ export default function Students() {
   const [gapsFor, setGapsFor] = useState(null)   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
   const [allCats, setAllCats] = useState([])
   const [fCat, setFCat] = useState('')
+  const [sortBy, setSortBy] = useState('name')
   const [selected, setSelected] = useState([])
   const [bulkCat, setBulkCat] = useState('')
   const [noticeTemplates, setNoticeTemplates] = useState([])
@@ -166,6 +167,13 @@ export default function Students() {
     const matchF = !fFile || (fFile === 'done' ? s.profile_reviewed : !s.profile_reviewed)
     const matchC = !fCat || (catMap[s.id] || []).includes(fCat)
     return matchQ && matchN && matchD && matchF && matchC
+  }).sort((a, b) => {
+    if (sortBy === 'rate_desc') return (attRates[b.id]?.rate ?? -1) - (attRates[a.id]?.rate ?? -1)
+    if (sortBy === 'rate_asc')  return (attRates[a.id]?.rate ?? 999) - (attRates[b.id]?.rate ?? 999)
+    if (sortBy === 'file')      return Number(a.profile_reviewed) - Number(b.profile_reviewed)
+    if (sortBy === 'nat')       return (a.persons?.nationality || '').localeCompare(b.persons?.nationality || '')
+    if (sortBy === 'deg')       return (a.degree_level || '').localeCompare(b.degree_level || '')
+    return (a.persons?.full_name || '').localeCompare(b.persons?.full_name || '')
   })
 
   const byDeg = students.reduce((a, s) => { const d = s.degree_level || 'غير محدد'; a[d] = (a[d]||0)+1; return a }, {})
@@ -193,6 +201,14 @@ export default function Students() {
             <option value="">حالة الملف</option>
             <option value="done">مكتمل</option>
             <option value="pending">غير مكتمل</option>
+          </select>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} title="ترتيب القائمة">
+            <option value="name">ترتيب: الاسم</option>
+            <option value="rate_desc">الأعلى حضوراً</option>
+            <option value="rate_asc">الأقل حضوراً</option>
+            <option value="file">الملف الناقص أولاً</option>
+            <option value="nat">الجنسية</option>
+            <option value="deg">المرحلة</option>
           </select>
           <select value={fCat} onChange={e => setFCat(e.target.value)}>
             <option value="">كل الفئات</option>

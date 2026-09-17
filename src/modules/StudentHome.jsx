@@ -72,7 +72,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true, viewAs 
         openTickets = tk || []
       } catch (e) { console.error('my_open_tickets:', e) }
       try {
-        const { data: sv } = await supabase.rpc('my_pending_surveys')
+        const { data: sv } = viewAs
+          ? await supabase.rpc('pending_surveys_of', { p_student: studentId })
+          : await supabase.rpc('my_pending_surveys')
         pendingSurveys = (sv || []).filter(x => !x.answered)
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
 

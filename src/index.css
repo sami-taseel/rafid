@@ -3566,3 +3566,25 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 /* عبارة «ناقص» قابلة للنقر */
 .pill-click { display: inline-flex; align-items: center; gap: 5px; border: none; cursor: pointer; font-family: inherit; transition: all .12s; }
 .pill-click:hover { filter: brightness(.94); transform: translateY(-1px); }
+
+/* وضع العرض: التنقّل متاح، والإجراءات معطّلة */
+.spv-noaction .save-btn,
+.spv-noaction .sp-logout,
+.spv-noaction .sph-logout,
+.spv-noaction input:not([type=checkbox]):not([type=radio]),
+.spv-noaction textarea,
+.spv-noaction select,
+.spv-noaction .exc-mini,
+.spv-noaction .cc-icon-btn.checkin,
+.spv-noaction .cc-icon-btn.undo,
+.spv-noaction .srv-fill-btn,
+.spv-noaction .tk-close,
+.spv-noaction .pause-btn,
+.spv-noaction .mon-btn,
+.spv-noaction .mon-confirm-all,
+.spv-noaction .file-pick,
+.spv-noaction .srv-file-pick {
+  pointer-events: none !important; opacity: .55 !important;
+}
+.spv-noaction form { pointer-events: none; }
+.spv-noaction .sp-tabs, .spv-noaction .sp-tabs * { pointer-events: auto !important; opacity: 1 !important; }
