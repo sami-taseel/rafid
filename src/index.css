@@ -3538,3 +3538,14 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 
 /* رسالة تعذّر العرض داخل نافذة المعاينة */
 .spv-err { text-align: center; padding: 40px 20px; color: var(--text-soft); }
+
+/* ===== نواقص ملف الطالب ===== */
+.pg-ok { text-align: center; padding: 40px 20px; color: #15784e; }
+.pg-wrap { padding: 4px; }
+.pg-head { display: flex; align-items: center; gap: 9px; background: #fff4e0; color: #8a5a08; border-radius: 12px; padding: 13px 15px; font-size: 13.5px; margin-bottom: 14px; }
+.pg-group { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.pg-kind { display: flex; align-items: center; gap: 8px; background: var(--bg); padding: 10px 13px; font-size: 13.5px; font-weight: 700; border-bottom: 1px solid var(--border); }
+.pg-n { margin-inline-start: auto; background: #fcecec; color: #b32d2d; font-size: 12px; padding: 2px 10px; border-radius: 9px; }
+.pg-items { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px 13px; }
+.pg-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 6px 12px; font-size: 13px; }
+:root[data-theme="dark"] .pg-head { background: #2a2410; color: #f0c060; }
