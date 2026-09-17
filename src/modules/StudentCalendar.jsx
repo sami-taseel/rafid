@@ -7,7 +7,7 @@ const DOW = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعا
 const MON = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
 
 // تقويم الطالب: يعرض جلسات الأنشطة المرتبطة بفئته فقط
-export default function StudentCalendar({ studentId }) {
+export default function StudentCalendar({ studentId, viewAs = false }) {
   const [sessions, setSessions] = useState([])
   const [cur, setCur] = useState(new Date())        // شهر التقويم المعروض
   const [actMonth, setActMonth] = useState(new Date()) // شهر «الأنشطة القادمة»
@@ -19,7 +19,9 @@ export default function StudentCalendar({ studentId }) {
 
   useEffect(() => {
     async function load() {
-      const { data: visIds } = await supabase.rpc('visible_activity_ids')
+      const { data: visIds } = viewAs
+        ? await supabase.rpc('visible_activity_ids_of', { p_student: studentId })
+        : await supabase.rpc('visible_activity_ids')
       const ids = (visIds || []).map(x => (typeof x === 'object' && x !== null) ? (x.visible_activity_ids || x.id) : x).filter(Boolean)
       let q = supabase.from('sessions').select('id, planned_date, start_time, duration_min, title, status, recording_url, activity_id, activities(title, activity_type, provider, location, tracks(name_ar, code))')
       if (ids.length) q = q.in('activity_id', ids)
@@ -36,7 +38,9 @@ export default function StudentCalendar({ studentId }) {
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // نوع الاستهداف لكل نشاط (إلزامي/اختياري)
       try {
-        const { data: tt } = await supabase.rpc('my_target_types')
+        const { data: tt } = viewAs
+          ? await supabase.rpc('target_types_of', { p_student: studentId })
+          : await supabase.rpc('my_target_types')
         const tm = {}
         ;(tt || []).forEach(x => { tm[x.activity_id] = x.target_type })
         setTypeMap(tm)

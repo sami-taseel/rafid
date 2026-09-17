@@ -10,7 +10,7 @@ import { FeatureCard, CompactCard } from './SessionCard'
 // تسميات حالات البلاغ
 const TK_LABEL = { open: 'مفتوح', in_progress: 'قيد المعالجة', resolved: 'تمت المعالجة — أغلِقه', failed: 'تعذّرت المعالجة' }
 
-export default function StudentHome({ studentId, onGoTab, isFull = true }) {
+export default function StudentHome({ studentId, onGoTab, isFull = true, viewAs = false }) {
   const [showAbsent, setShowAbsent] = useState(false)
   const [showTickets, setShowTickets] = useState(false)
   const [points, setPoints] = useState(0)
@@ -23,7 +23,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
     async function load() {
      try {
       const today = new Date().toISOString().slice(0, 10)
-      const { data: visIds } = await supabase.rpc('visible_activity_ids')
+      const { data: visIds } = viewAs
+        ? await supabase.rpc('visible_activity_ids_of', { p_student: studentId })
+        : await supabase.rpc('visible_activity_ids')
       const visible = (visIds || []).map(x => typeof x === 'object' ? x.visible_activity_ids : x)
       const [att, sessions, surveys, notifs] = await Promise.all([
         supabase.from('attendance').select('status, session_id, sessions(activity_id)').eq('student_id', studentId),
@@ -37,7 +39,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // نوع الاستهداف لكل نشاط (يحسب الفئات اليدوية والتلقائية خادمياً)
       const typeMap = {}
       try {
-        const { data: tt } = await supabase.rpc('my_target_types')
+        const { data: tt } = viewAs
+          ? await supabase.rpc('target_types_of', { p_student: studentId })
+          : await supabase.rpc('my_target_types')
         ;(tt || []).forEach(x => { typeMap[x.activity_id] = x.target_type })
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // جلسات الغياب: نجلب تفاصيلها لعرضها عند الضغط على نسبة الغياب
@@ -61,7 +65,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // البلاغات المفتوحة والاستبانات المعلّقة
       let openTickets = [], pendingSurveys = []
       try {
-        const { data: tk, error: tkErr } = await supabase.rpc('my_open_tickets')
+        const { data: tk, error: tkErr } = viewAs
+          ? await supabase.rpc('open_tickets_of', { p_student: studentId })
+          : await supabase.rpc('my_open_tickets')
         if (tkErr) console.error('my_open_tickets:', tkErr)
         openTickets = tk || []
       } catch (e) { console.error('my_open_tickets:', e) }
@@ -77,7 +83,9 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
       // الإحصاءات من الخادم: كل الجلسات الإلزامية الماضية (ما لا سجل له = غياب)
       let st = null
       try {
-        const { data: sd } = await supabase.rpc('my_attendance_stats')
+        const { data: sd } = viewAs
+          ? await supabase.rpc('attendance_stats_of', { p_student: studentId })
+          : await supabase.rpc('my_attendance_stats')
         st = Array.isArray(sd) ? sd[0] : sd
       } catch { /* الدالة قد لا تكون منفّذة بعد */ }
       // احتياط: الحساب المحلي إن تعذّرت الدالة
@@ -103,7 +111,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
      }
     }
     if (studentId) load()
-  }, [studentId])
+  }, [studentId, viewAs])
 
   useEffect(() => {
     if (!studentId) return
@@ -111,7 +119,7 @@ export default function StudentHome({ studentId, onGoTab, isFull = true }) {
     // الموافقات المعلّقة بعد تحديث جوهري
     supabase.from('form_records').select('id, form_templates(title)').eq('student_id', studentId).eq('status', 'pending')
       .then(({ data }) => setPending(data || [])).catch(() => {})
-  }, [studentId])
+  }, [studentId, viewAs])
 
   if (!data) return <div className="state"><div className="spinner"></div>…</div>
 
