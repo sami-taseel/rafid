@@ -1,10 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Component } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '../supabaseClient'
 import Icon from '../Icon'
 import StudentHome from './StudentHome'
 import StudentCalendar from './StudentCalendar'
 import StudentSurveys from './StudentSurveys'
+import { LangProvider } from '../i18n/LangContext'
+
+// حدّ خطأ: يمنع انهيار صفحة المدير إن فشل عرض جزء من صفحة الطالب
+class PreviewBoundary extends Component {
+  constructor(p) { super(p); this.state = { err: null } }
+  static getDerivedStateFromError(err) { return { err } }
+  render() {
+    if (this.state.err) {
+      return (
+        <div className="spv-err">
+          <Icon name="alert" size={26} />
+          <div style={{ marginTop: 8, fontWeight: 700 }}>تعذّر عرض هذا القسم</div>
+          <div style={{ fontSize: 12, marginTop: 4, opacity: .8 }}>{String(this.state.err?.message || '')}</div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // عرض صفحة الطالب كما يراها تماماً — للقراءة فقط
 export default function StudentPreview({ studentId, onClose }) {
@@ -45,11 +64,13 @@ export default function StudentPreview({ studentId, onClose }) {
         {/* طبقة تمنع أي تفاعل — عرض خالص */}
         <div className="spv-body spv-locked">
           <div className="spv-shield" title="وضع العرض — لا يمكن تنفيذ أي إجراء"></div>
-          <div className="sp-container">
-            {tab === 'home' && <StudentHome studentId={studentId} viewAs isFull />}
-            {tab === 'calendar' && <StudentCalendar studentId={studentId} viewAs />}
-            {tab === 'surveys' && <StudentSurveys studentId={studentId} />}
-          </div>
+          <PreviewBoundary key={tab}><LangProvider>
+            <div className="sp-container">
+              {tab === 'home' && <StudentHome studentId={studentId} viewAs isFull />}
+              {tab === 'calendar' && <StudentCalendar studentId={studentId} viewAs />}
+              {tab === 'surveys' && <StudentSurveys studentId={studentId} />}
+            </div>
+          </LangProvider></PreviewBoundary>
         </div>
 
         <div className="spv-foot">
