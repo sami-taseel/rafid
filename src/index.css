@@ -3549,3 +3549,20 @@ textarea { font-family: inherit; font-size: 14px; line-height: 1.6; color: var(-
 .pg-items { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px 13px; }
 .pg-item { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 6px 12px; font-size: 13px; }
 :root[data-theme="dark"] .pg-head { background: #2a2410; color: #f0c060; }
+
+/* ===== عرض حساب الطالب كما هو ===== */
+.spv-overlay { position: fixed; inset: 0; background: rgba(15,22,38,.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 12px; z-index: 2000; animation: excFadeIn .2s ease; }
+.spv-box { background: var(--bg); border-radius: 18px; width: 100%; max-width: 760px; height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.4); animation: excPop .26s cubic-bezier(.2,.9,.3,1.2); }
+.spv-bar { display: flex; align-items: center; gap: 12px; padding: 11px 15px; background: #1f3864; color: #fff; flex-shrink: 0; }
+.spv-x { width: 30px; height: 30px; border-radius: 8px; border: none; background: rgba(255,255,255,.2); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.spv-x:hover { background: rgba(255,255,255,.35); }
+.spv-bar-t { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; }
+.spv-bar-note { margin-inline-start: auto; font-size: 11.5px; background: rgba(255,255,255,.18); padding: 4px 11px; border-radius: 9px; white-space: nowrap; }
+.spv-frame { position: relative; flex: 1; overflow-y: auto; overflow-x: hidden; }
+.spv-shield { position: absolute; inset: 0; z-index: 50; cursor: not-allowed; }
+.spv-err { text-align: center; padding: 50px 20px; color: var(--text-soft); }
+@media (max-width: 560px) { .spv-bar-note { display: none; } .spv-box { height: 95vh; } }
+
+/* عبارة «ناقص» قابلة للنقر */
+.pill-click { display: inline-flex; align-items: center; gap: 5px; border: none; cursor: pointer; font-family: inherit; transition: all .12s; }
+.pill-click:hover { filter: brightness(.94); transform: translateY(-1px); }

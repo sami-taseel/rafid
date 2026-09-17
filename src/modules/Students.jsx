@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import StudentDetail from './StudentDetail'
 import { useConfirm, usePrompt } from '../Confirm'
 import StudentPreview from './StudentPreview'
+import ProfileGapsModal from './ProfileGapsModal'
 import Icon from '../Icon'
 import { useToast } from '../Toast'
 import BulkEval from './BulkEval'
@@ -27,7 +28,8 @@ export default function Students() {
 
   const [catMap, setCatMap] = useState({})
   const [attRates, setAttRates] = useState({})
-  const [preview, setPreview] = useState(null)   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
+  const [preview, setPreview] = useState(null)
+  const [gapsFor, setGapsFor] = useState(null)   // {studentId: {attended, required, rate}}   // student_id -> [أسماء الفئات]
   const [allCats, setAllCats] = useState([])
   const [fCat, setFCat] = useState('')
   const [selected, setSelected] = useState([])
@@ -232,7 +234,8 @@ export default function Students() {
           onClose={(done) => { setShowBulkEval(false); if (done) setSelected([]) }}
         />
       )}
-      {preview && <StudentPreview studentId={preview} onClose={() => setPreview(null)} />}
+      {gapsFor && <ProfileGapsModal student={gapsFor} onClose={() => setGapsFor(null)} />}
+      {preview && <StudentPreview studentId={preview.id} studentName={preview.name} onClose={() => setPreview(null)} />}
       {selected.length > 0 && (
         <div className="bulk-action-bar">
           <span className="bulk-count">{selected.length} محدّد</span>
@@ -283,7 +286,7 @@ export default function Students() {
                   {s.is_monitor && <span className="monitor-pill" title="مشرف تحضير">▦ مشرف</span>}
                   {s.is_test && <span className="test-pill" title="حساب تجريبي — مستثنى من الإحصاءات">🧪 تجريبي</span>}
                   <button className="spv-eye" title="عرض حساب الطالب (قراءة فقط)"
-                    onClick={e => { e.stopPropagation(); setPreview(s.id) }}>
+                    onClick={e => { e.stopPropagation(); setPreview({ id: s.id, name: s.persons?.full_name }) }}>
                     <Icon name="eye" size={14} />
                   </button>
                 </td>
@@ -304,7 +307,12 @@ export default function Students() {
                     </div>
                   ) : <span className="muted" style={{ fontSize: 12 }}>—</span>}
                 </td>
-                <td>{s.profile_reviewed ? <span className="pill-on">مكتمل</span> : <span className="pill-off">ناقص</span>}</td>
+                <td>{s.profile_reviewed
+                  ? <span className="pill-on">مكتمل</span>
+                  : <button className="pill-off pill-click" title="اضغط لمعرفة النواقص"
+                      onClick={e => { e.stopPropagation(); setGapsFor({ id: s.id, name: s.persons?.full_name }) }}>
+                      ناقص <Icon name="eye" size={12} />
+                    </button>}</td>
               </tr>
             ))}
           </tbody>

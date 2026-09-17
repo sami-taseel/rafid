@@ -22,7 +22,7 @@ export default function StudentProfile(props) {
   return <LangProvider><StudentProfileInner {...props} /></LangProvider>
 }
 
-function StudentProfileInner({ session, deepSurvey }) {
+function StudentProfileInner({ session, deepSurvey, viewStudentId = null, viewOnly = false }) {
   const { t, lang, setLang, available, isRtl } = useLang()
   const [student, setStudent] = useState(null)
   const [fields, setFields] = useState([])
@@ -66,6 +66,24 @@ function StudentProfileInner({ session, deepSurvey }) {
   useEffect(() => {
     async function load() {
       try {
+        // وضع العرض الإداري: نحمّل الطالب بمعرّفه مباشرة
+        if (viewStudentId) {
+          const { data: st } = await supabase.from('students')
+            .select('*, persons(*)').eq('id', viewStudentId).maybeSingle()
+          if (st) {
+            setStudent({ ...st, _person: st.persons })
+            const { data: fs } = await supabase.from('profile_fields')
+              .select('*').eq('is_active', true).order('sort_order')
+            setFields(fs || [])
+            const { data: vals } = await supabase.from('student_field_values')
+              .select('field_id, value').eq('student_id', st.id)
+            const vm = {}; (vals || []).forEach(v => { vm[v.field_id] = v.value }); setValues(vm)
+            const { data: bl } = await supabase.from('buildings').select('*')
+            setBuildings(bl || [])
+            setLoading(false)
+            return
+          }
+        }
         const uid = session.user.id
         const email = session.user.email
         // نجلب كل صفوف الشخص المطابقة لـ auth_user_id
@@ -125,7 +143,7 @@ function StudentProfileInner({ session, deepSurvey }) {
       } finally { setLoading(false) }
     }
     load()
-  }, [session])
+  }, [session, viewStudentId])
 
   async function handleSave(e) {
     e.preventDefault(); setSaving(true); setMsg(null)
